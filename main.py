@@ -1,33 +1,50 @@
-from vanilla_agent import VanillaAgent
-from config import PROVIDER
+from dotenv import load_dotenv
+load_dotenv()
+
+from agents.vanilla_agent import VanillaAgent
+from agents.hybrid_agent import HybridAgent
 
 
 def main():
 
     print("\n===============================")
-    print(" VanillaAgent Cloud Chat ")
+    print("         AgentGPT CLI          ")
     print("===============================")
-    print(f"Provider: {PROVIDER}")
-    print("===============================\n")
+    print("1. Vanilla Agent  (cloud only)")
+    print("2. Hybrid Agent   (local + cloud + tools)")
 
-    agent = VanillaAgent()
+    choice = input("\nSelect agent (1 or 2): ").strip()
 
-    while True:
+    if choice == "1":
 
-        task = input("Enter a task (or 'exit'): ")
+        agent = VanillaAgent()
 
-        if task.lower() == "exit":
-            break
+        while True:
+            task = input("\nEnter a task (or 'exit'): ")
+            if task.lower() == "exit":
+                break
 
-        payload, response = agent.run(task)
+            prompt, response = agent.run(task)
 
-        print("\n--- Payload Sent to Cloud ---")
-        print(payload)
+            print("\n--- Prompt Sent ---\n")
+            print(prompt)
+            print("\n--- Response ---\n")
+            print(response)
 
-        print("\n--- Cloud Response ---")
-        print(response)
+    elif choice == "2":
 
-        print("\n===============================\n")
+        agent = HybridAgent()
+
+        while True:
+            task = input("\nEnter a task (or 'exit'): ")
+            if task.lower() == "exit":
+                break
+
+            result = agent.run(task)
+            print("\nResult:", result)
+
+    else:
+        print("Invalid choice. Please enter 1 or 2.")
 
 
 if __name__ == "__main__":

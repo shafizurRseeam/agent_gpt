@@ -21,3 +21,9 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Environment variables
+.env
+
+# Misnamed venv
+vevn/

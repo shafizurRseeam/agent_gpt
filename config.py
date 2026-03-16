@@ -1,15 +1,10 @@
 PROVIDER = "openai"
 
-# options:
-# "openai"
-# "claude"
-# "gemini"
-
 MODEL_CONFIG = {
-    "openai": "gpt-4.1-mini",
-    "claude": "claude-3-haiku-20240307",
-    "gemini": "gemini-1.5-flash"
+    "openai": "gpt-4o-mini",
+    "claude": "claude-3-sonnet-20240229",
+    "gemini": "gemini-1.5-pro"
 }
 
-MAX_TOKENS = 150
-TEMPERATURE = 0
+MAX_TOKENS = 500
+TEMPERATURE = 0.7
