@@ -1,7 +1,7 @@
 import os
 import requests
 from openai import OpenAI
-from config import PROVIDER, MODEL_CONFIG, MAX_TOKENS, TEMPERATURE
+from config import PROVIDER, MODEL_CONFIG, CLOUD_MAX_TOKENS, CLOUD_TEMPERATURE
 
 
 class CloudLLM:
@@ -35,8 +35,19 @@ class CloudLLM:
                     {"role": "system", "content": "You are an AI assistant."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=MAX_TOKENS,
-                temperature=TEMPERATURE
+                max_tokens=CLOUD_MAX_TOKENS,
+                temperature=CLOUD_TEMPERATURE
+            )
+            return response.choices[0].message.content
+
+    def chat(self, messages):
+        """Multi-turn conversation. messages is a list of {role, content} dicts."""
+        if self.provider == "openai":
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                max_tokens=CLOUD_MAX_TOKENS,
+                temperature=CLOUD_TEMPERATURE
             )
             return response.choices[0].message.content
 
@@ -49,7 +60,7 @@ class CloudLLM:
             }
             payload = {
                 "model": self.model,
-                "max_tokens": MAX_TOKENS,
+                "max_tokens": CLOUD_MAX_TOKENS,
                 "messages": [{"role": "user", "content": prompt}]
             }
             r = requests.post(url, headers=headers, json=payload)
