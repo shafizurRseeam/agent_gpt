@@ -237,7 +237,7 @@ User details:
   Insurance: {p.get('insurance', '')} (ID: {p.get('insurance_id', '')})
   {availability}{pref_section}
 
-Step 1 — Reason: Think through what you know about this user. What past history is relevant? What personal details does the cloud need to complete this task end-to-end?
+Step 1 — Reason: Think through what you are going to include in the cloud message and why. What personal details does the cloud need? What past history from memory is worth mentioning to help the cloud narrow the result? Your reasoning should explain the choices you are making for the cloud query — not independently analyse the user's situation.
 Step 2 — Cloud query: Write a natural-language message to the cloud assistant that will handle this task. Include the user's name, address, phone, insurance, and availability. Mention any relevant past context briefly. Do not filter for privacy — include what helps.
 
 Important: the CLOUD QUERY is a message sent TO the cloud service on behalf of the user, not a message to the user themselves.
