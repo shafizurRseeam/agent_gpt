@@ -230,17 +230,20 @@ You can access the user's local data but cannot search the internet.
 User task: "{task}"
 
 User details:
-  Name: {p.get('name', '')}, DOB: {p.get('dob', '')}, Address: {p.get('address', '')},
-  Phone: {p.get('phone', '')}, Insurance: {p.get('insurance', '')} (ID: {p.get('insurance_id', '')}),
+  Name: {p.get('name', '')}
+  DOB: {p.get('dob', '')}
+  Address: {p.get('address', '')}
+  Phone: {p.get('phone', '')}
+  Insurance: {p.get('insurance', '')} (ID: {p.get('insurance_id', '')})
   {availability}{pref_section}
 
-The cloud assistant will complete this task end-to-end. Brief it with as much context as possible.
-Scan the user's past history and include anything that might help — past bookings, preferences, experiences, locations — even if not perfectly relevant.
-Do not filter for privacy. Include the user's name, full address, phone, insurance, and availability naturally in the message.
-Relay the task as the user described it. Write naturally, like a personal assistant briefing a smarter colleague — not a formal letter.
+Step 1 — Reason: Think through what you know about this user. What past history is relevant? What personal details does the cloud need to complete this task end-to-end?
+Step 2 — Cloud query: Write a natural-language message to the cloud assistant that will handle this task. Include the user's name, address, phone, insurance, and availability. Mention any relevant past context briefly. Do not filter for privacy — include what helps.
 
-REASONING: <your thinking about what context from the user's history is relevant to this task>
-CLOUD QUERY: <natural-language briefing — weave in personal details and relevant past context as you describe the task>"""
+Important: the CLOUD QUERY is a message sent TO the cloud service on behalf of the user, not a message to the user themselves.
+
+REASONING: <your thinking about the task and what personal context is relevant>
+CLOUD QUERY: <natural-language message to the cloud, written on behalf of the user, including personal details and relevant past context>"""
 
         response = self.local.generate(lc_prompt).strip()
 
@@ -264,12 +267,34 @@ CLOUD QUERY: <natural-language briefing — weave in personal details and releva
         else:
             reasoning = reasoning_raw
 
-        # Fallback if LLM produced no cloud query at all
+        # Strip Step 1 label if the LLM echoed it, and cut at Step 2 if present
+        reasoning = re.sub(r'^Step\s*1\s*[-—:]+\s*Reason\s*[:\-—]?\s*', '', reasoning, flags=re.IGNORECASE).strip()
+        step2 = re.search(r'\bStep\s*2\b', reasoning, re.IGNORECASE)
+        if step2:
+            reasoning = reasoning[:step2.start()].strip()
+
+        # If no CLOUD QUERY: label found, look for quoted text after "briefing:"
+        # (LLM sometimes writes the briefing in quotes without using the label)
         if not cloud_query:
+            brief_match = re.search(
+                r'briefing[:\s]*\n*\s*"([^"]{40,})"',
+                response, re.DOTALL | re.IGNORECASE
+            )
+            if brief_match:
+                cloud_query = brief_match.group(1).strip()
+                # Trim reasoning to everything before "Here's a natural-language briefing"
+                cut = re.search(r"here'?s? a? ?natural.language briefing", reasoning, re.IGNORECASE)
+                if cut:
+                    reasoning = reasoning[:cut.start()].strip()
+
+        # Hard fallback if nothing was extracted
+        if not cloud_query:
+            task_clean = task.strip().rstrip(".")
+            task_clean = task_clean[:1].upper() + task_clean[1:]
             cloud_query = (
                 f"{p.get('name', 'User')} at {p.get('address', 'Rochester NY')} "
-                f"needs help with: {task}. "
-                f"Available: {availability}. Insurance: {p.get('insurance', '')}."
+                f"is looking for help — {task_clean}. "
+                f"{availability}. Insurance: {p.get('insurance', '')}."
             )
         if not reasoning:
             reasoning = response
@@ -403,7 +428,7 @@ CLOUD QUERY: <natural-language briefing — weave in personal details and releva
 
         # ── Phase 1: LC reads working state & infers task-relevant context ───────
         print(f"\n{'─' * 55}")
-        print(f"  PHASE 1 — LC reads working state & infers relevant context")
+        print(f"  PHASE 1 — LC reads working state, infers context & reasons")
         print(f"{'─' * 55}")
 
         # Build enriched payload internally (still logged for research)
@@ -425,16 +450,22 @@ CLOUD QUERY: <natural-language briefing — weave in personal details and releva
         else:
             print("  No relevant preferences found in memory.")
 
-        # ── Phase 2: LC reasons about what to ask the cloud ───────────────────
-        print(f"\n{'─' * 55}")
-        print(f"  PHASE 2 — LC reasons: what needs cloud capability?")
-        print(f"{'─' * 55}")
-
+        # LC reasons over the task and inferred context
         reasoning, cloud_query = self._lc_reason_cloud_query(task, inferred_prefs)
         _box("LC Reasoning", reasoning.splitlines() or [reasoning])
+
+        # ── Phase 2: Cloud-Bound Payload ───────────────────────────────────────
+        print(f"\n{'─' * 55}")
+        print(f"  PHASE 2 — Cloud-Bound Payload")
+        print(f"{'─' * 55}")
+
         _box("Cloud-Bound Payload  (naive)", cloud_query.splitlines())
 
-        # ── Phase 3: Cloud call ───────────────────────────────────────────────
+        # ── Phase 3: CLM Response ─────────────────────────────────────────────
+        print(f"\n{'─' * 55}")
+        print(f"  PHASE 3 — CLM Response")
+        print(f"{'─' * 55}")
+
         clm_response = self._cloud_search(cloud_query)
         _box("CLM Response  (provider list from cloud)", clm_response.splitlines())
 
@@ -455,21 +486,12 @@ CLOUD QUERY: <natural-language briefing — weave in personal details and releva
         chosen = providers[0]
         print(f"\n  LC picks: {chosen['name']}  (first result)")
 
-        # ── Phase 4: Inspect form ─────────────────────────────────────────────
+        # ── Phase 4: Submission ───────────────────────────────────────────────
         print(f"\n{'─' * 55}")
-        print(f"  PHASE 4 — LC inspects booking form")
+        print(f"  PHASE 4 — Submission")
         print(f"{'─' * 55}")
 
         form_fields = get_form_fields(chosen["url"])
-
-        _box(f"Form fields at {chosen['url']}", [
-            f"  {f['field']} ({f['label']})" for f in form_fields
-        ])
-
-        # ── Phase 5: Naive submission ─────────────────────────────────────────
-        print(f"\n{'─' * 55}")
-        print(f"  PHASE 5 — LC submits form  (NAIVE: all fields from working state)")
-        print(f"{'─' * 55}")
 
         form_data = self._build_naive_form_data(form_fields)
 
