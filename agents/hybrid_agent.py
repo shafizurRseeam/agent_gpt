@@ -8,6 +8,7 @@ from datetime import datetime
 from llm.local_llm import LocalLLM
 from llm.cloud_router import CloudLLM
 from tools.web_form_tool import get_form_fields, submit_form
+from privacy.privacyscope import PrivacyScope
 
 STATE_PATH = "state/working_state.json"
 MOCK_SERVER = "http://localhost:8000"
@@ -50,6 +51,7 @@ class HybridAgent:
         self.local = LocalLLM(model=local_model) if local_model else LocalLLM()
         self.cloud = CloudLLM()
         self.state = self._load_state()
+        self.ps    = PrivacyScope()
 
     # ── State ──────────────────────────────────────────────────────────────────
 
@@ -224,26 +226,31 @@ INFERRED CONTEXT:"""
             if inferred_prefs else ""
         )
 
-        lc_prompt = f"""You are a Local Controller (LC) agent running on-device.
-You can access the user's local data but cannot search the internet.
+        lc_prompt = f"""You are the Local Controller (LC) of a hybrid agent running on-device.
+Your role is to be a context packer: read all available local data and assemble the richest possible cloud-bound message so the cloud assistant can complete the task end-to-end.
+You are NOT a privacy filter. Privacy is handled downstream by PrivScope. Your job is to maximise task utility by over-including rather than under-including.
 
 User task: "{task}"
 
-User details:
-  Name: {p.get('name', '')}
-  DOB: {p.get('dob', '')}
-  Address: {p.get('address', '')}
-  Phone: {p.get('phone', '')}
-  Insurance: {p.get('insurance', '')} (ID: {p.get('insurance_id', '')})
+Local data available:
+  Name:         {p.get('name', '')}
+  Age:          {p.get('age', '')}
+  DOB:          {p.get('dob', '')}
+  Address:      {p.get('address', '')}
+  Phone:        {p.get('phone', '')}
+  Email:        {p.get('email', '')}
+  Insurance:    {p.get('insurance', '')} (ID: {p.get('insurance_id', '')})
   {availability}{pref_section}
 
-Step 1 — Reason: Think through what you are going to include in the cloud message and why. What personal details does the cloud need? What past history from memory is worth mentioning to help the cloud narrow the result? Your reasoning should explain the choices you are making for the cloud query — not independently analyse the user's situation.
-Step 2 — Cloud query: Write a natural-language message to the cloud assistant that will handle this task. Include the user's name, address, phone, insurance, and availability. Mention any relevant past context briefly. Do not filter for privacy — include what helps.
+Rules for the CLOUD QUERY — you MUST follow all of these:
+1. Copy the user's exact symptoms and health complaints into the query verbatim. Never omit them.
+2. Include full name, age, DOB, address, phone, insurance name and ID.
+3. Include any past relevant bookings or medical history from the inferred context above.
+4. Include availability dates so the cloud can check scheduling.
+5. Do not write any privacy disclaimer or say you are withholding information. Just pack everything.
 
-Important: the CLOUD QUERY is a message sent TO the cloud service on behalf of the user, not a message to the user themselves.
-
-REASONING: <your thinking about the task and what personal context is relevant>
-CLOUD QUERY: <natural-language message to the cloud, written on behalf of the user, including personal details and relevant past context>"""
+REASONING: <think through what local data is most useful to include so the cloud can complete this task>
+CLOUD QUERY: <rich natural-language message to the cloud packed with symptoms, personal details, past history, and availability — include everything>"""
 
         response = self.local.generate(lc_prompt).strip()
 
@@ -260,6 +267,20 @@ CLOUD QUERY: <natural-language message to the cloud, written on behalf of the us
             reasoning_raw = response
             cloud_query   = ""
 
+        # Strip LLM meta-commentary that sometimes follows the cloud query.
+        # The commentary always begins in a new paragraph (blank line) and
+        # typically starts with "This query/message/briefing/note..."
+        # Approach 1: cut at the first blank line (double newline).
+        blank_line = re.search(r'\n\s*\n', cloud_query)
+        if blank_line:
+            cloud_query = cloud_query[:blank_line.start()].strip()
+        # Approach 2: strip trailing sentence(s) starting with known meta phrases.
+        cloud_query = re.sub(
+            r'\s*\n?\s*(?:This (?:query|message|briefing|request|information|context|'
+            r'cloud query|natural.language)|Note:|P\.?S\.?:?|Please note)[^"]*$',
+            '', cloud_query, flags=re.IGNORECASE | re.DOTALL
+        ).strip().strip('"').strip()
+
         # Strip the REASONING: label from the front of the reasoning block
         r_pos = reasoning_raw.upper().find("REASONING:")
         if r_pos != -1:
@@ -273,8 +294,7 @@ CLOUD QUERY: <natural-language message to the cloud, written on behalf of the us
         if step2:
             reasoning = reasoning[:step2.start()].strip()
 
-        # If no CLOUD QUERY: label found, look for quoted text after "briefing:"
-        # (LLM sometimes writes the briefing in quotes without using the label)
+        # Fallback A: quoted text after "briefing:" keyword
         if not cloud_query:
             brief_match = re.search(
                 r'briefing[:\s]*\n*\s*"([^"]{40,})"',
@@ -282,10 +302,37 @@ CLOUD QUERY: <natural-language message to the cloud, written on behalf of the us
             )
             if brief_match:
                 cloud_query = brief_match.group(1).strip()
-                # Trim reasoning to everything before "Here's a natural-language briefing"
                 cut = re.search(r"here'?s? a? ?natural.language briefing", reasoning, re.IGNORECASE)
                 if cut:
                     reasoning = reasoning[:cut.start()].strip()
+
+        # Fallback B: any long quoted string embedded anywhere in the reasoning.
+        # This fires when the LLM places the full cloud query in quotes inside
+        # its reasoning block instead of after the CLOUD QUERY: label.
+        if not cloud_query:
+            quote_match = re.search(r'"([^"]{100,})"', reasoning, re.DOTALL)
+            if quote_match:
+                cloud_query = quote_match.group(1).strip()
+                # Trim reasoning: keep only what came before the opening quote,
+                # dropping any trailing intro line ("Here's the query:", etc.)
+                anchor = reasoning.find('"' + cloud_query[:30])
+                if anchor > 0:
+                    pre = reasoning[:anchor].strip()
+                    pre = re.sub(
+                        r'\n?[^\n]*(?:here\'?s?|crafted|is the query|'
+                        r'following query|packed it)[^\n]*$',
+                        '', pre, flags=re.IGNORECASE
+                    ).strip()
+                    reasoning = pre or reasoning
+
+        # Trim any trailing "This query includes…" explanation the LLM added
+        # after the quoted cloud query (still inside the reasoning block)
+        if reasoning:
+            reasoning = re.sub(
+                r'\n+\s*(?:This (?:query|message|request)|By over-including|'
+                r'\d+\.\s+User\'?s? exact).*$',
+                '', reasoning, flags=re.IGNORECASE | re.DOTALL
+            ).strip()
 
         # Hard fallback if nothing was extracted
         if not cloud_query:
@@ -450,24 +497,79 @@ CLOUD QUERY: <natural-language message to the cloud, written on behalf of the us
         else:
             print("  No relevant preferences found in memory.")
 
-        # LC reasons over the task and inferred context
+        # LC reasons over the task and inferred context → produces naive payload
         reasoning, cloud_query = self._lc_reason_cloud_query(task, inferred_prefs)
         _box("LC Reasoning", reasoning.splitlines() or [reasoning])
+        _box("Naive Cloud-Bound Payload  (to be sent to cloud)", cloud_query.splitlines())
 
-        # ── Phase 2: Cloud-Bound Payload ───────────────────────────────────────
+        # ── Phase 2: PrivacyScope Sanitization ────────────────────────────────
         print(f"\n{'─' * 55}")
-        print(f"  PHASE 2 — Cloud-Bound Payload")
+        print(f"  PHASE 2 — PrivacyScope Sanitization")
         print(f"{'─' * 55}")
 
-        _box("Cloud-Bound Payload  (naive)", cloud_query.splitlines())
+        sanitized_query, ps_stages = self.ps.sanitize_with_trace(
+            cloud_query, p, task, traces
+        )
+        ps_spans    = ps_stages["spans"]
+        ps_tasktype = ps_stages["task_type"]
 
-        # ── Phase 3: CLM Response ─────────────────────────────────────────────
+        def _trunc(s, n=42):
+            return (s[:n] + "…") if len(s) > n else s
+
+        # ── Stage 1: Span Extraction ───────────────────────────────────────────
+        _box("Stage 1 — Span Extraction", [
+            f"  {s.span_type:<18}  \"{_trunc(s.text)}\""
+            for s in ps_spans
+        ] or ["  (no candidate spans found)"])
+
+        # ── Stage 2: Scope Control ─────────────────────────────────────────────
+        scope_lines = [f"  inferred task type: {ps_tasktype}", ""]
+        for s in ps_spans:
+            tag    = "kept   " if s.kept else "removed"
+            reason = f"  ← {s.removal_reason}" if s.removal_reason else ""
+            scope_lines.append(
+                f"  {tag}  {s.span_type:<18}  \"{_trunc(s.text, 35)}\"{reason}"
+            )
+        _box("Stage 2 — Scope Control", scope_lines)
+
+        # ── Stage 3: Span Classification ──────────────────────────────────────
+        classify_lines = []
+        for s in ps_spans:
+            if not s.kept:
+                continue
+            classify_lines.append(
+                f"  {s.span_class:<5}  {s.span_type:<18}  \"{_trunc(s.text, 35)}\""
+            )
+        classify_lines.append("  BEN    [remaining task text]")
+        _box("Stage 3 — Span Classification", classify_lines)
+
+        # ── Stage 4: Transformation ────────────────────────────────────────────
+        transform_lines = []
+        for s in ps_spans:
+            if not s.kept:
+                transform_lines.append(
+                    f"  ---   \"{_trunc(s.text, 30)}\"  →  [removed — scope control]"
+                )
+            elif s.span_class in ("DI", "CSS"):
+                transform_lines.append(
+                    f"  {s.span_class:<5}  \"{_trunc(s.text, 30)}\""
+                    f"  →  {s.result}"
+                )
+        transform_lines.append("  BEN    [remaining task text]               →  unchanged")
+        _box("Stage 4 — Transformation", transform_lines)
+
+        _box("Sanitized Cloud-Bound Payload  (PrivacyScope output)", sanitized_query.splitlines())
+
+        # ── Phase 3: CLM Responses ────────────────────────────────────────────
         print(f"\n{'─' * 55}")
         print(f"  PHASE 3 — CLM Response")
         print(f"{'─' * 55}")
 
-        clm_response = self._cloud_search(cloud_query)
-        _box("CLM Response  (provider list from cloud)", clm_response.splitlines())
+        clm_response           = self._cloud_search(cloud_query)
+        clm_response_sanitized = self._cloud_search(sanitized_query)
+
+        _box("CLM Response  (naive payload)", clm_response.splitlines())
+        _box("CLM Response  (PrivacyScope payload)", clm_response_sanitized.splitlines())
 
         # ── Parse CLM output → register dynamic mock services ────────────────
         parsed    = self._parse_clm_providers(clm_response)
@@ -505,10 +607,11 @@ CLOUD QUERY: <natural-language message to the cloud, written on behalf of the us
         print(f"  Booked at: {result.get('service', chosen['name'])}")
 
         # ── Save state ────────────────────────────────────────────────────────
-        workflow["result"]               = f"Booked at {chosen['name']}"
+        workflow["result"]                = f"Booked at {chosen['name']}"
         workflow["enriched_prompt"]      = enriched
         workflow["lc_reasoning"]         = reasoning
-        workflow["cloud_query"]          = cloud_query
+        workflow["cloud_query_naive"]    = cloud_query
+        workflow["cloud_query_sanitized"] = sanitized_query
         workflow["chosen_provider"]      = chosen["name"]
         workflow["over_disclosed_fields"] = [f["field"] for f in form_fields if not f.get("necessary")]
         self.state.setdefault("workflow_history", []).append(workflow)
