@@ -1,0 +1,211 @@
+{
+  "domains": [
+    {
+      "domain": "medical_booking",
+      "intent_templates": [
+        "book",
+        "find",
+        "schedule",
+        "help me get"
+      ],
+      "task_objects": [
+        "doctor appointment",
+        "medical appointment",
+        "clinic appointment",
+        "checkup",
+        "specialist appointment"
+      ],
+      "constraints": [
+        "this week",
+        "tomorrow morning",
+        "before noon",
+        "after work",
+        "near my home",
+        "near my work",
+        "within 20 minutes",
+        "that accepts my insurance",
+        "in network",
+        "earliest available appointment",
+        "female provider preferred",
+        "highly rated provider"
+      ],
+      "context": [
+        "the pain is sharp when I move",
+        "it is interfering with sleep",
+        "over-the-counter medicine has not helped",
+        "I already tried rest and ice",
+        "I need a follow-up after urgent care",
+        "I was told to see a specialist",
+        "I recently had an ER visit",
+        "I had surgery last year",
+        "I recently started a new medication",
+        "the problem has been getting worse",
+        "it comes and goes throughout the day",
+        "I do not want to wait too long"
+      ],
+      "sensitive_seed_info": [
+        "chest tightness",
+        "knee pain",
+        "back pain",
+        "headaches",
+        "shortness of breath",
+        "rash",
+        "dizziness",
+        "abdominal pain",
+        "migraine",
+        "asthma",
+        "eczema",
+        "sinus infection",
+        "ER visit",
+        "surgery history",
+        "pregnancy",
+        "anxiety history",
+        "antidepressants",
+        "blood thinners",
+        "insulin"
+      ],
+      "user_goal": [
+        "get checked soon",
+        "find the earliest appointment",
+        "avoid waiting too long",
+        "see the right specialist",
+        "get treatment quickly"
+      ]
+    },
+    {
+      "domain": "travel_booking",
+      "intent_templates": [
+        "book",
+        "find",
+        "schedule",
+        "help me get"
+      ],
+      "task_objects": [
+        "flight booking",
+        "round-trip flight",
+        "one-way flight",
+        "hotel booking",
+        "flight and hotel booking"
+      ],
+      "constraints": [
+        "this weekend",
+        "next week",
+        "round trip",
+        "one way",
+        "nonstop preferred",
+        "morning departure preferred",
+        "nearby airport preferred",
+        "flexible dates",
+        "short layover only",
+        "carry-on only",
+        "refundable option preferred"
+      ],
+      "context": [
+        "I would prefer the shortest travel time",
+        "I do not want a very long layover",
+        "I want to keep the total cost low",
+        "I would rather leave in the morning",
+        "I need to return quickly",
+        "I want something convenient and simple",
+        "I am okay if the dates shift by a day",
+        "I do not want to arrive too late at night",
+        "I want to stay close to the main area",
+        "I would like a reliable airline",
+        "I am traveling with my child",
+        "this trip is for a family emergency",
+        "I need to be near the hospital",
+        "I do not want to travel alone late at night",
+        "I need wheelchair assistance",
+        "I am trying to avoid spending too much"
+      ],
+      "sensitive_seed_info": [
+        "family emergency",
+        "medical trip",
+        "job interview",
+        "budget concerns",
+        "visa issue",
+        "immigration concern",
+        "pregnancy",
+        "child travel",
+        "funeral travel",
+        "long-distance relationship",
+        "religious preference",
+        "dietary restriction",
+        "wheelchair assistance",
+        "anxiety",
+        "safety concern"
+      ],
+      "user_goal": [
+        "get there quickly",
+        "keep the trip affordable",
+        "make the trip easy",
+        "avoid travel stress",
+        "find the best option soon"
+      ]
+    },
+    {
+      "domain": "restaurant_booking",
+      "intent_templates": [
+        "book",
+        "find",
+        "reserve",
+        "help me get"
+      ],
+      "task_objects": [
+        "restaurant reservation",
+        "dinner reservation",
+        "lunch reservation",
+        "table reservation",
+        "brunch reservation"
+      ],
+      "constraints": [
+        "for 2 people",
+        "for 4 people",
+        "tonight",
+        "tomorrow evening",
+        "this weekend",
+        "near my home",
+        "near downtown",
+        "within 15 minutes",
+        "not too expensive",
+        "highly rated",
+        "outdoor seating preferred",
+        "quiet place preferred"
+      ],
+      "context": [
+        "I do not want a long wait",
+        "I want somewhere quiet",
+        "I prefer outdoor seating",
+        "I want a place with good ambiance",
+        "I would like something casual",
+        "I want to keep the price reasonable",
+        "I want a place that is easy to park near",
+        "I would rather avoid crowded places",
+        "I want somewhere good for conversation",
+        "I want to make sure the service is reliable"
+      ],
+      "sensitive_seed_info": [
+        "vegetarian",
+        "vegan",
+        "halal",
+        "kosher",
+        "seafood allergy",
+        "nut allergy",
+        "gluten-free",
+        "date night",
+        "anniversary",
+        "birthday dinner",
+        "coworker dinner",
+        "family dinner",
+        "budget concerns"
+      ],
+      "user_goal": [
+        "have a smooth dinner plan",
+        "find a good place nearby",
+        "keep things simple",
+        "avoid expensive options",
+        "make the evening go well"
+      ]
+    }
+  ]
+}

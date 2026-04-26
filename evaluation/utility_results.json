@@ -1,0 +1,402 @@
+{
+  "generated_at": "2026-03-31T00:21:00.375337",
+  "n_tasks": 5,
+  "domain_filter": null,
+  "rng_seed": 42,
+  "baselines": [
+    "naive",
+    "privacyscope",
+    "ner_redact"
+  ],
+  "matching": {
+    "rule_1_2": "all content words must match",
+    "rule_3plus": ">=2 content words must overlap",
+    "stop_words": [
+      "&",
+      "a",
+      "an",
+      "and",
+      "at",
+      "co",
+      "dr",
+      "for",
+      "in",
+      "inc",
+      "llc",
+      "ltd",
+      "mr",
+      "mrs",
+      "ms",
+      "of",
+      "st",
+      "the",
+      "to"
+    ]
+  },
+  "summary": {
+    "naive": {
+      "URR": 1.0,
+      "n": 3
+    },
+    "privacyscope": {
+      "URR": 0.26666666666666666,
+      "n": 3
+    },
+    "ner_redact": {
+      "URR": 0.13333333333333333,
+      "n": 3
+    }
+  },
+  "tasks": [
+    {
+      "task_num": 1,
+      "domain": "travel_booking",
+      "seed_id": "seed_0020",
+      "variant_id": 1,
+      "prompt": "Could you help me find a cheap hotel for my layover? I'm flying round trip for a funeral and I’m trying to minimize expenses because of some visa complications. Please let me know the best available options as soon as possible.",
+      "metrics": {
+        "naive": {
+          "URR": 1.0,
+          "matched": 5,
+          "total_naive": 5,
+          "matched_pairs": [
+            [
+              "Red Roof Inn Rochester",
+              "Red Roof Inn Rochester"
+            ],
+            [
+              "Quality Inn Rochester Airport",
+              "Quality Inn Rochester Airport"
+            ],
+            [
+              "Days Inn by Wyndham Rochester",
+              "Days Inn by Wyndham Rochester"
+            ],
+            [
+              "Super 8 by Wyndham Rochester",
+              "Super 8 by Wyndham Rochester"
+            ],
+            [
+              "Extended Stay America - Rochester - Greece",
+              "Extended Stay America - Rochester - Greece"
+            ]
+          ],
+          "naive_names": [
+            "Red Roof Inn Rochester",
+            "Quality Inn Rochester Airport",
+            "Days Inn by Wyndham Rochester",
+            "Super 8 by Wyndham Rochester",
+            "Extended Stay America - Rochester - Greece"
+          ],
+          "returned_names": [
+            "Red Roof Inn Rochester",
+            "Quality Inn Rochester Airport",
+            "Days Inn by Wyndham Rochester",
+            "Super 8 by Wyndham Rochester",
+            "Extended Stay America - Rochester - Greece"
+          ]
+        },
+        "privacyscope": {
+          "URR": 0.8,
+          "matched": 4,
+          "total_naive": 5,
+          "matched_pairs": [
+            [
+              "Red Roof Inn Rochester",
+              "Red Roof Inn Rochester"
+            ],
+            [
+              "Quality Inn Rochester Airport",
+              "Quality Inn Rochester Airport"
+            ],
+            [
+              "Days Inn by Wyndham Rochester",
+              "Super 8 by Wyndham Rochester"
+            ],
+            [
+              "Super 8 by Wyndham Rochester",
+              "Days Inn by Wyndham Rochester"
+            ]
+          ],
+          "naive_names": [
+            "Red Roof Inn Rochester",
+            "Quality Inn Rochester Airport",
+            "Days Inn by Wyndham Rochester",
+            "Super 8 by Wyndham Rochester",
+            "Extended Stay America - Rochester - Greece"
+          ],
+          "returned_names": [
+            "Red Roof Inn Rochester",
+            "Super 8 by Wyndham Rochester",
+            "Quality Inn Rochester Airport",
+            "Econo Lodge Rochester",
+            "Days Inn by Wyndham Rochester"
+          ]
+        },
+        "ner_redact": {
+          "URR": 0.4,
+          "matched": 2,
+          "total_naive": 5,
+          "matched_pairs": [
+            [
+              "Red Roof Inn Rochester",
+              "Red Roof Inn"
+            ],
+            [
+              "Days Inn by Wyndham Rochester",
+              "Super 8 by Wyndham"
+            ]
+          ],
+          "naive_names": [
+            "Red Roof Inn Rochester",
+            "Quality Inn Rochester Airport",
+            "Days Inn by Wyndham Rochester",
+            "Super 8 by Wyndham Rochester",
+            "Extended Stay America - Rochester - Greece"
+          ],
+          "returned_names": [
+            "Motel 6",
+            "Super 8 by Wyndham",
+            "Days Inn",
+            "Red Roof Inn",
+            "Econo Lodge"
+          ]
+        }
+      }
+    },
+    {
+      "task_num": 2,
+      "domain": "medical_booking",
+      "seed_id": "seed_0003",
+      "variant_id": 2,
+      "prompt": "Hello, I'd like to book a clinic appointment for tomorrow morning, preferably near my house. I've been having episodes of shortness of breath, particularly since my recent ER visit, and considering my pregnancy, I’d really like to avoid any long waits. Please let me know what options are available.",
+      "metrics": {
+        "naive": {
+          "URR": 1.0,
+          "matched": 5,
+          "total_naive": 5,
+          "matched_pairs": [
+            [
+              "Rochester General Hospital - Urgent Care",
+              "Rochester General Hospital - Urgent Care"
+            ],
+            [
+              "UR Medicine Immediate Care - Irondequoit",
+              "UR Medicine Immediate Care - Irondequoit"
+            ],
+            [
+              "Unity Hospital - Emergency Department",
+              "Unity Hospital - Emergency Department"
+            ],
+            [
+              "Convenient Care at Strong Memorial Hospital",
+              "Convenient Care at Strong Memorial Hospital"
+            ],
+            [
+              "Eastman Institute for Oral Health",
+              "Eastman Institute for Oral Health"
+            ]
+          ],
+          "naive_names": [
+            "Rochester General Hospital - Urgent Care",
+            "UR Medicine Immediate Care - Irondequoit",
+            "Unity Hospital - Emergency Department",
+            "Convenient Care at Strong Memorial Hospital",
+            "Eastman Institute for Oral Health"
+          ],
+          "returned_names": [
+            "Rochester General Hospital - Urgent Care",
+            "UR Medicine Immediate Care - Irondequoit",
+            "Unity Hospital - Emergency Department",
+            "Convenient Care at Strong Memorial Hospital",
+            "Eastman Institute for Oral Health"
+          ]
+        },
+        "privacyscope": {
+          "URR": 0.0,
+          "matched": 0,
+          "total_naive": 5,
+          "matched_pairs": [],
+          "naive_names": [
+            "Rochester General Hospital - Urgent Care",
+            "UR Medicine Immediate Care - Irondequoit",
+            "Unity Hospital - Emergency Department",
+            "Convenient Care at Strong Memorial Hospital",
+            "Eastman Institute for Oral Health"
+          ],
+          "returned_names": []
+        },
+        "ner_redact": {
+          "URR": 0.0,
+          "matched": 0,
+          "total_naive": 5,
+          "matched_pairs": [],
+          "naive_names": [
+            "Rochester General Hospital - Urgent Care",
+            "UR Medicine Immediate Care - Irondequoit",
+            "Unity Hospital - Emergency Department",
+            "Convenient Care at Strong Memorial Hospital",
+            "Eastman Institute for Oral Health"
+          ],
+          "returned_names": []
+        }
+      }
+    },
+    {
+      "task_num": 3,
+      "domain": "travel_booking",
+      "seed_id": "seed_0000",
+      "variant_id": 3,
+      "prompt": "I need help scheduling a flight back home soon, and a nonstop option is really important since I'm traveling with my child. Could you look up flights within our budget of $500 and make sure to add wheelchair assistance for my partner? We're flexible on dates if that helps.",
+      "metrics": {
+        "naive": {
+          "URR": null,
+          "matched": 0,
+          "total_naive": 0,
+          "matched_pairs": [],
+          "naive_names": [],
+          "returned_names": []
+        },
+        "privacyscope": {
+          "URR": null,
+          "matched": 0,
+          "total_naive": 0,
+          "matched_pairs": [],
+          "naive_names": [],
+          "returned_names": []
+        },
+        "ner_redact": {
+          "URR": null,
+          "matched": 0,
+          "total_naive": 0,
+          "matched_pairs": [],
+          "naive_names": [],
+          "returned_names": []
+        }
+      }
+    },
+    {
+      "task_num": 4,
+      "domain": "travel_booking",
+      "seed_id": "seed_0023",
+      "variant_id": 2,
+      "prompt": "Can you help me book a hotel for my upcoming job interview next week? I’ll need wheelchair assistance since I’m pregnant, and I want to ensure the trip is easy for me. I’ll just have a carry-on bag, so please find a place that’s convenient and hassle-free.",
+      "metrics": {
+        "naive": {
+          "URR": null,
+          "matched": 0,
+          "total_naive": 0,
+          "matched_pairs": [],
+          "naive_names": [],
+          "returned_names": []
+        },
+        "privacyscope": {
+          "URR": null,
+          "matched": 0,
+          "total_naive": 0,
+          "matched_pairs": [],
+          "naive_names": [],
+          "returned_names": []
+        },
+        "ner_redact": {
+          "URR": null,
+          "matched": 0,
+          "total_naive": 0,
+          "matched_pairs": [],
+          "naive_names": [],
+          "returned_names": []
+        }
+      }
+    },
+    {
+      "task_num": 5,
+      "domain": "restaurant_booking",
+      "seed_id": "seed_0008",
+      "variant_id": 3,
+      "prompt": "Find me a restaurant with outdoor seating for tomorrow evening, ideally close to downtown. It’s important that they offer vegetarian and gluten-free dishes since I have a seafood allergy. Also, I'd prefer something affordable, so I’d love to avoid any pricey places.",
+      "metrics": {
+        "naive": {
+          "URR": 1.0,
+          "matched": 5,
+          "total_naive": 5,
+          "matched_pairs": [
+            [
+              "Salena's Italian Restaurant",
+              "Salena's Italian Restaurant"
+            ],
+            [
+              "The Owl House",
+              "The Owl House"
+            ],
+            [
+              "Good Luck",
+              "Good Luck"
+            ],
+            [
+              "The Red Fern",
+              "The Red Fern"
+            ],
+            [
+              "Neno's Cafe",
+              "Neno's Cafe"
+            ]
+          ],
+          "naive_names": [
+            "Salena's Italian Restaurant",
+            "The Owl House",
+            "Good Luck",
+            "The Red Fern",
+            "Neno's Cafe"
+          ],
+          "returned_names": [
+            "Salena's Italian Restaurant",
+            "The Owl House",
+            "Good Luck",
+            "The Red Fern",
+            "Neno's Cafe"
+          ]
+        },
+        "privacyscope": {
+          "URR": 0.0,
+          "matched": 0,
+          "total_naive": 5,
+          "matched_pairs": [],
+          "naive_names": [
+            "Salena's Italian Restaurant",
+            "The Owl House",
+            "Good Luck",
+            "The Red Fern",
+            "Neno's Cafe"
+          ],
+          "returned_names": [
+            "The Patio Restaurant",
+            "Bistro Garden",
+            "Al Fresco Dining",
+            "The Rooftop Grill",
+            "Urban Outdoor Cafe"
+          ]
+        },
+        "ner_redact": {
+          "URR": 0.0,
+          "matched": 0,
+          "total_naive": 5,
+          "matched_pairs": [],
+          "naive_names": [
+            "Salena's Italian Restaurant",
+            "The Owl House",
+            "Good Luck",
+            "The Red Fern",
+            "Neno's Cafe"
+          ],
+          "returned_names": [
+            "Green Leaf Kitchen",
+            "Purely Plant-Based Café",
+            "The Herb Garden",
+            "Blissful Bites",
+            "Nature's Plate"
+          ]
+        }
+      }
+    }
+  ]
+}

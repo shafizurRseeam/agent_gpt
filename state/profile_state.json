@@ -1,0 +1,25 @@
+{
+  "user_profile": {
+    "name": "Bob Smith",
+    "age": 32,
+    "dob": "July 14, 1993",
+    "address": "12 ABC St, Rochester, NY",
+    "phone": "585-555-1212",
+    "email": "bob@example.com",
+
+    "ssn": "123-45-6789",
+    "passport_number": "X12345678",
+    "driver_license": "D1234567",
+    "insurance_id": "BC-123456-A9",
+    "patient_id": "PAT-00991",
+
+    "credit_card": "4111 1111 1111 1111",
+    "membership_id": "MEM-4455",
+    "frequent_flyer_number": "FF-998877",
+    "hotel_loyalty_id": "HIL-12345",
+    "vehicle_plate": "ABC-1234",
+
+    "insurance": "BlueCross Dental Plus"
+  },
+  "contacts": []
+}

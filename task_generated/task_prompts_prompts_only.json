@@ -1,0 +1,1258 @@
+[
+  {
+    "seed_id": "seed_0000",
+    "variant_id": 0,
+    "domain": "travel_booking",
+    "prompt": "Can you help me book a nonstop flight for my family, including my toddler, since we need to return quickly? We're flexible with our dates but ideally want to keep our budget around $500. Also, please make sure to request wheelchair assistance for my partner.",
+    "sensitive_info": [
+      "budget concerns",
+      "wheelchair assistance",
+      "child travel"
+    ]
+  },
+  {
+    "seed_id": "seed_0000",
+    "variant_id": 1,
+    "domain": "travel_booking",
+    "prompt": "I'm looking for a nonstop flight that can accommodate my child and provide wheelchair assistance for my husband. Our travel plans are flexible, but we'd like to keep the costs under $600 since we have a tight budget. We need to get back home quickly, so could you find something that works?",
+    "sensitive_info": [
+      "budget concerns",
+      "wheelchair assistance",
+      "child travel"
+    ]
+  },
+  {
+    "seed_id": "seed_0000",
+    "variant_id": 2,
+    "domain": "travel_booking",
+    "prompt": "Please find me a nonstop flight as soon as possible for my family. We have a child traveling with us and will need wheelchair assistance for my spouse. Our budget is limited to about $550, and we’re open to any dates that will work.",
+    "sensitive_info": [
+      "budget concerns",
+      "wheelchair assistance",
+      "child travel"
+    ]
+  },
+  {
+    "seed_id": "seed_0000",
+    "variant_id": 3,
+    "domain": "travel_booking",
+    "prompt": "I need help scheduling a flight back home soon, and a nonstop option is really important since I'm traveling with my child. Could you look up flights within our budget of $500 and make sure to add wheelchair assistance for my partner? We're flexible on dates if that helps.",
+    "sensitive_info": [
+      "budget concerns",
+      "wheelchair assistance",
+      "child travel"
+    ]
+  },
+  {
+    "seed_id": "seed_0001",
+    "variant_id": 0,
+    "domain": "medical_booking",
+    "prompt": "I recently visited urgent care for my eczema and headaches, but the over-the-counter medication isn't working. Can you help me book a follow-up appointment with a specialist this week? I’d prefer it to be before noon and within 20 minutes of my home.",
+    "sensitive_info": [
+      "eczema",
+      "headaches"
+    ]
+  },
+  {
+    "seed_id": "seed_0001",
+    "variant_id": 1,
+    "domain": "medical_booking",
+    "prompt": "I've been struggling with eczema and headaches since my urgent care visit, and I really need to see a specialist this week. Please find me an appointment before noon, ideally somewhere close that I can get to in about 20 minutes. I want to find a solution quickly!",
+    "sensitive_info": [
+      "eczema",
+      "headaches"
+    ]
+  },
+  {
+    "seed_id": "seed_0001",
+    "variant_id": 2,
+    "domain": "medical_booking",
+    "prompt": "I need to follow up on my eczema and persistent headaches after going to urgent care. It’s been a week, and I still don't feel better with the over-the-counter treatment. Can you schedule an appointment with a specialist for me this week, ideally before noon and within a 20-minute drive?",
+    "sensitive_info": [
+      "eczema",
+      "headaches"
+    ]
+  },
+  {
+    "seed_id": "seed_0001",
+    "variant_id": 3,
+    "domain": "medical_booking",
+    "prompt": "After my trip to urgent care for eczema and headaches, I'm still having issues and need to see a specialist soon. Can you set up a follow-up appointment this week, preferably in the morning before noon? I’d like to keep it within 20 minutes from where I live if possible.",
+    "sensitive_info": [
+      "eczema",
+      "headaches"
+    ]
+  },
+  {
+    "seed_id": "seed_0002",
+    "variant_id": 0,
+    "domain": "medical_booking",
+    "prompt": "Can you help me book an appointment with a highly rated endocrinologist? I need to get checked soon for my insulin management, and I prefer a time after work, but it must be before noon. Also, I have a history of surgery, so I want someone who understands that.",
+    "sensitive_info": [
+      "insulin",
+      "surgery history"
+    ]
+  },
+  {
+    "seed_id": "seed_0002",
+    "variant_id": 1,
+    "domain": "medical_booking",
+    "prompt": "I'd like to schedule an appointment with a top-rated doctor who specializes in diabetes after 5 PM but before noon the next day. My insulin levels have been fluctuating quite a bit throughout the day, and I want to make sure I'm checked soon, especially considering my previous surgeries.",
+    "sensitive_info": [
+      "insulin",
+      "surgery history"
+    ]
+  },
+  {
+    "seed_id": "seed_0002",
+    "variant_id": 2,
+    "domain": "medical_booking",
+    "prompt": "Please find me an appointment with a highly rated medical professional familiar with insulin issues. I need it after work hours, but it has to be before noon. Given my surgery history, I want to ensure that I get the appropriate care soon.",
+    "sensitive_info": [
+      "insulin",
+      "surgery history"
+    ]
+  },
+  {
+    "seed_id": "seed_0002",
+    "variant_id": 3,
+    "domain": "medical_booking",
+    "prompt": "I urgently need to see a highly rated doctor for my insulin concerns, they've been acting up lately. Can you book an appointment after my work hours but definitely before noon? It’s important to find someone who can take my surgery history into account.",
+    "sensitive_info": [
+      "insulin",
+      "surgery history"
+    ]
+  },
+  {
+    "seed_id": "seed_0003",
+    "variant_id": 0,
+    "domain": "medical_booking",
+    "prompt": "I need to book an appointment at a clinic near my home for tomorrow morning. I've been experiencing shortness of breath that seems to come and go, and since I'm pregnant, I want to make sure everything is okay. I can't wait too long to be seen, so if you could find a place with minimal wait times, that would be great.",
+    "sensitive_info": [
+      "ER visit",
+      "pregnancy",
+      "shortness of breath"
+    ]
+  },
+  {
+    "seed_id": "seed_0003",
+    "variant_id": 1,
+    "domain": "medical_booking",
+    "prompt": "Can you help me schedule a clinic appointment for tomorrow morning? I live close to Main Street, and I've had some ongoing shortness of breath since my ER visit last week. As I'm currently pregnant, I'm hoping for a quick visit without much waiting.",
+    "sensitive_info": [
+      "ER visit",
+      "pregnancy",
+      "shortness of breath"
+    ]
+  },
+  {
+    "seed_id": "seed_0003",
+    "variant_id": 2,
+    "domain": "medical_booking",
+    "prompt": "Hello, I'd like to book a clinic appointment for tomorrow morning, preferably near my house. I've been having episodes of shortness of breath, particularly since my recent ER visit, and considering my pregnancy, I’d really like to avoid any long waits. Please let me know what options are available.",
+    "sensitive_info": [
+      "ER visit",
+      "pregnancy",
+      "shortness of breath"
+    ]
+  },
+  {
+    "seed_id": "seed_0003",
+    "variant_id": 3,
+    "domain": "medical_booking",
+    "prompt": "I need to see a doctor tomorrow morning because I'm having significant shortness of breath. I've rested and used ice, but it hasn't been enough, and with my pregnancy, I'm a bit worried. Can you find a clinic near me that won’t make me wait too long for an appointment?",
+    "sensitive_info": [
+      "ER visit",
+      "pregnancy",
+      "shortness of breath"
+    ]
+  },
+  {
+    "seed_id": "seed_0004",
+    "variant_id": 0,
+    "domain": "restaurant_booking",
+    "prompt": "Can you book an outdoor table for me and my partner at a vegetarian-friendly restaurant near my home for our anniversary dinner tonight? We really don't want to be in a crowded place, so if you could find a quieter spot, that would be great.",
+    "sensitive_info": [
+      "anniversary",
+      "vegetarian",
+      "vegan"
+    ]
+  },
+  {
+    "seed_id": "seed_0004",
+    "variant_id": 1,
+    "domain": "restaurant_booking",
+    "prompt": "I'd love it if you could make a reservation for two at a vegan restaurant close to my house, ideally with outdoor seating. It's our anniversary tonight, and we'd prefer somewhere not too busy. Please check for availability for a nice, relaxing dinner.",
+    "sensitive_info": [
+      "anniversary",
+      "vegetarian",
+      "vegan"
+    ]
+  },
+  {
+    "seed_id": "seed_0004",
+    "variant_id": 2,
+    "domain": "restaurant_booking",
+    "prompt": "Please secure a table for me and my spouse for our anniversary tonight at a vegetarian restaurant not too far from home. We're looking for outdoor seating and would appreciate a quieter atmosphere, avoiding any crowded venues if possible.",
+    "sensitive_info": [
+      "anniversary",
+      "vegetarian",
+      "vegan"
+    ]
+  },
+  {
+    "seed_id": "seed_0004",
+    "variant_id": 3,
+    "domain": "restaurant_booking",
+    "prompt": "For our anniversary dinner tonight, could you find me a vegan-friendly restaurant nearby and book an outdoor table? We appreciate a tranquil dining experience, so if you could steer clear of the crowded places, that would be fantastic.",
+    "sensitive_info": [
+      "anniversary",
+      "vegetarian",
+      "vegan"
+    ]
+  },
+  {
+    "seed_id": "seed_0005",
+    "variant_id": 0,
+    "domain": "medical_booking",
+    "prompt": "Hey, I need to see a specialist about my anxiety since my doctor prescribed antidepressants. I've tried rest and ice, but I feel like I need more help. Can you find me the earliest available appointment with a highly rated provider within 20 minutes?",
+    "sensitive_info": [
+      "antidepressants",
+      "anxiety history"
+    ]
+  },
+  {
+    "seed_id": "seed_0005",
+    "variant_id": 1,
+    "domain": "medical_booking",
+    "prompt": "I'm looking to schedule an appointment with a mental health specialist because my doctor suggested it after I’ve been on antidepressants. I’ve already tried some home remedies like rest and ice, but I'm feeling pretty overwhelmed. Can you check for the earliest open slot with a top-rated provider nearby?",
+    "sensitive_info": [
+      "antidepressants",
+      "anxiety history"
+    ]
+  },
+  {
+    "seed_id": "seed_0005",
+    "variant_id": 2,
+    "domain": "medical_booking",
+    "prompt": "I’ve been dealing with anxiety, and my doctor mentioned seeing a specialist since I’ve been on antidepressants. I've tried self-care options like resting and using ice, but those aren't enough. Can you help me find the first available appointment within 20 minutes at a well-reviewed clinic?",
+    "sensitive_info": [
+      "antidepressants",
+      "anxiety history"
+    ]
+  },
+  {
+    "seed_id": "seed_0005",
+    "variant_id": 3,
+    "domain": "medical_booking",
+    "prompt": "Can you help me find a mental health specialist for my anxiety? My doctor put me on antidepressants, and I think it's time to get checked out since resting and icing didn’t really help. Please look for the soonest appointment with a high-rated provider that's within 20 minutes from me.",
+    "sensitive_info": [
+      "antidepressants",
+      "anxiety history"
+    ]
+  },
+  {
+    "seed_id": "seed_0006",
+    "variant_id": 0,
+    "domain": "travel_booking",
+    "prompt": "Could you help me find round-trip flights for a medical appointment I have next month? I need to travel with some flexibility in my dates, but I want to make sure the layover isn’t too long as I’ll need wheelchair assistance. I also want to keep the trip as affordable as possible.",
+    "sensitive_info": [
+      "medical trip",
+      "wheelchair assistance"
+    ]
+  },
+  {
+    "seed_id": "seed_0006",
+    "variant_id": 1,
+    "domain": "travel_booking",
+    "prompt": "I'm looking to book a round-trip flight for my medical trip and I need some assistance. I have some flexibility with my travel dates but would appreciate options that involve short layovers because I require wheelchair assistance. Please help me find the most budget-friendly options available.",
+    "sensitive_info": [
+      "medical trip",
+      "wheelchair assistance"
+    ]
+  },
+  {
+    "seed_id": "seed_0006",
+    "variant_id": 2,
+    "domain": "travel_booking",
+    "prompt": "Can you assist me in finding a round-trip flight for my upcoming medical visit? I need something that can accommodate flexible dates but limits the layover duration since I’ll be needing wheelchair assistance. Also, my priority is to keep the overall cost down.",
+    "sensitive_info": [
+      "medical trip",
+      "wheelchair assistance"
+    ]
+  },
+  {
+    "seed_id": "seed_0006",
+    "variant_id": 3,
+    "domain": "travel_booking",
+    "prompt": "I need to book a round-trip flight for a medical trip soon. If possible, I’d like to see options with flexible dates but very short layovers since I have wheelchair assistance needs. Keeping the fare affordable is really important to me, too. Can you help with that?",
+    "sensitive_info": [
+      "medical trip",
+      "wheelchair assistance"
+    ]
+  },
+  {
+    "seed_id": "seed_0007",
+    "variant_id": 0,
+    "domain": "medical_booking",
+    "prompt": "I need to schedule a follow-up appointment with a dermatologist for my eczema. Can you find me a specialist who accepts my insurance and has availability before noon? It’s been acting up and I want to get it sorted out as soon as possible.",
+    "sensitive_info": [
+      "eczema",
+      "knee pain"
+    ]
+  },
+  {
+    "seed_id": "seed_0007",
+    "variant_id": 1,
+    "domain": "medical_booking",
+    "prompt": "Could you help me find an orthopedic specialist for my knee pain? I'm looking for someone who accepts my insurance and can see me before noon. I just need a follow-up after my urgent care visit, and I'd like the earliest appointment available.",
+    "sensitive_info": [
+      "eczema",
+      "knee pain"
+    ]
+  },
+  {
+    "seed_id": "seed_0007",
+    "variant_id": 2,
+    "domain": "medical_booking",
+    "prompt": "I've been dealing with eczema and it’s pretty uncomfortable. Can you locate a dermatologist who takes my insurance and has early morning appointments? I would really appreciate getting in before noon if possible.",
+    "sensitive_info": [
+      "eczema",
+      "knee pain"
+    ]
+  },
+  {
+    "seed_id": "seed_0007",
+    "variant_id": 3,
+    "domain": "medical_booking",
+    "prompt": "I have some knee pain that I would like to get evaluated. Can you find a specialist who can fit me in for a follow-up appointment this morning? Just make sure they accept my insurance and can see me before noon.",
+    "sensitive_info": [
+      "eczema",
+      "knee pain"
+    ]
+  },
+  {
+    "seed_id": "seed_0008",
+    "variant_id": 0,
+    "domain": "restaurant_booking",
+    "prompt": "Can you help me find a restaurant with outdoor seating for tomorrow evening? I'd really prefer a place that caters to vegetarians and has gluten-free options since I have a seafood allergy. Also, if possible, I’d like to avoid anything too expensive and find something near downtown.",
+    "sensitive_info": [
+      "vegetarian",
+      "gluten-free",
+      "seafood allergy"
+    ]
+  },
+  {
+    "seed_id": "seed_0008",
+    "variant_id": 1,
+    "domain": "restaurant_booking",
+    "prompt": "I'm looking for a nearby restaurant that has outdoor seating for dinner tomorrow night. It needs to be vegetarian-friendly and gluten-free because I have a seafood allergy. Could you also make sure it doesn’t break the bank? I’d like to arrive within 15 minutes.",
+    "sensitive_info": [
+      "vegetarian",
+      "gluten-free",
+      "seafood allergy"
+    ]
+  },
+  {
+    "seed_id": "seed_0008",
+    "variant_id": 2,
+    "domain": "restaurant_booking",
+    "prompt": "Could you search for a place to eat outdoors tomorrow evening? I need vegetarian and gluten-free options due to my seafood allergy. Please keep it budget-friendly and close to downtown, and I'd like to get there within the next 15 minutes.",
+    "sensitive_info": [
+      "vegetarian",
+      "gluten-free",
+      "seafood allergy"
+    ]
+  },
+  {
+    "seed_id": "seed_0008",
+    "variant_id": 3,
+    "domain": "restaurant_booking",
+    "prompt": "Find me a restaurant with outdoor seating for tomorrow evening, ideally close to downtown. It’s important that they offer vegetarian and gluten-free dishes since I have a seafood allergy. Also, I'd prefer something affordable, so I’d love to avoid any pricey places.",
+    "sensitive_info": [
+      "vegetarian",
+      "gluten-free",
+      "seafood allergy"
+    ]
+  },
+  {
+    "seed_id": "seed_0009",
+    "variant_id": 0,
+    "domain": "travel_booking",
+    "prompt": "Can you help me find a one-way flight for my medical trip? I need to keep the total cost low, so I can only bring a carry-on. I’m looking for the quickest option available.",
+    "sensitive_info": [
+      "budget concerns",
+      "medical trip"
+    ]
+  },
+  {
+    "seed_id": "seed_0009",
+    "variant_id": 1,
+    "domain": "travel_booking",
+    "prompt": "I need to book a one-way flight for a medical appointment, but my budget is tight. Could you find me the best fares that allow only a carry-on? I want to get there as soon as possible.",
+    "sensitive_info": [
+      "budget concerns",
+      "medical trip"
+    ]
+  },
+  {
+    "seed_id": "seed_0009",
+    "variant_id": 2,
+    "domain": "travel_booking",
+    "prompt": "I’m planning a one-way trip for a medical issue and really need to stick to a tight budget. Can you find a quick flight option that only allows a carry-on? I want to make this as easy as possible.",
+    "sensitive_info": [
+      "budget concerns",
+      "medical trip"
+    ]
+  },
+  {
+    "seed_id": "seed_0009",
+    "variant_id": 3,
+    "domain": "travel_booking",
+    "prompt": "Could you search for a one-way flight for my upcoming medical travel? I have some budget limitations and will only have a carry-on, so I'm hoping to find a quick option that won't break the bank.",
+    "sensitive_info": [
+      "budget concerns",
+      "medical trip"
+    ]
+  },
+  {
+    "seed_id": "seed_0010",
+    "variant_id": 0,
+    "domain": "travel_booking",
+    "prompt": "Can you help me book a flight and hotel for this weekend? I want something reliable because I’m visiting my partner long distance, and I’d prefer to leave in the morning for an early arrival. My budget is a bit tight, so please keep that in mind.",
+    "sensitive_info": [
+      "budget concerns",
+      "long-distance relationship"
+    ]
+  },
+  {
+    "seed_id": "seed_0010",
+    "variant_id": 1,
+    "domain": "travel_booking",
+    "prompt": "I need to travel to see my girlfriend this weekend. Could you find me a good morning flight and a decent hotel? I’d appreciate it if you could focus on options that fit a budget since I want to get there quickly without breaking the bank.",
+    "sensitive_info": [
+      "budget concerns",
+      "long-distance relationship"
+    ]
+  },
+  {
+    "seed_id": "seed_0010",
+    "variant_id": 2,
+    "domain": "travel_booking",
+    "prompt": "I’m planning to visit my boyfriend next week and need help booking flights and accommodation. If possible, I’d like a morning flight for a quicker arrival. Since I'm on a tighter budget, I'd love to see affordable options you can find for a reliable airline.",
+    "sensitive_info": [
+      "budget concerns",
+      "long-distance relationship"
+    ]
+  },
+  {
+    "seed_id": "seed_0010",
+    "variant_id": 3,
+    "domain": "travel_booking",
+    "prompt": "Could you assist me in booking a flight and a hotel for this weekend? I need to leave in the morning to see my partner, and cost is important, so please focus on affordable choices. I’m looking for a reliable airline to ensure I get there as soon as possible.",
+    "sensitive_info": [
+      "budget concerns",
+      "long-distance relationship"
+    ]
+  },
+  {
+    "seed_id": "seed_0011",
+    "variant_id": 0,
+    "domain": "travel_booking",
+    "prompt": "I need to book a flight for my family emergency next week. It has to be in the morning because I don't want to travel alone late at night. If possible, please look for options that are refundable and keep the costs low.",
+    "sensitive_info": [
+      "family emergency",
+      "dietary restriction",
+      "anxiety"
+    ]
+  },
+  {
+    "seed_id": "seed_0011",
+    "variant_id": 1,
+    "domain": "travel_booking",
+    "prompt": "Can you help me find a morning flight for next week? I need to attend a family emergency and I prefer refundable tickets because of my anxiety traveling alone. Also, I have dietary restrictions, so I’ll need a meal option that caters to that.",
+    "sensitive_info": [
+      "family emergency",
+      "dietary restriction",
+      "anxiety"
+    ]
+  },
+  {
+    "seed_id": "seed_0011",
+    "variant_id": 2,
+    "domain": "travel_booking",
+    "prompt": "I'm looking to fly out next week due to a family emergency, and I want to leave in the morning. I really prefer refundable tickets since that would give me some peace of mind given I'll be traveling alone, especially at night. If you could find a budget-friendly option that accommodates my dietary restrictions, that would be great.",
+    "sensitive_info": [
+      "family emergency",
+      "dietary restriction",
+      "anxiety"
+    ]
+  },
+  {
+    "seed_id": "seed_0011",
+    "variant_id": 3,
+    "domain": "travel_booking",
+    "prompt": "Please book a morning flight for me next week; it's for a family emergency. I want the flight to be refundable just in case, and since I’m anxious about traveling at night, a low-cost option would actually help me feel more comfortable. Also, make sure they can provide meals that meet my dietary restrictions.",
+    "sensitive_info": [
+      "family emergency",
+      "dietary restriction",
+      "anxiety"
+    ]
+  },
+  {
+    "seed_id": "seed_0012",
+    "variant_id": 0,
+    "domain": "medical_booking",
+    "prompt": "Please help me get a doctor appointment — near my work, earliest available appointment, near my home. I have been dealing with blood thinners. I do not want to wait too long. I really need to get checked soon.",
+    "sensitive_info": [
+      "blood thinners",
+      "headaches",
+      "ER visit"
+    ]
+  },
+  {
+    "seed_id": "seed_0012",
+    "variant_id": 1,
+    "domain": "medical_booking",
+    "prompt": "I'd like to help me get a doctor appointment — near my work, earliest available appointment, near my home. I have been dealing with headaches. I do not want to wait too long. I really need to get checked soon.",
+    "sensitive_info": [
+      "blood thinners",
+      "headaches",
+      "ER visit"
+    ]
+  },
+  {
+    "seed_id": "seed_0012",
+    "variant_id": 2,
+    "domain": "medical_booking",
+    "prompt": "Please help me get a doctor appointment — near my work, earliest available appointment, near my home. I have been dealing with headaches. I do not want to wait too long. I really need to get checked soon.",
+    "sensitive_info": [
+      "blood thinners",
+      "headaches",
+      "ER visit"
+    ]
+  },
+  {
+    "seed_id": "seed_0012",
+    "variant_id": 3,
+    "domain": "medical_booking",
+    "prompt": "Can you help me help me get a doctor appointment — near my work, earliest available appointment, near my home? I have been dealing with headaches. I do not want to wait too long. I really need to get checked soon.",
+    "sensitive_info": [
+      "blood thinners",
+      "headaches",
+      "ER visit"
+    ]
+  },
+  {
+    "seed_id": "seed_0013",
+    "variant_id": 0,
+    "domain": "medical_booking",
+    "prompt": "Hi, I need to schedule a checkup with a female provider who accepts my insurance. I've been experiencing dizziness, migraines, and back pain, so I'd like to see a specialist as soon as possible. Ideally, I’d like the appointment to be somewhere close to my office if that’s available.",
+    "sensitive_info": [
+      "dizziness",
+      "migraine",
+      "back pain"
+    ]
+  },
+  {
+    "seed_id": "seed_0013",
+    "variant_id": 1,
+    "domain": "medical_booking",
+    "prompt": "Can you help me find a female doctor who can see me for my checkup? I’ve been suffering from dizziness and frequent migraines, plus my back has been bothering me. It's important that they accept my insurance and are located near my workplace, as I’m hoping to get in quickly.",
+    "sensitive_info": [
+      "dizziness",
+      "migraine",
+      "back pain"
+    ]
+  },
+  {
+    "seed_id": "seed_0013",
+    "variant_id": 2,
+    "domain": "medical_booking",
+    "prompt": "I need to book a checkup soon because I’ve been feeling dizzy and having migraines, along with some back pain. I’d prefer a female provider who takes my insurance and is located near my office. Can you check for available appointments this week?",
+    "sensitive_info": [
+      "dizziness",
+      "migraine",
+      "back pain"
+    ]
+  },
+  {
+    "seed_id": "seed_0013",
+    "variant_id": 3,
+    "domain": "medical_booking",
+    "prompt": "I'm looking to schedule a checkup with a specialist, particularly a female doctor, because I've been dealing with dizziness, migraines, and back pain. Please make sure they accept my insurance and that the location is convenient to my workplace, as I really want to address this quickly.",
+    "sensitive_info": [
+      "dizziness",
+      "migraine",
+      "back pain"
+    ]
+  },
+  {
+    "seed_id": "seed_0014",
+    "variant_id": 0,
+    "domain": "travel_booking",
+    "prompt": "Hey, could you help me find a nonstop round-trip flight for my medical appointment? I'm hoping for something from the closest airport since I need wheelchair assistance. Also, I’m working with a tight budget, so please keep that in mind as well.",
+    "sensitive_info": [
+      "medical trip",
+      "budget concerns",
+      "anxiety"
+    ]
+  },
+  {
+    "seed_id": "seed_0014",
+    "variant_id": 1,
+    "domain": "travel_booking",
+    "prompt": "Hi there! I'm looking to book a nonstop round-trip flight to get to my medical consultation. I really need it to be from a nearby airport because I require wheelchair assistance and unfortunately, my anxiety makes travel harder for me. Additionally, can you suggest options that fit within a reasonable budget?",
+    "sensitive_info": [
+      "medical trip",
+      "budget concerns",
+      "anxiety"
+    ]
+  },
+  {
+    "seed_id": "seed_0014",
+    "variant_id": 2,
+    "domain": "travel_booking",
+    "prompt": "Can you assist me in finding a nonstop round-trip flight to my medical trip? It's important that it's from a nearby airport because I’ll need wheelchair support. Also, I'd appreciate if you could focus on budget-friendly options since I want to keep my expenses low.",
+    "sensitive_info": [
+      "medical trip",
+      "budget concerns",
+      "anxiety"
+    ]
+  },
+  {
+    "seed_id": "seed_0014",
+    "variant_id": 3,
+    "domain": "travel_booking",
+    "prompt": "I need some help booking a nonstop round-trip flight for a medical trip, preferably from the closest airport because I need wheelchair assistance. Travel always makes me anxious, so quick arrangements would be ideal. Please make sure the suggestions are affordable too.",
+    "sensitive_info": [
+      "medical trip",
+      "budget concerns",
+      "anxiety"
+    ]
+  },
+  {
+    "seed_id": "seed_0015",
+    "variant_id": 0,
+    "domain": "restaurant_booking",
+    "prompt": "Please book a dinner reservation — for 4 people, highly rated, tomorrow evening. I have been dealing with gluten-free. I want to make sure the service is reliable. I really need to make the evening go well.",
+    "sensitive_info": [
+      "gluten-free",
+      "coworker dinner"
+    ]
+  },
+  {
+    "seed_id": "seed_0015",
+    "variant_id": 1,
+    "domain": "restaurant_booking",
+    "prompt": "I need you to book a dinner reservation — for 4 people, highly rated, tomorrow evening. I have been dealing with coworker dinner. I want to make sure the service is reliable. I really need to make the evening go well.",
+    "sensitive_info": [
+      "gluten-free",
+      "coworker dinner"
+    ]
+  },
+  {
+    "seed_id": "seed_0015",
+    "variant_id": 2,
+    "domain": "restaurant_booking",
+    "prompt": "Can you help me book a dinner reservation — for 4 people, highly rated, tomorrow evening? I have been dealing with gluten-free. I want to make sure the service is reliable. I really need to make the evening go well.",
+    "sensitive_info": [
+      "gluten-free",
+      "coworker dinner"
+    ]
+  },
+  {
+    "seed_id": "seed_0015",
+    "variant_id": 3,
+    "domain": "restaurant_booking",
+    "prompt": "I need you to book a dinner reservation — for 4 people, highly rated, tomorrow evening. I have been dealing with coworker dinner. I want to make sure the service is reliable. I really need to make the evening go well.",
+    "sensitive_info": [
+      "gluten-free",
+      "coworker dinner"
+    ]
+  },
+  {
+    "seed_id": "seed_0016",
+    "variant_id": 0,
+    "domain": "restaurant_booking",
+    "prompt": "Can you help me book a casual outdoor lunch for my family this Saturday? I’d prefer somewhere close to home that serves halal food. I want to keep things simple and relaxed.",
+    "sensitive_info": [
+      "halal",
+      "coworker dinner",
+      "family dinner"
+    ]
+  },
+  {
+    "seed_id": "seed_0016",
+    "variant_id": 1,
+    "domain": "restaurant_booking",
+    "prompt": "Could you find a casual restaurant with outdoor seating for a coworker dinner on Friday? It’s important that they offer halal options and are located near my place. I want a laid-back vibe for this get-together.",
+    "sensitive_info": [
+      "halal",
+      "coworker dinner",
+      "family dinner"
+    ]
+  },
+  {
+    "seed_id": "seed_0016",
+    "variant_id": 2,
+    "domain": "restaurant_booking",
+    "prompt": "I need to reserve a table for lunch tomorrow, preferably outdoors. It’s a family gathering, and we’d like somewhere nearby that has halal dishes. Keeping it simple and easy is my priority.",
+    "sensitive_info": [
+      "halal",
+      "coworker dinner",
+      "family dinner"
+    ]
+  },
+  {
+    "seed_id": "seed_0016",
+    "variant_id": 3,
+    "domain": "restaurant_booking",
+    "prompt": "Can you set up a lunch reservation for a casual meal with my coworkers? I’d like to go someplace with outdoor seating and halal menu options, ideally not too far from where I live. I’m aiming for an uncomplicated experience.",
+    "sensitive_info": [
+      "halal",
+      "coworker dinner",
+      "family dinner"
+    ]
+  },
+  {
+    "seed_id": "seed_0017",
+    "variant_id": 0,
+    "domain": "medical_booking",
+    "prompt": "I need you to book a doctor appointment — female provider preferred, before noon. I have been dealing with ER visit. It is interfering with sleep. I really need to avoid waiting too long.",
+    "sensitive_info": [
+      "ER visit",
+      "pregnancy",
+      "antidepressants"
+    ]
+  },
+  {
+    "seed_id": "seed_0017",
+    "variant_id": 1,
+    "domain": "medical_booking",
+    "prompt": "Help me book a doctor appointment — female provider preferred, before noon. I have been dealing with antidepressants. It is interfering with sleep. I really need to avoid waiting too long.",
+    "sensitive_info": [
+      "ER visit",
+      "pregnancy",
+      "antidepressants"
+    ]
+  },
+  {
+    "seed_id": "seed_0017",
+    "variant_id": 2,
+    "domain": "medical_booking",
+    "prompt": "Help me book a doctor appointment — female provider preferred, before noon. I have been dealing with antidepressants. It is interfering with sleep. I really need to avoid waiting too long.",
+    "sensitive_info": [
+      "ER visit",
+      "pregnancy",
+      "antidepressants"
+    ]
+  },
+  {
+    "seed_id": "seed_0017",
+    "variant_id": 3,
+    "domain": "medical_booking",
+    "prompt": "Can you help me book a doctor appointment — female provider preferred, before noon? I have been dealing with ER visit. It is interfering with sleep. I really need to avoid waiting too long.",
+    "sensitive_info": [
+      "ER visit",
+      "pregnancy",
+      "antidepressants"
+    ]
+  },
+  {
+    "seed_id": "seed_0018",
+    "variant_id": 0,
+    "domain": "restaurant_booking",
+    "prompt": "Can you help me get a lunch reservation for two in a quiet restaurant nearby? It's our anniversary today, and I need to make sure they can accommodate a seafood allergy. Ideally, I'd like to have this booking within 15 minutes.",
+    "sensitive_info": [
+      "anniversary",
+      "seafood allergy"
+    ]
+  },
+  {
+    "seed_id": "seed_0018",
+    "variant_id": 1,
+    "domain": "restaurant_booking",
+    "prompt": "I need a lunch reservation for me and my partner within the next 15 minutes. We're celebrating our anniversary, so I'm looking for a tranquil place. Also, please ensure they can cater to my seafood allergy.",
+    "sensitive_info": [
+      "anniversary",
+      "seafood allergy"
+    ]
+  },
+  {
+    "seed_id": "seed_0018",
+    "variant_id": 2,
+    "domain": "restaurant_booking",
+    "prompt": "Could you find me a nice, quiet restaurant for lunch? I need a reservation for two people in the next 15 minutes because we're celebrating our anniversary. It's important that you check for any seafood allergy accommodations.",
+    "sensitive_info": [
+      "anniversary",
+      "seafood allergy"
+    ]
+  },
+  {
+    "seed_id": "seed_0018",
+    "variant_id": 3,
+    "domain": "restaurant_booking",
+    "prompt": "I’m looking for a lunch spot that's calming and not too busy. Can you book a table for two within 15 minutes for my anniversary? Also, one of us has a seafood allergy, so make sure the place can handle that.",
+    "sensitive_info": [
+      "anniversary",
+      "seafood allergy"
+    ]
+  },
+  {
+    "seed_id": "seed_0019",
+    "variant_id": 0,
+    "domain": "restaurant_booking",
+    "prompt": "Can you please book a table for four for our family dinner tonight? We have a nut allergy, so please ensure the restaurant is aware of that. I’d like to go somewhere with a shorter wait time since I want the evening to be smooth and worry-free.",
+    "sensitive_info": [
+      "family dinner",
+      "nut allergy"
+    ]
+  },
+  {
+    "seed_id": "seed_0019",
+    "variant_id": 1,
+    "domain": "restaurant_booking",
+    "prompt": "I need you to reserve a table for us tomorrow evening. It’s a family dinner, and my cousin has a nut allergy, so check if the restaurant can accommodate that. It would be great if we could avoid a long wait, as I want the night to go smoothly.",
+    "sensitive_info": [
+      "family dinner",
+      "nut allergy"
+    ]
+  },
+  {
+    "seed_id": "seed_0019",
+    "variant_id": 2,
+    "domain": "restaurant_booking",
+    "prompt": "Please help me find a restaurant for a family dinner this weekend. We’re dealing with a nut allergy, so please make sure there's an option that can cater to that. I’d appreciate a place where we won’t have to wait too long.",
+    "sensitive_info": [
+      "family dinner",
+      "nut allergy"
+    ]
+  },
+  {
+    "seed_id": "seed_0019",
+    "variant_id": 3,
+    "domain": "restaurant_booking",
+    "prompt": "Can you arrange a dinner reservation for my family tonight? We have someone with a nut allergy, so it’s essential that the restaurant can handle it. I'd prefer a place that doesn’t have a lengthy wait time so we can enjoy our evening without delays.",
+    "sensitive_info": [
+      "family dinner",
+      "nut allergy"
+    ]
+  },
+  {
+    "seed_id": "seed_0020",
+    "variant_id": 0,
+    "domain": "travel_booking",
+    "prompt": "Hi, I need to book a hotel for a short layover during my round trip. I'm traveling for a funeral, and I want to keep the costs low since I also have some visa issues to deal with. Could you find the best budget option quickly? Thanks!",
+    "sensitive_info": [
+      "visa issue",
+      "funeral travel"
+    ]
+  },
+  {
+    "seed_id": "seed_0020",
+    "variant_id": 1,
+    "domain": "travel_booking",
+    "prompt": "Could you help me find a cheap hotel for my layover? I'm flying round trip for a funeral and I’m trying to minimize expenses because of some visa complications. Please let me know the best available options as soon as possible.",
+    "sensitive_info": [
+      "visa issue",
+      "funeral travel"
+    ]
+  },
+  {
+    "seed_id": "seed_0020",
+    "variant_id": 2,
+    "domain": "travel_booking",
+    "prompt": "I have a round trip planned for a funeral, and I'm looking for a hotel to stay during my short layover. I'm dealing with some visa issues, so I'd appreciate it if you could find the most affordable choices quickly. Time is a bit of a concern, so please hurry!",
+    "sensitive_info": [
+      "visa issue",
+      "funeral travel"
+    ]
+  },
+  {
+    "seed_id": "seed_0020",
+    "variant_id": 3,
+    "domain": "travel_booking",
+    "prompt": "Can you set me up with a hotel booking for my upcoming round trip? I have a short layover and will be traveling for a funeral, so finding an economical place is a must since I’m also facing some visa issues. Speedy assistance would be greatly appreciated.",
+    "sensitive_info": [
+      "visa issue",
+      "funeral travel"
+    ]
+  },
+  {
+    "seed_id": "seed_0021",
+    "variant_id": 0,
+    "domain": "restaurant_booking",
+    "prompt": "Could you help me book a table for four at a nice restaurant this weekend? We really want a place conducive for conversation, but I have a seafood allergy and need to ensure there are options for me. Also, let's keep the budget in mind since I don't want to go overboard.",
+    "sensitive_info": [
+      "seafood allergy",
+      "budget concerns"
+    ]
+  },
+  {
+    "seed_id": "seed_0021",
+    "variant_id": 1,
+    "domain": "restaurant_booking",
+    "prompt": "I need a reservation for four people this weekend, ideally at a quiet restaurant where we can have a good conversation. I'm allergic to seafood, so please find a place that has good choices for me. Also, keep in mind that we need to stay within a reasonable budget.",
+    "sensitive_info": [
+      "seafood allergy",
+      "budget concerns"
+    ]
+  },
+  {
+    "seed_id": "seed_0021",
+    "variant_id": 2,
+    "domain": "restaurant_booking",
+    "prompt": "Can you reserve a table for four at a nice restaurant this weekend? It's important that the place is not too noisy because we want to chat. I have a seafood allergy, so make sure the menu is friendly for that, and let’s try not to spend too much either.",
+    "sensitive_info": [
+      "seafood allergy",
+      "budget concerns"
+    ]
+  },
+  {
+    "seed_id": "seed_0021",
+    "variant_id": 3,
+    "domain": "restaurant_booking",
+    "prompt": "Please find a restaurant for four this weekend where we can enjoy some good conversation. I need to avoid seafood due to my allergy, so keep that in mind when selecting a place. Also, let’s keep an eye on the budget, as I want to enjoy the evening without breaking the bank.",
+    "sensitive_info": [
+      "seafood allergy",
+      "budget concerns"
+    ]
+  },
+  {
+    "seed_id": "seed_0022",
+    "variant_id": 0,
+    "domain": "restaurant_booking",
+    "prompt": "Hi there! I need to make a reservation for a quiet dinner this weekend for my birthday. I’d love to find a nice restaurant near my home that won’t be too crowded. Can you help me with that?",
+    "sensitive_info": [
+      "birthday dinner",
+      "coworker dinner",
+      "anniversary"
+    ]
+  },
+  {
+    "seed_id": "seed_0022",
+    "variant_id": 1,
+    "domain": "restaurant_booking",
+    "prompt": "Could you book a table for two at a nice restaurant close to where I live? It’s our anniversary this weekend, and I’d really like it to be a calm atmosphere, away from the busy crowds.",
+    "sensitive_info": [
+      "birthday dinner",
+      "coworker dinner",
+      "anniversary"
+    ]
+  },
+  {
+    "seed_id": "seed_0022",
+    "variant_id": 2,
+    "domain": "restaurant_booking",
+    "prompt": "I’m looking to reserve a spot for a coworker dinner this weekend, preferably somewhere near my place. I'd prefer a less crowded setting since we need a bit more privacy for our conversation. Can you find something suitable?",
+    "sensitive_info": [
+      "birthday dinner",
+      "coworker dinner",
+      "anniversary"
+    ]
+  },
+  {
+    "seed_id": "seed_0022",
+    "variant_id": 3,
+    "domain": "restaurant_booking",
+    "prompt": "Can you help me find a cozy restaurant near my home for a birthday dinner this weekend? I want to avoid busy places if possible, so a quiet spot would be perfect. Thank you!",
+    "sensitive_info": [
+      "birthday dinner",
+      "coworker dinner",
+      "anniversary"
+    ]
+  },
+  {
+    "seed_id": "seed_0023",
+    "variant_id": 0,
+    "domain": "travel_booking",
+    "prompt": "Hi, I have a job interview scheduled for next week, and I need to book a hotel in the city for a few nights. I'll be traveling with just a carry-on, and I also need wheelchair assistance when I arrive. Can you help me find a comfortable place that's close to the interview location?",
+    "sensitive_info": [
+      "pregnancy",
+      "job interview"
+    ]
+  },
+  {
+    "seed_id": "seed_0023",
+    "variant_id": 1,
+    "domain": "travel_booking",
+    "prompt": "I’m traveling for a job interview next week and I need to secure a hotel room. I’m pregnant, so I’d really appreciate a comfortable place with wheelchair accessibility. Also, I’ll only be bringing a carry-on, so something easy to manage would be ideal.",
+    "sensitive_info": [
+      "pregnancy",
+      "job interview"
+    ]
+  },
+  {
+    "seed_id": "seed_0023",
+    "variant_id": 2,
+    "domain": "travel_booking",
+    "prompt": "Can you help me book a hotel for my upcoming job interview next week? I’ll need wheelchair assistance since I’m pregnant, and I want to ensure the trip is easy for me. I’ll just have a carry-on bag, so please find a place that’s convenient and hassle-free.",
+    "sensitive_info": [
+      "pregnancy",
+      "job interview"
+    ]
+  },
+  {
+    "seed_id": "seed_0023",
+    "variant_id": 3,
+    "domain": "travel_booking",
+    "prompt": "Hey, I have a job interview next week and need to book a hotel. Since I'm pregnant, I'm looking for a wheelchair-friendly option close to the interview venue. Also, I’ll be traveling light with only my carry-on, so I’d appreciate your help finding a good spot!",
+    "sensitive_info": [
+      "pregnancy",
+      "job interview"
+    ]
+  },
+  {
+    "seed_id": "seed_0024",
+    "variant_id": 0,
+    "domain": "travel_booking",
+    "prompt": "Help me find a flight and hotel booking — refundable option preferred, nonstop preferred. I have been dealing with wheelchair assistance. I need to return quickly. I really need to find the best option soon.",
+    "sensitive_info": [
+      "wheelchair assistance",
+      "job interview",
+      "funeral travel"
+    ]
+  },
+  {
+    "seed_id": "seed_0024",
+    "variant_id": 1,
+    "domain": "travel_booking",
+    "prompt": "Can you help me find a flight and hotel booking — refundable option preferred, nonstop preferred? I have been dealing with wheelchair assistance. I need to return quickly. I really need to find the best option soon.",
+    "sensitive_info": [
+      "wheelchair assistance",
+      "job interview",
+      "funeral travel"
+    ]
+  },
+  {
+    "seed_id": "seed_0024",
+    "variant_id": 2,
+    "domain": "travel_booking",
+    "prompt": "I'd like to find a flight and hotel booking — refundable option preferred, nonstop preferred. I have been dealing with job interview. I need to return quickly. I really need to find the best option soon.",
+    "sensitive_info": [
+      "wheelchair assistance",
+      "job interview",
+      "funeral travel"
+    ]
+  },
+  {
+    "seed_id": "seed_0024",
+    "variant_id": 3,
+    "domain": "travel_booking",
+    "prompt": "Help me find a flight and hotel booking — refundable option preferred, nonstop preferred. I have been dealing with job interview. I need to return quickly. I really need to find the best option soon.",
+    "sensitive_info": [
+      "wheelchair assistance",
+      "job interview",
+      "funeral travel"
+    ]
+  },
+  {
+    "seed_id": "seed_0025",
+    "variant_id": 0,
+    "domain": "medical_booking",
+    "prompt": "Help me book a doctor appointment — after work, in network. I have been dealing with surgery history. I recently started a new medication. I really need to find the earliest appointment.",
+    "sensitive_info": [
+      "blood thinners",
+      "surgery history"
+    ]
+  },
+  {
+    "seed_id": "seed_0025",
+    "variant_id": 1,
+    "domain": "medical_booking",
+    "prompt": "Can you help me book a doctor appointment — after work, in network? I have been dealing with surgery history. I recently started a new medication. I really need to find the earliest appointment.",
+    "sensitive_info": [
+      "blood thinners",
+      "surgery history"
+    ]
+  },
+  {
+    "seed_id": "seed_0025",
+    "variant_id": 2,
+    "domain": "medical_booking",
+    "prompt": "Help me book a doctor appointment — after work, in network. I have been dealing with blood thinners. I recently started a new medication. I really need to find the earliest appointment.",
+    "sensitive_info": [
+      "blood thinners",
+      "surgery history"
+    ]
+  },
+  {
+    "seed_id": "seed_0025",
+    "variant_id": 3,
+    "domain": "medical_booking",
+    "prompt": "book a doctor appointment — after work, in network. I have been dealing with surgery history. I recently started a new medication. I really need to find the earliest appointment.",
+    "sensitive_info": [
+      "blood thinners",
+      "surgery history"
+    ]
+  },
+  {
+    "seed_id": "seed_0026",
+    "variant_id": 0,
+    "domain": "travel_booking",
+    "prompt": "Can you help me find a refundable flight for a family emergency? I need to leave soon, preferably from the airport nearby, but I really don’t want to travel alone at night. If the dates could shift by a day, that would be great.",
+    "sensitive_info": [
+      "anxiety",
+      "dietary restriction",
+      "family emergency"
+    ]
+  },
+  {
+    "seed_id": "seed_0026",
+    "variant_id": 1,
+    "domain": "travel_booking",
+    "prompt": "I need to book a flight quickly due to a family emergency. It would be better if I find a refundable option and depart from a nearby airport, but I’m flexible with the dates by a day or so. Also, I get anxious traveling alone late at night.",
+    "sensitive_info": [
+      "anxiety",
+      "dietary restriction",
+      "family emergency"
+    ]
+  },
+  {
+    "seed_id": "seed_0026",
+    "variant_id": 2,
+    "domain": "travel_booking",
+    "prompt": "Please find me a refundable flight as I have a family emergency. I'd like to leave from the nearest airport because I’m anxious about flying alone at night. I can adjust my departure by a day if needed to get there quickly.",
+    "sensitive_info": [
+      "anxiety",
+      "dietary restriction",
+      "family emergency"
+    ]
+  },
+  {
+    "seed_id": "seed_0026",
+    "variant_id": 3,
+    "domain": "travel_booking",
+    "prompt": "I urgently need to book a flight for a family emergency, and it has to be refundable. I prefer leaving from a nearby airport since I feel anxious about flying alone late at night. If the flight can shift by a day, that would really help me out.",
+    "sensitive_info": [
+      "anxiety",
+      "dietary restriction",
+      "family emergency"
+    ]
+  },
+  {
+    "seed_id": "seed_0027",
+    "variant_id": 0,
+    "domain": "medical_booking",
+    "prompt": "Can you help me find the earliest appointment with a specialist? I really need to see someone about my asthma and back pain. Ideally, I'd like to schedule it for tomorrow morning after work hours, if that's possible.",
+    "sensitive_info": [
+      "asthma",
+      "back pain"
+    ]
+  },
+  {
+    "seed_id": "seed_0027",
+    "variant_id": 1,
+    "domain": "medical_booking",
+    "prompt": "I need to see a specialist regarding my asthma and persistent back pain that flares up throughout the day. What's the soonest appointment I can get for tomorrow morning after I finish work? Please let me know the available times.",
+    "sensitive_info": [
+      "asthma",
+      "back pain"
+    ]
+  },
+  {
+    "seed_id": "seed_0027",
+    "variant_id": 2,
+    "domain": "medical_booking",
+    "prompt": "Could you book an appointment for me with a specialist as soon as possible? I'm dealing with asthma issues and occasional back pain, and I can only make it tomorrow morning after work. What are the earliest slots available?",
+    "sensitive_info": [
+      "asthma",
+      "back pain"
+    ]
+  },
+  {
+    "seed_id": "seed_0027",
+    "variant_id": 3,
+    "domain": "medical_booking",
+    "prompt": "Can you check for the earliest available appointment with a specialist for me? I'm experiencing issues with asthma and on-and-off back pain. It would need to be scheduled for tomorrow morning after I'm done with my job.",
+    "sensitive_info": [
+      "asthma",
+      "back pain"
+    ]
+  },
+  {
+    "seed_id": "seed_0028",
+    "variant_id": 0,
+    "domain": "restaurant_booking",
+    "prompt": "Could you help me find a quiet restaurant for brunch tonight? I’m looking for a place that offers halal and vegan options, but I don’t want it to be too expensive. I want to make sure it’s a nice environment for conversation.",
+    "sensitive_info": [
+      "halal",
+      "vegan"
+    ]
+  },
+  {
+    "seed_id": "seed_0028",
+    "variant_id": 1,
+    "domain": "restaurant_booking",
+    "prompt": "I need to book a brunch reservation for tonight at a reasonable restaurant. It’s important to me that they serve halal and vegan dishes, and the atmosphere should be calm and quiet so we can talk comfortably. Any suggestions?",
+    "sensitive_info": [
+      "halal",
+      "vegan"
+    ]
+  },
+  {
+    "seed_id": "seed_0028",
+    "variant_id": 2,
+    "domain": "restaurant_booking",
+    "prompt": "Can you look up restaurants for a brunch reservation tonight? I'd love a place that isn't too pricey, preferably a nice quiet spot that has halal and vegan selections. I want the setting to be perfect for conversation.",
+    "sensitive_info": [
+      "halal",
+      "vegan"
+    ]
+  },
+  {
+    "seed_id": "seed_0028",
+    "variant_id": 3,
+    "domain": "restaurant_booking",
+    "prompt": "I’m trying to find a good spot for brunch tonight without breaking the bank. My friend is vegan and I prefer halal options too. If you could suggest somewhere not too loud, that would really help us enjoy our conversation.",
+    "sensitive_info": [
+      "halal",
+      "vegan"
+    ]
+  },
+  {
+    "seed_id": "seed_0029",
+    "variant_id": 0,
+    "domain": "restaurant_booking",
+    "prompt": "Can you help me find a nice, quiet place for lunch with my coworkers? I'd love a restaurant that has outdoor seating and offers vegetarian and vegan options. I'd prefer somewhere not too crowded since we're looking to have a good conversation without breaking the bank.",
+    "sensitive_info": [
+      "vegetarian",
+      "vegan",
+      "coworker dinner"
+    ]
+  },
+  {
+    "seed_id": "seed_0029",
+    "variant_id": 1,
+    "domain": "restaurant_booking",
+    "prompt": "I'm looking for a lunch spot for me and a couple of colleagues. Ideally, it should have outdoor seating, and I need to ensure there are vegetarian and vegan meals available. I want a relaxing atmosphere without too many people, and something affordable would be great!",
+    "sensitive_info": [
+      "vegetarian",
+      "vegan",
+      "coworker dinner"
+    ]
+  },
+  {
+    "seed_id": "seed_0029",
+    "variant_id": 2,
+    "domain": "restaurant_booking",
+    "prompt": "Could you suggest a cozy restaurant for lunch with my coworkers? I'm hoping for somewhere with outdoor seating, serving both vegetarian and vegan dishes. It's important to me that the place is not too busy and doesn't cost a fortune, as we want to focus on conversation.",
+    "sensitive_info": [
+      "vegetarian",
+      "vegan",
+      "coworker dinner"
+    ]
+  },
+  {
+    "seed_id": "seed_0029",
+    "variant_id": 3,
+    "domain": "restaurant_booking",
+    "prompt": "Please find a lunch reservation for my team and me at a quiet restaurant. We prefer outdoor seating and need options for both vegetarians and vegans. Keeping the budget reasonable is key, as we want to enjoy a good meal without all the noise and fuss.",
+    "sensitive_info": [
+      "vegetarian",
+      "vegan",
+      "coworker dinner"
+    ]
+  }
+]

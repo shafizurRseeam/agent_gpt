@@ -1,13 +1,6 @@
-import json
-import os
-
-STATE_PATH = "state/working_state.json"
+from state.state_io import load_state
 
 
 def get_contacts():
-    """Returns the user's contacts from working state."""
-    if not os.path.exists(STATE_PATH):
-        return []
-    with open(STATE_PATH) as f:
-        state = json.load(f)
-    return state.get("contacts", [])
+    """Returns the user's contacts from profile state."""
+    return load_state().get("contacts", [])

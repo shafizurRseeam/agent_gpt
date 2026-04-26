@@ -9,8 +9,13 @@ from llm.local_llm import LocalLLM
 from llm.cloud_router import CloudLLM
 from tools.web_form_tool import get_form_fields, submit_form
 from privacy.privacyscope import PrivacyScope
+import privacy.privacy_enhancing_prompt as pep_baseline
+import privacy.agentdam as agentdam_baseline
+import privacy.presidio_redact as ner_redact_baseline
+from results.task_logger import append_task
 
-STATE_PATH = "state/working_state.json"
+from state.state_io import load_state, save_state, append_trace
+
 MOCK_SERVER = "http://localhost:8000"
 
 # ── Demo-only: keyword → field-template category ──────────────────────────────
@@ -56,14 +61,10 @@ class HybridAgent:
     # ── State ──────────────────────────────────────────────────────────────────
 
     def _load_state(self):
-        if os.path.exists(STATE_PATH):
-            with open(STATE_PATH) as f:
-                return json.load(f)
-        return {"user_profile": {}, "memory_traces": [], "contacts": [], "workflow_history": []}
+        return load_state()
 
     def _save_state(self):
-        with open(STATE_PATH, "w") as f:
-            json.dump(self.state, f, indent=2)
+        save_state(self.state)
 
     def _first_free_date(self):
         for t in self.state.get("memory_traces", []):
@@ -462,14 +463,57 @@ CLOUD QUERY: <rich natural-language message to the cloud packed with symptoms, p
         }
         return {f["field"]: field_map[f["field"]] for f in form_fields if f["field"] in field_map}
 
+    # ── Mode selection ──────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _select_mode() -> int:
+        """
+        Ask the user which comparison mode to run.
+          1 → Naive only
+          2 → Naive  vs  PrivacyScope
+          3 → Naive  vs  PrivacyScope  vs  PRESIDIO
+          4 → Naive  vs  PrivacyScope  vs  PRESIDIO  vs  PEP
+          5 → Naive  vs  PrivacyScope  vs  PRESIDIO  vs  PEP  vs  AGENTDAM
+        Returns 1–5.
+        """
+        print("\n  ┌─ Privacy Baseline Mode ─────────────────────────────────────")
+        print("  │  1  →  Naive only")
+        print("  │  2  →  Naive  vs  PrivacyScope")
+        print("  │  3  →  Naive  vs  PrivacyScope  vs  PRESIDIO")
+        print("  │  4  →  Naive  vs  PrivacyScope  vs  PRESIDIO  vs  PEP")
+        print("  │  5  →  Naive  vs  PrivacyScope  vs  PRESIDIO  vs  PEP  vs  AGENTDAM")
+        print("  └─────────────────────────────────────────────────────────────")
+        while True:
+            choice = input("  Select mode [1-5]: ").strip()
+            if choice in ("1", "2", "3", "4", "5"):
+                return int(choice)
+            print("  Please enter a number between 1 and 5.")
+
     # ── Main run ────────────────────────────────────────────────────────────────
 
-    def run(self, task):
-        print(f"\n{'═' * 55}")
-        print(f"  HYBRID AGENT  (naive)")
+    def run(self, task, mode: int = None):
+        if mode is None:
+            mode = self._select_mode()
+
+        # Derive which baselines are active from the mode number
+        run_ps      = mode >= 2   # PrivacyScope
+        run_ner     = mode >= 3   # PRESIDIO
+        run_pep     = mode >= 4   # Privacy-Enhancing Prompt
+        run_agentdam = mode >= 5  # AGENTDAM
+
+        _MODE_LABEL = {
+            1: "Naive only",
+            2: "Naive  vs  PrivacyScope",
+            3: "Naive  vs  PrivacyScope  vs  PRESIDIO",
+            4: "Naive  vs  PrivacyScope  vs  PRESIDIO  vs  PEP",
+            5: "Naive  vs  PrivacyScope  vs  PRESIDIO  vs  PEP  vs  AGENTDAM",
+        }
+
+        print(f"\n{'═' * 63}")
+        print(f"  HYBRID AGENT  —  mode {mode}: {_MODE_LABEL[mode]}")
         print(f"  LC model : {self.local.model}")
         print(f"  Task: {task}")
-        print(f"{'═' * 55}")
+        print(f"{'═' * 63}")
 
         workflow = {"task": task, "started_at": datetime.now().isoformat()}
 
@@ -502,63 +546,92 @@ CLOUD QUERY: <rich natural-language message to the cloud packed with symptoms, p
         _box("LC Reasoning", reasoning.splitlines() or [reasoning])
         _box("Naive Cloud-Bound Payload  (to be sent to cloud)", cloud_query.splitlines())
 
-        # ── Phase 2: PrivacyScope Sanitization ────────────────────────────────
-        print(f"\n{'─' * 55}")
-        print(f"  PHASE 2 — PrivacyScope Sanitization")
-        print(f"{'─' * 55}")
-
-        sanitized_query, ps_stages = self.ps.sanitize_with_trace(
-            cloud_query, p, task, traces
-        )
-        ps_spans    = ps_stages["spans"]
-        ps_tasktype = ps_stages["task_type"]
-
-        def _trunc(s, n=42):
+        def _trunc(s, n=38):
             return (s[:n] + "…") if len(s) > n else s
 
-        # ── Stage 1: Span Extraction ───────────────────────────────────────────
-        _box("Stage 1 — Span Extraction", [
-            f"  {s.span_type:<18}  \"{_trunc(s.text)}\""
-            for s in ps_spans
-        ] or ["  (no candidate spans found)"])
+        # ── Phase 2: PrivacyScope Sanitization (modes 2–5) ────────────────────
+        sanitized_query = None
+        if run_ps:
+            print(f"\n{'─' * 55}")
+            print(f"  PHASE 2 — PrivacyScope Sanitization")
+            print(f"{'─' * 55}")
 
-        # ── Stage 2: Scope Control ─────────────────────────────────────────────
-        scope_lines = [f"  inferred task type: {ps_tasktype}", ""]
-        for s in ps_spans:
-            tag    = "kept   " if s.kept else "removed"
-            reason = f"  ← {s.removal_reason}" if s.removal_reason else ""
-            scope_lines.append(
-                f"  {tag}  {s.span_type:<18}  \"{_trunc(s.text, 35)}\"{reason}"
+            sanitized_query, ps_stages = self.ps.sanitize_with_trace(
+                cloud_query, p, task, traces
             )
-        _box("Stage 2 — Scope Control", scope_lines)
+            ps_spans    = ps_stages["spans"]
+            ps_tasktype = ps_stages["task_type"]
+            rho         = ps_stages.get("rho", 0.20)
 
-        # ── Stage 3: Span Classification ──────────────────────────────────────
-        classify_lines = []
-        for s in ps_spans:
-            if not s.kept:
-                continue
-            classify_lines.append(
-                f"  {s.span_class:<5}  {s.span_type:<18}  \"{_trunc(s.text, 35)}\""
+            _box("Stage 1 — Span Extraction", [
+                f"  [{s.source:<11}]  {s.span_type:<16}  \"{_trunc(s.text)}\""
+                for s in ps_spans
+            ] or ["  (no candidate spans found)"])
+
+            scope_lines = [
+                f"  task type: {ps_tasktype}   ρ = {rho}",
+                f"  {'span':<16}  {'SemRel':>7}  {'Resid':>6}  {'Keep':>5}  decision",
+                f"  {'─'*16}  {'─'*7}  {'─'*6}  {'─'*5}  {'─'*20}",
+            ]
+            for s in ps_spans:
+                decision = "KEPT" if s.kept else f"REMOVED ({s.removal_reason})"
+                scope_lines.append(
+                    f"  {_trunc(s.span_type, 16):<16}  "
+                    f"{s.sem_rel:>7.3f}  {s.resid:>6}  {s.keep:>5}  {decision}"
+                )
+            _box("Stage 2 — Scope Control", scope_lines)
+
+            classify_lines = [
+                f"  {s.span_class:<5}  {s.span_type:<16}  \"{_trunc(s.text)}\""
+                for s in ps_spans if s.kept
+            ] + ["  BEN    [remaining task text]"]
+            _box("Stage 3 — Span Classification", classify_lines)
+
+            transform_lines = []
+            for s in ps_spans:
+                if not s.kept:
+                    transform_lines.append(f"  ---   \"{_trunc(s.text, 30)}\"  →  [removed]")
+                elif s.span_class in ("DI", "CSS"):
+                    transform_lines.append(f"  {s.span_class:<5}  \"{_trunc(s.text, 30)}\"  →  {s.result}")
+            transform_lines.append("  BEN    [remaining task text]  →  unchanged")
+            _box("Stage 4 — Transformation", transform_lines)
+
+            _box("Sanitized Cloud-Bound Payload  (PrivacyScope output)", sanitized_query.splitlines())
+
+        # ── Phase 2b: Additional baselines (modes 3–5) ───────────────────────
+        ner_query = pep_query = agentdam_query = None
+
+        if run_ner or run_pep or run_agentdam:
+            print(f"\n{'─' * 55}")
+            print(f"  PHASE 2b — Additional Privacy Baselines")
+            print(f"{'─' * 55}")
+
+        if run_ner:
+            ner_query, ner_trace = ner_redact_baseline.sanitize_with_trace(  # presidio
+                cloud_query, p, task, traces
             )
-        classify_lines.append("  BEN    [remaining task text]")
-        _box("Stage 3 — Span Classification", classify_lines)
+            ner_span_lines = [
+                f"  [{tag:<14}]  \"{_trunc(orig, 35)}\""
+                for orig, tag in ner_trace["spans"]
+            ] or ["  (no spans detected)"]
+            _box("PRESIDIO — Detected spans", ner_span_lines)
+            _box("PRESIDIO  (output)", ner_query.splitlines())
 
-        # ── Stage 4: Transformation ────────────────────────────────────────────
-        transform_lines = []
-        for s in ps_spans:
-            if not s.kept:
-                transform_lines.append(
-                    f"  ---   \"{_trunc(s.text, 30)}\"  →  [removed — scope control]"
-                )
-            elif s.span_class in ("DI", "CSS"):
-                transform_lines.append(
-                    f"  {s.span_class:<5}  \"{_trunc(s.text, 30)}\""
-                    f"  →  {s.result}"
-                )
-        transform_lines.append("  BEN    [remaining task text]               →  unchanged")
-        _box("Stage 4 — Transformation", transform_lines)
+        if run_pep:
+            print("\n  [Running Privacy-Enhancing Prompt baseline …]")
+            try:
+                pep_query = pep_baseline.sanitize(cloud_query, p, task, traces, self.local)
+            except Exception as e:
+                pep_query = f"[PEP error: {e}]"
+            _box("Privacy-Enhancing Prompt  (PEP output)", pep_query.splitlines())
 
-        _box("Sanitized Cloud-Bound Payload  (PrivacyScope output)", sanitized_query.splitlines())
+        if run_agentdam:
+            print("\n  [Running AGENTDAM baseline …]")
+            try:
+                agentdam_query = agentdam_baseline.sanitize(cloud_query, p, task, traces, self.local)
+            except Exception as e:
+                agentdam_query = f"[AGENTDAM error: {e}]"
+            _box("AGENTDAM  (output)", agentdam_query.splitlines())
 
         # ── Phase 3: CLM Responses ────────────────────────────────────────────
         print(f"\n{'─' * 55}")
@@ -566,10 +639,20 @@ CLOUD QUERY: <rich natural-language message to the cloud packed with symptoms, p
         print(f"{'─' * 55}")
 
         clm_response           = self._cloud_search(cloud_query)
-        clm_response_sanitized = self._cloud_search(sanitized_query)
+        clm_response_sanitized = self._cloud_search(sanitized_query) if sanitized_query else None
+        clm_ner_resp           = self._cloud_search(ner_query)      if ner_query      else None
+        clm_pep_resp           = self._cloud_search(pep_query)      if pep_query      else None
+        clm_agentdam_resp      = self._cloud_search(agentdam_query) if agentdam_query else None
 
         _box("CLM Response  (naive payload)", clm_response.splitlines())
-        _box("CLM Response  (PrivacyScope payload)", clm_response_sanitized.splitlines())
+        if clm_response_sanitized:
+            _box("CLM Response  (PrivacyScope payload)", clm_response_sanitized.splitlines())
+        if clm_ner_resp:
+            _box("CLM Response  (PRESIDIO payload)", clm_ner_resp.splitlines())
+        if clm_pep_resp:
+            _box("CLM Response  (PEP payload)", clm_pep_resp.splitlines())
+        if clm_agentdam_resp:
+            _box("CLM Response  (AGENTDAM payload)", clm_agentdam_resp.splitlines())
 
         # ── Parse CLM output → register dynamic mock services ────────────────
         parsed    = self._parse_clm_providers(clm_response)
@@ -616,16 +699,64 @@ CLOUD QUERY: <rich natural-language message to the cloud packed with symptoms, p
         workflow["over_disclosed_fields"] = [f["field"] for f in form_fields if not f.get("necessary")]
         self.state.setdefault("workflow_history", []).append(workflow)
 
-        self.state.setdefault("memory_traces", []).append({
+        now = datetime.now().isoformat()
+
+        # tool:get_location — LC uses this in future workflows for proximity search
+        location_entry = {
+            "source":        "tool:get_location",
+            "gathered_at":   now,
+            "from_workflow": task,
+            "data":          p.get("address", ""),
+        }
+
+        # tool:search_results — providers surfaced by CLM; useful residue for future tasks
+        search_entry = {
+            "source":        "tool:search_results",
+            "gathered_at":   now,
+            "from_workflow": task,
+            "data":          [
+                {"name": pr["name"], "address": pr["address"]}
+                for pr in parsed
+            ],
+        }
+
+        # tool:book_appointment — includes lc_reasoning + naive_payload for audit trail
+        trace_entry = {
             "source":        "tool:book_appointment",
             "gathered_at":   workflow["started_at"],
             "from_workflow": task,
+            "lc_reasoning":  reasoning,
+            "naive_payload": cloud_query,
             "data": {
                 "booked_at":        chosen["name"],
                 "address":          chosen["address"],
-                "appointment_date": self._first_free_date()
-            }
-        })
-        self._save_state()
+                "appointment_date": self._first_free_date(),
+            },
+        }
+
+        for entry in (location_entry, search_entry, trace_entry):
+            self.state.setdefault("memory_traces", []).append(entry)
+            append_trace(entry)   # writes only to working_trace.json
+
+        # ── Log task result for evaluation ────────────────────────────────────
+        task_id = append_task(
+            prompt=task,
+            mode=mode,
+            payloads={
+                "naive":        cloud_query,
+                "privacyscope": sanitized_query,
+                "pep":          pep_query,
+                "agentdam":     agentdam_query,
+                "presidio":     ner_query,
+            },
+            clm_responses={
+                "naive":        clm_response,
+                "privacyscope": clm_response_sanitized,
+                "pep":          clm_pep_resp,
+                "agentdam":     clm_agentdam_resp,
+                "presidio":     clm_ner_resp,
+            },
+        )
+        print(f"\n  [Logged as task #{task_id} → results/task_results.json]")
 
         return workflow["result"]

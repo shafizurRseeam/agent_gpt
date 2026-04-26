@@ -1,0 +1,2206 @@
+{
+  "generated_at": "2026-03-30T22:28:16.364531",
+  "n_tasks": 30,
+  "domain_filter": null,
+  "rng_seed": 42,
+  "baselines": [
+    "naive",
+    "privacyscope",
+    "ner_redact"
+  ],
+  "matching": "case-insensitive substring",
+  "token_counting": "whitespace-split word count",
+  "summary": {
+    "naive": {
+      "LR": 0.7333333333333333,
+      "LRatio": 0.42777777777777787,
+      "RLR": 0.9,
+      "RLRatio": 0.14345012293128925,
+      "PR": 0.0,
+      "mean_san_latency_s": 0.0,
+      "n_lr": 30,
+      "n_rlr": 30
+    },
+    "privacyscope": {
+      "LR": 0.5333333333333333,
+      "LRatio": 0.28888888888888886,
+      "RLR": 0.26666666666666666,
+      "RLRatio": 0.009265357015000732,
+      "PR": 0.5682967011070537,
+      "mean_san_latency_s": 0.311,
+      "n_lr": 30,
+      "n_rlr": 30
+    },
+    "ner_redact": {
+      "LR": 0.7333333333333333,
+      "LRatio": 0.41666666666666674,
+      "RLR": 0.43333333333333335,
+      "RLRatio": 0.01845594649296605,
+      "PR": 0.0973400233955354,
+      "mean_san_latency_s": 0.032,
+      "n_lr": 30,
+      "n_rlr": 30
+    }
+  },
+  "tasks": [
+    {
+      "task_id": 1,
+      "seed_id": "seed_0020",
+      "variant_id": 1,
+      "domain": "travel_booking",
+      "prompt": "Could you help me find a cheap hotel for my layover? I'm flying round trip for a funeral and I’m trying to minimize expenses because of some visa complications. Please let me know the best available options as soon as possible.",
+      "sensitive_info": [
+        "visa issue",
+        "funeral travel"
+      ],
+      "n_resid_facts": 9,
+      "latency": {
+        "lc_s": 18.612,
+        "ps_s": 2.524,
+        "ner_s": 0.173,
+        "total_s": 21.309
+      },
+      "payloads": {
+        "naive": "Hi Cloud Assistant, I'm Bob Smith, a 32-year-old with a DOB of July 14th, 1993. My current address is 45 Elm St, Rochester NY 14623. I can be reached at 585-555-0192 or via email at bob@example.com. I have BlueCross Dental Plus insurance with ID (insert ID number here).",
+        "privacyscope": "I can be reached at <PHONE_2> or via email at <EMAIL_3>.",
+        "ner_redact": "Hi Cloud Assistant, I'm [REDACTED_NAME], a 32-year-old with a [REDACTED_ORG] of [REDACTED_DATE]. My current address is [REDACTED_ADDRESS]. I can be reached at [REDACTED_PHONE] or via email at [REDACTED_EMAIL]. I have [REDACTED_INSURANCE] insurance with ID (insert ID number here).",
+        "lc_reasoning": "Based on the provided local data and inferred preferences, I will create a rich cloud-bound message that maximizes task utility by over-including relevant information.\n\nHere is the"
+      },
+      "metrics": {
+        "naive": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 1,
+          "RLRatio": 0.5555555555555556,
+          "leaked_seed": [],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192",
+            "bob@example.com",
+            "BlueCross Dental Plus"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 48,
+          "tokens_payload": 48
+        },
+        "privacyscope": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.7708333333333334,
+          "tokens_naive": 48,
+          "tokens_payload": 11
+        },
+        "ner_redact": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.20833333333333334,
+          "tokens_naive": 48,
+          "tokens_payload": 38
+        }
+      }
+    },
+    {
+      "task_id": 2,
+      "seed_id": "seed_0003",
+      "variant_id": 2,
+      "domain": "medical_booking",
+      "prompt": "Hello, I'd like to book a clinic appointment for tomorrow morning, preferably near my house. I've been having episodes of shortness of breath, particularly since my recent ER visit, and considering my pregnancy, I’d really like to avoid any long waits. Please let me know what options are available.",
+      "sensitive_info": [
+        "ER visit",
+        "pregnancy",
+        "shortness of breath"
+      ],
+      "n_resid_facts": 11,
+      "latency": {
+        "lc_s": 13.648,
+        "ps_s": 0.195,
+        "ner_s": 0.04,
+        "total_s": 13.883
+      },
+      "payloads": {
+        "naive": "Hello, I'd like to book a clinic appointment for tomorrow morning, preferably near my house. I've been having episodes of shortness of breath, particularly since my recent ER visit, and considering my pregnancy, I’d really like to avoid any long waits. \n\nMy name is Bob Smith, I'm 32 years old born on July 14, 1993. My address is 45 Elm St, Rochester NY 14623. My phone number is 585-555-0192 and my email is bob@example.com.\n\nI have BlueCross Dental Plus insurance with ID: [insert ID].\n\nIn the past, I had a recent ER visit due to shortness of breath, and now I'm pregnant. Given these circumstances, I would like to prioritize appointment scheduling near my home address for convenience and peace of mind.\n\nTomorrow morning is my preferred date, but I'd be open to adjusting the schedule if necessary. Can you please let me know what options are available? I appreciate your assistance in finding a suitable appointment time.",
+        "privacyscope": "I've been having episodes of shortness of breath, particularly since my recent ER visit, and considering my pregnancy, I’d really like to avoid any long waits. this week is my preferred date, but I'd be open to adjusting the schedule if necessary. Can you please let me know what options are available?",
+        "ner_redact": "Hello, I'd like to book a clinic appointment for [REDACTED_DATE], preferably near my house. I've been having episodes of shortness of breath, particularly since my recent [REDACTED_LOCATION] visit, and considering my pregnancy, I’d really like to avoid any long waits. \n\nMy name is [REDACTED_NAME], I'm 32 years old born on [REDACTED_DATE]. My address is [REDACTED_ADDRESS]. My phone number is [REDACTED_PHONE] and my email is [REDACTED_EMAIL].\n\nI have [REDACTED_INSURANCE] insurance with ID: [insert ID].\n\nIn the past, I had a recent [REDACTED_LOCATION] visit due to shortness of breath, and now I'm pregnant. Given these circumstances, I would like to prioritize appointment scheduling near my home address for convenience and peace of mind.\n\n[REDACTED_DATE] morning is my preferred date, but I'd be open to adjusting the schedule if necessary. Can you please let me know what options are available? I appreciate your assistance in finding a suitable appointment time.",
+        "lc_reasoning": "Here's a rich and informative CLOUD QUERY based on the provided local data:\n\n\"Hello, I'd like to book a clinic appointment for tomorrow morning, preferably near my house. I've been having episodes of shortness of breath, particularly since my recent ER visit, and considering my pregnancy, I’d really like to avoid any long waits. \n\nMy name is Bob Smith, I'm 32 years old born on July 14, 1993. My address is 45 Elm St, Rochester NY 14623. My phone number is 585-555-0192 and my email is bob@example.com.\n\nI have BlueCross Dental Plus insurance with ID: [insert ID].\n\nIn the past, I had a recent ER visit due to shortness of breath, and now I'm pregnant. Given these circumstances, I would like to prioritize appointment scheduling near my home address for convenience and peace of mind.\n\nTomorrow morning is my preferred date, but I'd be open to adjusting the schedule if necessary. Can you please let me know what options are available? I appreciate your assistance in finding a suitable appointment time.\"\n\nI included all the required information while trying to phrase it in a natural and concise manner, ensuring that the cloud assistant has everything they need to complete the task end-to-end."
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 1.0,
+          "RLR": 1,
+          "RLRatio": 0.45454545454545453,
+          "leaked_seed": [
+            "ER visit",
+            "pregnancy",
+            "shortness of breath"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192",
+            "bob@example.com",
+            "BlueCross Dental Plus"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 158,
+          "tokens_payload": 158
+        },
+        "privacyscope": {
+          "LR": 1,
+          "LRatio": 1.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [
+            "ER visit",
+            "pregnancy",
+            "shortness of breath"
+          ],
+          "leaked_resid": [],
+          "PR": 0.6708860759493671,
+          "tokens_naive": 158,
+          "tokens_payload": 52
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 0.6666666666666666,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [
+            "pregnancy",
+            "shortness of breath"
+          ],
+          "leaked_resid": [],
+          "PR": 0.06962025316455696,
+          "tokens_naive": 158,
+          "tokens_payload": 147
+        }
+      }
+    },
+    {
+      "task_id": 3,
+      "seed_id": "seed_0000",
+      "variant_id": 3,
+      "domain": "travel_booking",
+      "prompt": "I need help scheduling a flight back home soon, and a nonstop option is really important since I'm traveling with my child. Could you look up flights within our budget of $500 and make sure to add wheelchair assistance for my partner? We're flexible on dates if that helps.",
+      "sensitive_info": [
+        "budget concerns",
+        "wheelchair assistance",
+        "child travel"
+      ],
+      "n_resid_facts": 14,
+      "latency": {
+        "lc_s": 15.346,
+        "ps_s": 0.385,
+        "ner_s": 0.037,
+        "total_s": 15.768
+      },
+      "payloads": {
+        "naive": "Hello Cloud Assistant, I need help scheduling a flight back home soon as my partner (Bob Smith, 32 years old born on 1993-07-14) and I are traveling with our child. Since [partner's name] requires wheelchair assistance, please ensure that the selected flights have this accommodation available.\n\nWe have a budget of $500 for flights. Our current address is 45 Elm St, Rochester NY 14623. The contact information includes my phone number (585-555-0192) and email address (bob@example.com). \n\nPlease note that [partner's name] has BlueCross Dental Plus insurance with ID [insert insurance ID here]. We are flexible on dates for the return flight.\n\nIn the past, we have had a family booking with [insert any relevant past bookings or medical history here, if available].\n\nCould you please assist us in finding nonstop flights that fit our budget and meet these requirements? I appreciate your help.",
+        "privacyscope": "We have a budget of $500 for flights. We are flexible on dates for the return flight.",
+        "ner_redact": "Hello [REDACTED_PERSON] Assistant, I need help scheduling a flight back home soon as my partner ([REDACTED_NAME], 32 years old born on [REDACTED_DOB]) and I are traveling with our child. Since [partner's name] requires wheelchair assistance, please ensure that the selected flights have this accommodation available.\n\nWe have a budget of $[REDACTED_MONEY] for flights. Our current address is [REDACTED_ADDRESS]. The contact information includes my phone number [REDACTED_PHONE]) and email address ([REDACTED_EMAIL]). \n\nPlease note that [partner's name] has [REDACTED_INSURANCE] insurance with ID [insert insurance ID here]. We are flexible on dates for the return flight.\n\nIn the past, we have had a family booking with [insert any relevant past bookings or medical history here, if available].\n\nCould you please assist us in finding nonstop flights that fit our budget and meet these requirements? I appreciate your help.",
+        "lc_reasoning": "Based on the available local data and inferred preferences, I will create a comprehensive CLOUD QUERY that maximizes task utility by over-including relevant information. Here is the crafted query:\n\n\"Hello Cloud Assistant, I need help scheduling a flight back home soon as my partner (Bob Smith, 32 years old born on 1993-07-14) and I are traveling with our child. Since [partner's name] requires wheelchair assistance, please ensure that the selected flights have this accommodation available.\n\nWe have a budget of $500 for flights. Our current address is 45 Elm St, Rochester NY 14623. The contact information includes my phone number (585-555-0192) and email address (bob@example.com). \n\nPlease note that [partner's name] has BlueCross Dental Plus insurance with ID [insert insurance ID here]. We are flexible on dates for the return flight.\n\nIn the past, we have had a family booking with [insert any relevant past bookings or medical history here, if available].\n\nCould you please assist us in finding nonstop flights that fit our budget and meet these requirements? I appreciate your help.\"\n\nI included all the necessary information as per the rules provided:\n\n1. The user's exact symptoms (none in this case) are not present, but the query mentions a medical context due to past inferred task type.\n2. Full name, age, DOB, address, phone number, email, and insurance details are included verbatim.\n3. I mentioned a relevant past booking or medical history, although there is no specific information available in this case.\n4. Availability dates are specified for the return flight.\n5. No privacy disclaimer is written; the focus is on gathering all necessary data to complete the task effectively.\n\nThis CLOUD QUERY should provide the cloud assistant with an extensive context to find suitable flights that meet the user's requirements, maximizing task utility."
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 0.3333333333333333,
+          "RLR": 1,
+          "RLRatio": 0.42857142857142855,
+          "leaked_seed": [
+            "wheelchair assistance"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "1993-07-14",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192",
+            "bob@example.com",
+            "BlueCross Dental Plus"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 143,
+          "tokens_payload": 143
+        },
+        "privacyscope": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.8811188811188811,
+          "tokens_naive": 143,
+          "tokens_payload": 17
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 0.3333333333333333,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [
+            "wheelchair assistance"
+          ],
+          "leaked_resid": [],
+          "PR": 0.055944055944055944,
+          "tokens_naive": 143,
+          "tokens_payload": 135
+        }
+      }
+    },
+    {
+      "task_id": 4,
+      "seed_id": "seed_0023",
+      "variant_id": 2,
+      "domain": "travel_booking",
+      "prompt": "Can you help me book a hotel for my upcoming job interview next week? I’ll need wheelchair assistance since I’m pregnant, and I want to ensure the trip is easy for me. I’ll just have a carry-on bag, so please find a place that’s convenient and hassle-free.",
+      "sensitive_info": [
+        "pregnancy",
+        "job interview"
+      ],
+      "n_resid_facts": 17,
+      "latency": {
+        "lc_s": 15.13,
+        "ps_s": 0.106,
+        "ner_s": 0.015,
+        "total_s": 15.251
+      },
+      "payloads": {
+        "naive": "Hi, I'm Bob Smith, a 32-year-old pregnant woman due to give birth on July 14, 1993. I'll be needing wheelchair assistance for my upcoming job interview next week since I'm pregnant. I'll be traveling with only a carry-on bag and would like to find a convenient and hassle-free place to stay.",
+        "privacyscope": "Hi, I'm <NAME_1>, a 32-year-old pregnant woman due to give birth on 1990s. I'll be needing wheelchair assistance for my upcoming job interview this week since I'm pregnant. I'll be traveling with only a carry-on bag and would like to find a convenient and hassle-free place to stay.",
+        "ner_redact": "Hi, I'm [REDACTED_NAME], a 32-year-old pregnant woman due to give birth on [REDACTED_DATE]. I'll be needing wheelchair assistance for my upcoming job interview [REDACTED_DATE] since I'm pregnant. I'll be traveling with only a carry-on bag and would like to find a convenient and hassle-free place to stay.",
+        "lc_reasoning": "Here's the"
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 1,
+          "RLRatio": 0.11764705882352941,
+          "leaked_seed": [
+            "job interview"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "wheelchair assistance"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 51,
+          "tokens_payload": 51
+        },
+        "privacyscope": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 1,
+          "RLRatio": 0.058823529411764705,
+          "leaked_seed": [
+            "job interview"
+          ],
+          "leaked_resid": [
+            "wheelchair assistance"
+          ],
+          "PR": 0.058823529411764705,
+          "tokens_naive": 51,
+          "tokens_payload": 48
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 1,
+          "RLRatio": 0.058823529411764705,
+          "leaked_seed": [
+            "job interview"
+          ],
+          "leaked_resid": [
+            "wheelchair assistance"
+          ],
+          "PR": 0.0784313725490196,
+          "tokens_naive": 51,
+          "tokens_payload": 47
+        }
+      }
+    },
+    {
+      "task_id": 5,
+      "seed_id": "seed_0008",
+      "variant_id": 3,
+      "domain": "restaurant_booking",
+      "prompt": "Find me a restaurant with outdoor seating for tomorrow evening, ideally close to downtown. It’s important that they offer vegetarian and gluten-free dishes since I have a seafood allergy. Also, I'd prefer something affordable, so I’d love to avoid any pricey places.",
+      "sensitive_info": [
+        "vegetarian",
+        "gluten-free",
+        "seafood allergy"
+      ],
+      "n_resid_facts": 19,
+      "latency": {
+        "lc_s": 13.375,
+        "ps_s": 0.182,
+        "ner_s": 0.025,
+        "total_s": 13.582
+      },
+      "payloads": {
+        "naive": "Hello Cloud Assistant, I'm Bob Smith, 32 years old, born on July 14, 1993. I have a severe seafood allergy and require vegetarian and gluten-free options when dining out. I'd like to book a restaurant with outdoor seating for tomorrow evening near my current address at 45 Elm St, Rochester NY 14623. My phone number is 585-555-0192 and I'm insured through BlueCross Dental Plus with ID \\[insert insurance ID]. Unfortunately, I don't have any past relevant bookings or medical history to share at this time. However, I do recall that I had some issues with gluten intolerance in the past, which may be relevant for future reference.",
+        "privacyscope": "Hello <NAME_1> Assistant, I'm <NAME_2>, in their 30s, born on 1990s. I have a severe seafood allergy and require vegetarian and gluten-free options when dining out.",
+        "ner_redact": "Hello [REDACTED_PERSON] Assistant, I'm [REDACTED_NAME], 32 years old, born on [REDACTED_DATE]. I have a severe seafood allergy and require vegetarian and gluten-free options when dining out. I'd like to book a restaurant with outdoor seating for [REDACTED_DATE] [REDACTED_DATE] near my current address at [REDACTED_ADDRESS]. My phone number is [REDACTED_PHONE] and I'm insured through [REDACTED_INSURANCE] with ID \\[insert insurance ID]. Unfortunately, I don't have any past relevant bookings or medical history to share at this time. However, I do recall that I had some issues with gluten intolerance in the past, which may be relevant for future reference.",
+        "lc_reasoning": "Here's the"
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 1.0,
+          "RLR": 1,
+          "RLRatio": 0.21052631578947367,
+          "leaked_seed": [
+            "vegetarian",
+            "gluten-free",
+            "seafood allergy"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192",
+            "BlueCross Dental Plus"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 107,
+          "tokens_payload": 107
+        },
+        "privacyscope": {
+          "LR": 1,
+          "LRatio": 1.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [
+            "vegetarian",
+            "gluten-free",
+            "seafood allergy"
+          ],
+          "leaked_resid": [],
+          "PR": 0.7570093457943925,
+          "tokens_naive": 107,
+          "tokens_payload": 26
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 1.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [
+            "vegetarian",
+            "gluten-free",
+            "seafood allergy"
+          ],
+          "leaked_resid": [],
+          "PR": 0.09345794392523364,
+          "tokens_naive": 107,
+          "tokens_payload": 97
+        }
+      }
+    },
+    {
+      "task_id": 6,
+      "seed_id": "seed_0007",
+      "variant_id": 3,
+      "domain": "medical_booking",
+      "prompt": "I have some knee pain that I would like to get evaluated. Can you find a specialist who can fit me in for a follow-up appointment this morning? Just make sure they accept my insurance and can see me before noon.",
+      "sensitive_info": [
+        "eczema",
+        "knee pain"
+      ],
+      "n_resid_facts": 22,
+      "latency": {
+        "lc_s": 15.966,
+        "ps_s": 0.181,
+        "ner_s": 0.02,
+        "total_s": 16.166
+      },
+      "payloads": {
+        "naive": "Hello Cloud Assistant, I'd like to find a specialist who can evaluate my knee pain. My name is Bob Smith, I'm 32 years old (1993-07-14), and I have knee pain as my primary symptom. I've also had issues with dizziness and migraines previously, which is why Dr. Jennifer Lee, MD, booked me for an appointment that wasn't specific to these symptoms.",
+        "privacyscope": "Hello <NAME_1> Assistant, I'd like to find a specialist who can evaluate orthopedic concern. I've also had issues with dizziness and migraines previously, which is why Dr.",
+        "ner_redact": "Hello [REDACTED_PERSON] Assistant, I'd like to find a specialist who can evaluate my knee pain. My name is [REDACTED_NAME], I'm 32 years old ([REDACTED_DOB]), and I have knee pain as my primary symptom. I've also had issues with dizziness and migraines previously, which is why Dr. [REDACTED_PERSON], [REDACTED_LOCATION], booked me for an appointment that wasn't specific to these symptoms.",
+        "lc_reasoning": "Based on the available local data and task requirements, I've assembled a rich cloud-bound message that includes all relevant information.\n\nHere's the"
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 1,
+          "RLRatio": 0.09090909090909091,
+          "leaked_seed": [
+            "knee pain"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "1993-07-14"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 61,
+          "tokens_payload": 61
+        },
+        "privacyscope": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.5573770491803278,
+          "tokens_naive": 61,
+          "tokens_payload": 27
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [
+            "knee pain"
+          ],
+          "leaked_resid": [],
+          "PR": 0.03278688524590164,
+          "tokens_naive": 61,
+          "tokens_payload": 59
+        }
+      }
+    },
+    {
+      "task_id": 7,
+      "seed_id": "seed_0007",
+      "variant_id": 0,
+      "domain": "medical_booking",
+      "prompt": "I need to schedule a follow-up appointment with a dermatologist for my eczema. Can you find me a specialist who accepts my insurance and has availability before noon? It’s been acting up and I want to get it sorted out as soon as possible.",
+      "sensitive_info": [
+        "eczema",
+        "knee pain"
+      ],
+      "n_resid_facts": 24,
+      "latency": {
+        "lc_s": 16.129,
+        "ps_s": 0.402,
+        "ner_s": 0.051,
+        "total_s": 16.582
+      },
+      "payloads": {
+        "naive": "Hi Cloud Assistant, I need to schedule a follow-up appointment with a dermatologist for my eczema. Can you find me a specialist who accepts BlueCross Dental Plus (ID: [insert ID]) insurance and has availability before noon? It’s been acting up and I want to get it sorted out as soon as possible.\n\nHere are some details about the issue:\n\n* Name: Bob Smith\n* Age: 32\n* Date of Birth: 1993-07-14\n* Address: 45 Elm St, Rochester NY 14623\n* Phone: 585-555-0192\n* Email: bob@example.com\n\nI have a history of eczema, and I've had it for quite some time. I'm not sure when the last appointment was, but I know I need to get it checked again soon.\n\nIn terms of past appointments, I do recall that I previously visited Dermatology Associates, which accepts insurance from my provider. They seem like a reputable clinic, and I'd like to book an appointment with one of their dermatologists if possible.\n\nI'm specifically interested in seeing Dr. Jennifer Lee or Dr. Sarah Thompson, as they are both listed as accepting the same insurance plan and have availability before noon. Would it be possible to book an appointment with either of these doctors for a time slot before 12 PM?\n\nPlease let me know if this is feasible, and I'll provide any additional information you need to complete the booking.",
+        "privacyscope": "Hi Cloud Assistant, I need to schedule a follow-up appointment with a dermatologist for my eczema. Can you find me a specialist who accepts dental insurance (ID: [insert ID]) insurance and has availability before this week? It’s been acting up and I want to get it sorted out as soon as possible. I'm not sure when the last appointment was, but I know I need to get it checked again soon. They seem like a reputable clinic, and I'd like to book an appointment with one of their dermatologists if possible. I'm specifically interested in seeing Dr. Jennifer Lee or Dr. Sarah Thompson, as they are both listed as accepting the same insurance plan and have availability before this week.",
+        "ner_redact": "Hi Cloud Assistant, I need to schedule a follow-up appointment with a dermatologist for my eczema. Can you find me a specialist who accepts [REDACTED_INSURANCE] (ID: [insert ID]) insurance and has availability before [REDACTED_DATE]? It’s been acting up and I want to get it sorted out as soon as possible.\n\nHere are some details about the issue:\n\n* Name: [REDACTED_NAME]\n* Age: [REDACTED_NUMBER]\n* Date of Birth: [REDACTED_DOB]\n* Address: [REDACTED_ADDRESS]\n* Phone: [REDACTED_PHONE]\n* Email: [REDACTED_EMAIL]\n\nI have a history of eczema, and I've had it for quite some time. I'm not sure when the last appointment was, but I know I need to get it checked again soon.\n\nIn terms of past appointments, I do recall that I previously visited [REDACTED_ORG], which accepts insurance from my provider. They seem like a reputable clinic, and I'd like to book an appointment with one of their dermatologists if possible.\n\nI'm specifically interested in seeing Dr. [REDACTED_PERSON] or Dr. [REDACTED_PERSON], as they are both listed as accepting the same insurance plan and have availability before [REDACTED_DATE]. Would it be possible to book an appointment with either of these doctors for a time slot before [REDACTED_DATE]?\n\nPlease let me know if this is feasible, and I'll provide any additional information you need to complete the booking.",
+        "lc_reasoning": "Here's a CLOUD QUERY that includes all the relevant information:\n\n\"Hi Cloud Assistant, I need to schedule a follow-up appointment with a dermatologist for my eczema. Can you find me a specialist who accepts BlueCross Dental Plus (ID: [insert ID]) insurance and has availability before noon? It’s been acting up and I want to get it sorted out as soon as possible.\n\nHere are some details about the issue:\n\n* Name: Bob Smith\n* Age: 32\n* Date of Birth: 1993-07-14\n* Address: 45 Elm St, Rochester NY 14623\n* Phone: 585-555-0192\n* Email: bob@example.com\n\nI have a history of eczema, and I've had it for quite some time. I'm not sure when the last appointment was, but I know I need to get it checked again soon.\n\nIn terms of past appointments, I do recall that I previously visited Dermatology Associates, which accepts insurance from my provider. They seem like a reputable clinic, and I'd like to book an appointment with one of their dermatologists if possible.\n\nI'm specifically interested in seeing Dr. Jennifer Lee or Dr. Sarah Thompson, as they are both listed as accepting the same insurance plan and have availability before noon. Would it be possible to book an appointment with either of these doctors for a time slot before 12 PM?\n\nPlease let me know if this is feasible, and I'll provide any additional information you need to complete the booking.\"\n\nThis CLOUD QUERY includes:\n\n* User's exact symptoms (eczema) and health complaints\n* Full personal details (name, age, DOB, address, phone, email)\n* Insurance name and ID\n* Inferred past medical history (visiting Dermatology Associates, interest in Dr. Jennifer Lee or Dr. Sarah Thompson)\n* Specific availability criteria (before noon)\n\nBy including all this information, the cloud assistant should be able to provide a rich set of options for scheduling an appointment that meets the user's needs."
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 1,
+          "RLRatio": 0.2916666666666667,
+          "leaked_seed": [
+            "eczema"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "1993-07-14",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192",
+            "bob@example.com",
+            "BlueCross Dental Plus",
+            "eczema"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 226,
+          "tokens_payload": 226
+        },
+        "privacyscope": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 1,
+          "RLRatio": 0.041666666666666664,
+          "leaked_seed": [
+            "eczema"
+          ],
+          "leaked_resid": [
+            "eczema"
+          ],
+          "PR": 0.4690265486725664,
+          "tokens_naive": 226,
+          "tokens_payload": 120
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 1,
+          "RLRatio": 0.041666666666666664,
+          "leaked_seed": [
+            "eczema"
+          ],
+          "leaked_resid": [
+            "eczema"
+          ],
+          "PR": 0.05309734513274336,
+          "tokens_naive": 226,
+          "tokens_payload": 214
+        }
+      }
+    },
+    {
+      "task_id": 8,
+      "seed_id": "seed_0004",
+      "variant_id": 1,
+      "domain": "restaurant_booking",
+      "prompt": "I'd love it if you could make a reservation for two at a vegan restaurant close to my house, ideally with outdoor seating. It's our anniversary tonight, and we'd prefer somewhere not too busy. Please check for availability for a nice, relaxing dinner.",
+      "sensitive_info": [
+        "anniversary",
+        "vegetarian",
+        "vegan"
+      ],
+      "n_resid_facts": 26,
+      "latency": {
+        "lc_s": 13.889,
+        "ps_s": 0.194,
+        "ner_s": 0.041,
+        "total_s": 14.124
+      },
+      "payloads": {
+        "naive": "Hello Cloud Assistant, \n\nI'd love it if you could make a reservation for two at a vegan restaurant close to my house, ideally with outdoor seating. It's our anniversary tonight, and we'd prefer somewhere not too busy.\n\nAs my name is Bob Smith, I'm 32 years old and was born on July 14th, 1993. I currently reside at 45 Elm St, Rochester NY 14623. My phone number is 585-555-0192, and you can reach me directly if needed. I'm insured with BlueCross Dental Plus, ID: [insert insurance ID].\n\nFor dinner reservations, I'd prefer a vegan option that caters to halal preferences, as I have a friend who follows these dietary restrictions.\n\nI was hoping for an outdoor seating area where we could enjoy a relaxing dinner without the crowds. \n\nTo ensure smooth planning, please include availability dates in your search, and consider booking for tonight's anniversary celebration.\n\nThat's all the information I can share. Thank you so much for assisting me!\n\nBest regards,\nBob Smith",
+        "privacyscope": "Hello <NAME_1> Assistant, \n\nI'd love it if you could make a reservation for two at a vegan restaurant close to my house, ideally with outdoor seating. It's our anniversary this week, and we'd prefer somewhere not too busy. I currently reside at Rochester, NY area. My phone number is <PHONE_3>, and you can reach me directly if needed. I was hoping for an outdoor seating area where we could enjoy a relaxing dinner without the crowds. Thank you so much for assisting me! Best regards,\n<NAME_2>",
+        "ner_redact": "Hello [REDACTED_PERSON] Assistant, \n\nI'd love it if you could make a reservation for [REDACTED_NUMBER] at a vegan restaurant close to my house, ideally with outdoor seating. It's our anniversary [REDACTED_DATE], and we'd prefer somewhere not too busy.\n\nAs my name is [REDACTED_NAME], I'm 32 years old and was born on [REDACTED_DATE]. I currently reside at [REDACTED_ADDRESS]. My phone number is [REDACTED_PHONE], and you can reach me directly if needed. I'm insured with [REDACTED_INSURANCE], ID: [insert insurance ID].\n\nFor dinner reservations, I'd prefer a vegan option that caters to halal preferences, as I have a friend who follows these dietary restrictions.\n\nI was hoping for an outdoor seating area where we could enjoy a relaxing dinner without the crowds. \n\nTo ensure smooth planning, please include availability dates in your search, and consider booking for [REDACTED_DATE]'s anniversary celebration.\n\nThat's all the information I can share. Thank you so much for assisting me!\n\nBest regards,\n[REDACTED_NAME]",
+        "lc_reasoning": "Based on the available local data and inferred preferences, I will pack the richest possible cloud-bound message as follows:\n\n\"Hello Cloud Assistant, \n\nI'd love it if you could make a reservation for two at a vegan restaurant close to my house, ideally with outdoor seating. It's our anniversary tonight, and we'd prefer somewhere not too busy.\n\nAs my name is Bob Smith, I'm 32 years old and was born on July 14th, 1993. I currently reside at 45 Elm St, Rochester NY 14623. My phone number is 585-555-0192, and you can reach me directly if needed. I'm insured with BlueCross Dental Plus, ID: [insert insurance ID].\n\nFor dinner reservations, I'd prefer a vegan option that caters to halal preferences, as I have a friend who follows these dietary restrictions.\n\nI was hoping for an outdoor seating area where we could enjoy a relaxing dinner without the crowds. \n\nTo ensure smooth planning, please include availability dates in your search, and consider booking for tonight's anniversary celebration.\n\nThat's all the information I can share. Thank you so much for assisting me!\n\nBest regards,\nBob Smith\"\n\nThis message includes all relevant data points to maximize task utility, while being mindful of the rules provided by PrivScope for handling local context packer roles."
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 0.6666666666666666,
+          "RLR": 1,
+          "RLRatio": 0.15384615384615385,
+          "leaked_seed": [
+            "anniversary",
+            "vegan"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192",
+            "BlueCross Dental Plus"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 164,
+          "tokens_payload": 164
+        },
+        "privacyscope": {
+          "LR": 1,
+          "LRatio": 0.6666666666666666,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [
+            "anniversary",
+            "vegan"
+          ],
+          "leaked_resid": [],
+          "PR": 0.47560975609756095,
+          "tokens_naive": 164,
+          "tokens_payload": 86
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 0.6666666666666666,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [
+            "anniversary",
+            "vegan"
+          ],
+          "leaked_resid": [],
+          "PR": 0.06707317073170732,
+          "tokens_naive": 164,
+          "tokens_payload": 153
+        }
+      }
+    },
+    {
+      "task_id": 9,
+      "seed_id": "seed_0029",
+      "variant_id": 0,
+      "domain": "restaurant_booking",
+      "prompt": "Can you help me find a nice, quiet place for lunch with my coworkers? I'd love a restaurant that has outdoor seating and offers vegetarian and vegan options. I'd prefer somewhere not too crowded since we're looking to have a good conversation without breaking the bank.",
+      "sensitive_info": [
+        "vegetarian",
+        "vegan",
+        "coworker dinner"
+      ],
+      "n_resid_facts": 29,
+      "latency": {
+        "lc_s": 13.646,
+        "ps_s": 0.136,
+        "ner_s": 0.017,
+        "total_s": 13.799
+      },
+      "payloads": {
+        "naive": "Hello Cloud Assistant, I'd like to book a quiet restaurant for lunch with my coworkers today/this weekend. My name is Bob Smith, I'm 32 years old, born on July 14th, 1993, and live at 45 Elm St, Rochester NY 14623. My phone number is 585-555-0192 and email address is bob@example.com. I have BlueCross Dental Plus insurance with ID (please confirm once provided).",
+        "privacyscope": "Hello <NAME_1> Assistant, I'd like to book a quiet restaurant for lunch with my coworkers this week/this week. I have dental insurance with ID (please confirm once provided).",
+        "ner_redact": "Hello [REDACTED_PERSON] Assistant, I'd like to book a quiet restaurant for lunch with my coworkers [REDACTED_DATE]/[REDACTED_DATE]. My name is [REDACTED_NAME], I'm 32 years old, born on [REDACTED_DATE], and live at [REDACTED_ADDRESS]. My phone number is [REDACTED_PHONE] and email address is [REDACTED_EMAIL]. I have [REDACTED_INSURANCE] insurance with ID (please confirm once provided).",
+        "lc_reasoning": "Based on the available local data and inferred preferences, I will create a comprehensive CLOUD QUERY that includes all relevant information. Here's the query:\n\n\"Hello Cloud Assistant, I'd like to book a quiet restaurant for lunch with my coworkers today/this weekend. My name is Bob Smith, I'm 32 years old, born on July 14th, 1993, and live at 45 Elm St, Rochester NY 14623. My phone number is 585-555-0192 and email address is bob@example.com. I have BlueCross Dental Plus insurance with ID (please confirm once provided).\n\n\"I'm looking for a restaurant with outdoor seating, vegetarian and vegan options, and a quiet atmosphere where we can have a good conversation without breaking the bank. I'd prefer to avoid crowded areas.\n\n\"Additionally, my past medical history includes [insert any relevant health complaints or allergies]. If there are any specific health considerations or precautions I should be aware of, please let me know.\n\n\"I'm available for lunch today or this weekend. Can you please suggest some options that fit these criteria? Thank you!\"\n\nI've included all the necessary information from the local data, as well as the inferred preferences and medical history. The query is phrased in a natural way to provide context for the cloud assistant's task."
+      },
+      "metrics": {
+        "naive": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 1,
+          "RLRatio": 0.1724137931034483,
+          "leaked_seed": [],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192",
+            "bob@example.com",
+            "BlueCross Dental Plus"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 62,
+          "tokens_payload": 62
+        },
+        "privacyscope": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.5483870967741935,
+          "tokens_naive": 62,
+          "tokens_payload": 28
+        },
+        "ner_redact": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.1774193548387097,
+          "tokens_naive": 62,
+          "tokens_payload": 51
+        }
+      }
+    },
+    {
+      "task_id": 10,
+      "seed_id": "seed_0003",
+      "variant_id": 1,
+      "domain": "medical_booking",
+      "prompt": "Can you help me schedule a clinic appointment for tomorrow morning? I live close to Main Street, and I've had some ongoing shortness of breath since my ER visit last week. As I'm currently pregnant, I'm hoping for a quick visit without much waiting.",
+      "sensitive_info": [
+        "ER visit",
+        "pregnancy",
+        "shortness of breath"
+      ],
+      "n_resid_facts": 32,
+      "latency": {
+        "lc_s": 13.616,
+        "ps_s": 0.141,
+        "ner_s": 0.017,
+        "total_s": 13.775
+      },
+      "payloads": {
+        "naive": "Hello Cloud Assistant, I need help scheduling a clinic appointment for tomorrow morning as soon as possible. My name is Bob Smith, I'm 32 years old born on July 14th, 1993, and I live at 45 Elm St, Rochester NY 14623. My phone number is 585-555-0192 and my email is bob@example.com. I am currently covered under BlueCross Dental Plus with ID [insert insurance ID here].",
+        "privacyscope": "Hello <NAME_1> Assistant, I need help scheduling a clinic appointment for this week as soon as possible.",
+        "ner_redact": "Hello [REDACTED_PERSON] Assistant, I need help scheduling a clinic appointment for [REDACTED_DATE] as soon as possible. My name is [REDACTED_NAME], I'm 32 years old born on [REDACTED_DATE], and I live at [REDACTED_ADDRESS]. My phone number is [REDACTED_PHONE] and my email is [REDACTED_EMAIL]. I am currently covered under [REDACTED_INSURANCE] with ID [insert insurance ID here].",
+        "lc_reasoning": "Here's a rich natural-language message for the"
+      },
+      "metrics": {
+        "naive": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 1,
+          "RLRatio": 0.15625,
+          "leaked_seed": [],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192",
+            "bob@example.com",
+            "BlueCross Dental Plus"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 65,
+          "tokens_payload": 65
+        },
+        "privacyscope": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.7384615384615385,
+          "tokens_naive": 65,
+          "tokens_payload": 17
+        },
+        "ner_redact": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.16923076923076924,
+          "tokens_naive": 65,
+          "tokens_payload": 54
+        }
+      }
+    },
+    {
+      "task_id": 11,
+      "seed_id": "seed_0021",
+      "variant_id": 2,
+      "domain": "restaurant_booking",
+      "prompt": "Can you reserve a table for four at a nice restaurant this weekend? It's important that the place is not too noisy because we want to chat. I have a seafood allergy, so make sure the menu is friendly for that, and let’s try not to spend too much either.",
+      "sensitive_info": [
+        "seafood allergy",
+        "budget concerns"
+      ],
+      "n_resid_facts": 35,
+      "latency": {
+        "lc_s": 14.515,
+        "ps_s": 0.703,
+        "ner_s": 0.039,
+        "total_s": 15.258
+      },
+      "payloads": {
+        "naive": "Hi, I'd like to reserve a table for four people at a nice restaurant in Rochester, NY 14623 this weekend. It's crucial that the place isn't too noisy because we want to have a conversation. My name is Bob Smith, and I'm 32 years old with a birthdate of July 14, 1993. I reside at 45 Elm St, Rochester NY 14623. I can be reached at 585-555-0192 or via email at bob@example.com.\n\nI have a seafood allergy, which means the menu should be friendly and accommodate my dietary requirements. Additionally, I'd like to try not to spend too much money on food and drinks.\n\nCould you also please check if I have any past relevant bookings or medical history that might impact my dining experience? My insurance details are BlueCross Dental Plus with ID [insert ID].\n\nI'm looking for availability dates this weekend and would appreciate it if the restaurant could accommodate my preferences regarding noise levels and seafood options. Thank you for your assistance in finding an ideal spot.",
+        "privacyscope": "Hi, I'd like to reserve a table for four people at a nice restaurant in local area, local area this week. It's crucial that the place isn't too noisy because we want to have a conversation. I reside at 45 Elm St, local area local area 14623. I can be reached at <PHONE_2> or via email at <EMAIL_3>. I have a seafood allergy, which means the menu should be friendly and accommodate my dietary requirements. Thank you for your assistance in finding an ideal spot.",
+        "ner_redact": "Hi, I'd like to reserve a table for [REDACTED_NUMBER] people at a nice restaurant in [REDACTED_LOCATION], [REDACTED_LOCATION] [REDACTED_DATE]. It's crucial that the place isn't too noisy because we want to have a conversation. My name is [REDACTED_NAME], and I'm 32 years old with a birthdate of [REDACTED_DATE]. I reside at [REDACTED_ADDRESS]. I can be reached at [REDACTED_PHONE] or via email at [REDACTED_EMAIL].\n\nI have a seafood allergy, which means the menu should be friendly and accommodate my dietary requirements. Additionally, I'd like to try not to spend too much money on food and drinks.\n\nCould you also please check if I have any past relevant bookings or medical history that might impact my dining experience? My insurance details are [REDACTED_INSURANCE] with ID [insert ID].\n\nI'm looking for availability dates [REDACTED_DATE] and would appreciate it if the restaurant could accommodate my preferences regarding noise levels and seafood options. Thank you for your assistance in finding an ideal spot.",
+        "lc_reasoning": "Based on the available local data, I will assemble a rich and informative CLOUD QUERY that maximizes task utility. Here is the query:\n\n\"Hi, I'd like to reserve a table for four people at a nice restaurant in Rochester, NY 14623 this weekend. It's crucial that the place isn't too noisy because we want to have a conversation. My name is Bob Smith, and I'm 32 years old with a birthdate of July 14, 1993. I reside at 45 Elm St, Rochester NY 14623. I can be reached at 585-555-0192 or via email at bob@example.com.\n\nI have a seafood allergy, which means the menu should be friendly and accommodate my dietary requirements. Additionally, I'd like to try not to spend too much money on food and drinks.\n\nCould you also please check if I have any past relevant bookings or medical history that might impact my dining experience? My insurance details are BlueCross Dental Plus with ID [insert ID].\n\nI'm looking for availability dates this weekend and would appreciate it if the restaurant could accommodate my preferences regarding noise levels and seafood options. Thank you for your assistance in finding an ideal spot.\"\n\nThis CLOUD QUERY includes all relevant local data, such as:\n\n* Personal details (name, age, DOB, address, phone, email, insurance)\n* Symptoms and health complaints (seafood allergy)\n* Inferred context (past relevant bookings or medical history)\n* Availability dates (this weekend)\n* Preferences regarding noise levels and cuisine\n\nBy including all this information, the cloud assistant should be able to provide a comprehensive set of options for Bob Smith's restaurant reservation."
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 1,
+          "RLRatio": 0.17142857142857143,
+          "leaked_seed": [
+            "seafood allergy"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192",
+            "bob@example.com",
+            "BlueCross Dental Plus",
+            "seafood allergy"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 170,
+          "tokens_payload": 170
+        },
+        "privacyscope": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 1,
+          "RLRatio": 0.02857142857142857,
+          "leaked_seed": [
+            "seafood allergy"
+          ],
+          "leaked_resid": [
+            "seafood allergy"
+          ],
+          "PR": 0.5,
+          "tokens_naive": 170,
+          "tokens_payload": 85
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 1,
+          "RLRatio": 0.02857142857142857,
+          "leaked_seed": [
+            "seafood allergy"
+          ],
+          "leaked_resid": [
+            "seafood allergy"
+          ],
+          "PR": 0.07647058823529412,
+          "tokens_naive": 170,
+          "tokens_payload": 157
+        }
+      }
+    },
+    {
+      "task_id": 12,
+      "seed_id": "seed_0027",
+      "variant_id": 3,
+      "domain": "medical_booking",
+      "prompt": "Can you check for the earliest available appointment with a specialist for me? I'm experiencing issues with asthma and on-and-off back pain. It would need to be scheduled for tomorrow morning after I'm done with my job.",
+      "sensitive_info": [
+        "asthma",
+        "back pain"
+      ],
+      "n_resid_facts": 37,
+      "latency": {
+        "lc_s": 13.072,
+        "ps_s": 0.233,
+        "ner_s": 0.013,
+        "total_s": 13.318
+      },
+      "payloads": {
+        "naive": "Bob Smith at 45 Elm St, Rochester NY 14623 needs help: Can you check for the earliest available appointment with a specialist for me? I'm experiencing issues with asthma and on-and-off back pain. It would need to be scheduled for tomorrow morning after I'm done with my job.. .",
+        "privacyscope": "<NAME_1> at Rochester, NY area needs help: Can you check for the earliest available appointment with a specialist for me? I'm experiencing issues with asthma and medical concern. .",
+        "ner_redact": "[REDACTED_NAME] at [REDACTED_ADDRESS] needs help: Can you check for the earliest available appointment with a specialist for me? I'm experiencing issues with asthma and on-and-off back pain. It would need to be scheduled for [REDACTED_DATE] after I'm done with my job.. .",
+        "lc_reasoning": "Here's a rich natural-language message to be sent to the cloud:\n\n\"Hello cloud assistant, I'm Bob Smith, a 32-year-old man born on July 14th, 1993. My current address is 45 Elm St, Rochester NY 14623 and my phone number is 585-555-0192. I can be reached at bob@example.com.\n\nI've been experiencing issues with asthma and on-and-off back pain lately. I'm looking for the earliest available appointment with a specialist to check these symptoms.\n\nFrom my past bookings, I have appointments scheduled with Dr. Jennifer Lee, MD and Dr. Sarah Thompson, DO in the future. My insurance is BlueCross Dental Plus with ID [insert insurance ID if available].\n\nI need an appointment tomorrow morning after I've finished my job, so availability for that day would be ideal.\n\nPlease find me the earliest available time slot tomorrow morning for a specialist to check on asthma and back pain issues, considering my insurance coverage."
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 1.0,
+          "RLR": 1,
+          "RLRatio": 0.05405405405405406,
+          "leaked_seed": [
+            "asthma",
+            "back pain"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 49,
+          "tokens_payload": 49
+        },
+        "privacyscope": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [
+            "asthma"
+          ],
+          "leaked_resid": [],
+          "PR": 0.40816326530612246,
+          "tokens_naive": 49,
+          "tokens_payload": 29
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 1.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [
+            "asthma",
+            "back pain"
+          ],
+          "leaked_resid": [],
+          "PR": 0.14285714285714285,
+          "tokens_naive": 49,
+          "tokens_payload": 42
+        }
+      }
+    },
+    {
+      "task_id": 13,
+      "seed_id": "seed_0017",
+      "variant_id": 1,
+      "domain": "medical_booking",
+      "prompt": "Help me book a doctor appointment — female provider preferred, before noon. I have been dealing with antidepressants. It is interfering with sleep. I really need to avoid waiting too long.",
+      "sensitive_info": [
+        "ER visit",
+        "pregnancy",
+        "antidepressants"
+      ],
+      "n_resid_facts": 39,
+      "latency": {
+        "lc_s": 13.245,
+        "ps_s": 0.191,
+        "ner_s": 0.041,
+        "total_s": 13.478
+      },
+      "payloads": {
+        "naive": "Hello, I'm Bob Smith, 32 years old, born on July 14, 1993. I'm experiencing antidepressant-induced sleep issues that are affecting my daily life. I need to book a doctor appointment with a female provider before noon. Can you please assist me in finding an available appointment for the soonest possible date and time? Additionally, can you check if there are any female physicians or specialists who have experience treating antidepressant-related sleep disturbances?\n\nI'd also like to request that my insurance information be verified - specifically BlueCross Dental Plus with ID number [insert ID]. I have a home address at 45 Elm St, Rochester NY 14623 and can be reached on phone at 585-555-0192.\n\nIn the past, I've had some experience with mental health appointments; please feel free to include any relevant information from my medical history. Can you also provide me with availability dates for upcoming weeks?\n\nPlease let me know if there are any additional steps I need to take or if you require any further information from me. Thank you very much for your assistance.",
+        "privacyscope": "Hello, I'm <NAME_1>, in their 30s, born on 1990s. I need to book a doctor appointment with a female provider before noon. Can you please assist me in finding an available appointment for the soonest possible date and time? Additionally, can you check if there are any female physicians or specialists who have experience treating antidepressant-related sleep disturbances? Can you also provide me with availability dates for upcoming weeks?",
+        "ner_redact": "Hello, I'm [REDACTED_NAME], 32 years old, born on [REDACTED_DATE]. I'm experiencing antidepressant-induced sleep issues that are affecting my daily life. I need to book a doctor appointment with a female provider before noon. Can you please assist me in finding an available appointment for the soonest possible date and time? Additionally, can you check if there are any female physicians or specialists who have experience treating antidepressant-related sleep disturbances?\n\nI'd also like to request that my insurance information be verified - specifically [REDACTED_INSURANCE] with ID number [insert ID]. I have a home address at [REDACTED_ADDRESS] and can be reached on phone at [REDACTED_PHONE].\n\nIn the past, I've had some experience with mental health appointments; please feel free to include any relevant information from my medical history. Can you also provide me with availability dates for upcoming [REDACTED_DATE]?\n\nPlease let me know if there are any additional steps I need to take or if you require any further information from me. Thank you very much for your assistance.",
+        "lc_reasoning": "Based on the available local data and inferred preferences, I will assemble a rich and detailed CLOUD QUERY for the cloud assistant:\n\n\"Hello, I'm Bob Smith, 32 years old, born on July 14, 1993. I'm experiencing antidepressant-induced sleep issues that are affecting my daily life. I need to book a doctor appointment with a female provider before noon. Can you please assist me in finding an available appointment for the soonest possible date and time? Additionally, can you check if there are any female physicians or specialists who have experience treating antidepressant-related sleep disturbances?\n\nI'd also like to request that my insurance information be verified - specifically BlueCross Dental Plus with ID number [insert ID]. I have a home address at 45 Elm St, Rochester NY 14623 and can be reached on phone at 585-555-0192.\n\nIn the past, I've had some experience with mental health appointments; please feel free to include any relevant information from my medical history. Can you also provide me with availability dates for upcoming weeks?\n\nPlease let me know if there are any additional steps I need to take or if you require any further information from me. Thank you very much for your assistance.\"\n\nI included all the required local data and inferred preferences, while rephrasing them in a clear and concise manner to ensure the cloud assistant has a comprehensive understanding of the task requirements."
+      },
+      "metrics": {
+        "naive": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 1,
+          "RLRatio": 0.10256410256410256,
+          "leaked_seed": [],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192",
+            "BlueCross Dental Plus"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 177,
+          "tokens_payload": 177
+        },
+        "privacyscope": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.6101694915254238,
+          "tokens_naive": 177,
+          "tokens_payload": 69
+        },
+        "ner_redact": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.05649717514124294,
+          "tokens_naive": 177,
+          "tokens_payload": 167
+        }
+      }
+    },
+    {
+      "task_id": 14,
+      "seed_id": "seed_0002",
+      "variant_id": 3,
+      "domain": "medical_booking",
+      "prompt": "I urgently need to see a highly rated doctor for my insulin concerns, they've been acting up lately. Can you book an appointment after my work hours but definitely before noon? It’s important to find someone who can take my surgery history into account.",
+      "sensitive_info": [
+        "insulin",
+        "surgery history"
+      ],
+      "n_resid_facts": 42,
+      "latency": {
+        "lc_s": 16.668,
+        "ps_s": 0.12,
+        "ner_s": 0.012,
+        "total_s": 16.8
+      },
+      "payloads": {
+        "naive": "Hello, Cloud Assistant. I'm Bob Smith, 32 years old, born on July 14th, 1993. I live at 45 Elm St, Rochester NY 14623 and can be reached at 585-555-0192 or bob@example.com. My insurance is BlueCross Dental Plus (ID: ).",
+        "privacyscope": "Hello, Cloud Assistant. I'm <NAME_1>, in their 30s, born on 1990s. I live at Rochester, NY area and can be reached at <PHONE_2> or <EMAIL_3>. My insurance is dental insurance (ID: ).",
+        "ner_redact": "Hello, Cloud Assistant. I'm [REDACTED_NAME], 32 years old, born on [REDACTED_DATE]. I live at [REDACTED_ADDRESS] and can be reached at [REDACTED_PHONE] or [REDACTED_EMAIL]. My insurance is [REDACTED_INSURANCE] (ID: ).",
+        "lc_reasoning": "Here's a rich natural-language message packed with all the available information that I've assembled for the"
+      },
+      "metrics": {
+        "naive": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 1,
+          "RLRatio": 0.11904761904761904,
+          "leaked_seed": [],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192",
+            "bob@example.com",
+            "BlueCross Dental Plus"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 39,
+          "tokens_payload": 39
+        },
+        "privacyscope": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.1794871794871795,
+          "tokens_naive": 39,
+          "tokens_payload": 32
+        },
+        "ner_redact": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.2564102564102564,
+          "tokens_naive": 39,
+          "tokens_payload": 29
+        }
+      }
+    },
+    {
+      "task_id": 15,
+      "seed_id": "seed_0018",
+      "variant_id": 3,
+      "domain": "restaurant_booking",
+      "prompt": "I’m looking for a lunch spot that's calming and not too busy. Can you book a table for two within 15 minutes for my anniversary? Also, one of us has a seafood allergy, so make sure the place can handle that.",
+      "sensitive_info": [
+        "anniversary",
+        "seafood allergy"
+      ],
+      "n_resid_facts": 44,
+      "latency": {
+        "lc_s": 19.309,
+        "ps_s": 0.153,
+        "ner_s": 0.003,
+        "total_s": 19.466
+      },
+      "payloads": {
+        "naive": "Hey Cloud Assistant,",
+        "privacyscope": "",
+        "ner_redact": "Hey Cloud Assistant,",
+        "lc_reasoning": "Based on the available local data and inferred preferences, I will assemble a rich cloud-bound message to maximize task utility. Here is the"
+      },
+      "metrics": {
+        "naive": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.0,
+          "tokens_naive": 3,
+          "tokens_payload": 3
+        },
+        "privacyscope": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 1.0,
+          "tokens_naive": 3,
+          "tokens_payload": 0
+        },
+        "ner_redact": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.0,
+          "tokens_naive": 3,
+          "tokens_payload": 3
+        }
+      }
+    },
+    {
+      "task_id": 16,
+      "seed_id": "seed_0013",
+      "variant_id": 2,
+      "domain": "medical_booking",
+      "prompt": "I need to book a checkup soon because I’ve been feeling dizzy and having migraines, along with some back pain. I’d prefer a female provider who takes my insurance and is located near my office. Can you check for available appointments this week?",
+      "sensitive_info": [
+        "dizziness",
+        "migraine",
+        "back pain"
+      ],
+      "n_resid_facts": 46,
+      "latency": {
+        "lc_s": 14.326,
+        "ps_s": 0.151,
+        "ner_s": 0.018,
+        "total_s": 14.495
+      },
+      "payloads": {
+        "naive": "Hello Cloud Assistant, I need to book a checkup soon because I’ve been feeling dizzy and having migraines, along with some back pain. My name is Bob Smith, I’m 32 years old, born on July 14th, 1993, living at 45 Elm St, Rochester NY 14623, and can be reached at 585-555-0192 or bob@example.com. I have BlueCross Dental Plus insurance with ID .",
+        "privacyscope": "Hello <NAME_1> Assistant, I need to book a checkup soon because I’ve been feeling dizzy and having migraines, along with medical concern. I have dental concern with ID .",
+        "ner_redact": "Hello [REDACTED_PERSON] Assistant, I need to book a checkup soon because I’ve been feeling dizzy and having migraines, along with some back pain. My name is [REDACTED_NAME], I’m 32 years old, born on [REDACTED_DATE], living at [REDACTED_ADDRESS], and can be reached at [REDACTED_PHONE] or [REDACTED_EMAIL]. I have [REDACTED_INSURANCE] insurance with ID .",
+        "lc_reasoning": "Based on the available local data and inferred preferences, I will assemble a rich cloud-bound message for the cloud assistant. Here is the"
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 0.6666666666666666,
+          "RLR": 1,
+          "RLRatio": 0.13043478260869565,
+          "leaked_seed": [
+            "migraine",
+            "back pain"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192",
+            "bob@example.com",
+            "BlueCross Dental Plus",
+            "back pain"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 62,
+          "tokens_payload": 62
+        },
+        "privacyscope": {
+          "LR": 1,
+          "LRatio": 0.3333333333333333,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [
+            "migraine"
+          ],
+          "leaked_resid": [],
+          "PR": 0.532258064516129,
+          "tokens_naive": 62,
+          "tokens_payload": 29
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 0.6666666666666666,
+          "RLR": 1,
+          "RLRatio": 0.021739130434782608,
+          "leaked_seed": [
+            "migraine",
+            "back pain"
+          ],
+          "leaked_resid": [
+            "back pain"
+          ],
+          "PR": 0.16129032258064516,
+          "tokens_naive": 62,
+          "tokens_payload": 52
+        }
+      }
+    },
+    {
+      "task_id": 17,
+      "seed_id": "seed_0001",
+      "variant_id": 0,
+      "domain": "medical_booking",
+      "prompt": "I recently visited urgent care for my eczema and headaches, but the over-the-counter medication isn't working. Can you help me book a follow-up appointment with a specialist this week? I’d prefer it to be before noon and within 20 minutes of my home.",
+      "sensitive_info": [
+        "eczema",
+        "headaches"
+      ],
+      "n_resid_facts": 49,
+      "latency": {
+        "lc_s": 23.214,
+        "ps_s": 0.35,
+        "ner_s": 0.023,
+        "total_s": 23.587
+      },
+      "payloads": {
+        "naive": "Hello Cloud Assistant,\n\nI'm Bob Smith, a 32-year-old male with a Doctor of Birthdate July 14th, 1993. I recently visited urgent care for my eczema and headaches, but the over-the-counter medication isn't working. Can you help me book a follow-up appointment with a specialist this week? \n\nI've been experiencing eczema and occasional headaches, and my back has been bothering me. Additionally, I have dizziness and frequent migraines, which is why I was initially seeking medical attention for those symptoms.\n\nGiven that I have a past experience with",
+        "privacyscope": "Hello <NAME_1> Assistant,\n\nI'm <NAME_2>, a 32-year-old male with a Doctor of Birthdate 1990s. I recently visited urgent care for my eczema and headaches, but the over-the-counter medication isn't working. Can you help me book a follow-up appointment with a specialist this week?",
+        "ner_redact": "Hello [REDACTED_PERSON] Assistant,\n\nI'm [REDACTED_NAME], a 32-year-old male with a Doctor of Birthdate [REDACTED_DATE]. I recently visited urgent care for my eczema and headaches, but the over-the-counter medication isn't working. Can you help me book a follow-up appointment with a specialist [REDACTED_DATE]? \n\nI've been experiencing eczema and occasional headaches, and my back has been bothering me. Additionally, I have dizziness and frequent migraines, which is why I was initially seeking medical attention for those symptoms.\n\nGiven that I have a past experience with",
+        "lc_reasoning": "Here's the CLOUD QUERY based on the provided local data:\n\n\"Hello Cloud Assistant,\n\nI'm Bob Smith, a 32-year-old male with a Doctor of Birthdate July 14th, 1993. I recently visited urgent care for my eczema and headaches, but the over-the-counter medication isn't working. Can you help me book a follow-up appointment with a specialist this week? \n\nI've been experiencing eczema and occasional headaches, and my back has been bothering me. Additionally, I have dizziness and frequent migraines, which is why I was initially seeking medical attention for those symptoms.\n\nGiven that I have a past experience with \"Can you help me find a female doctor who can see me for my checkup? I’ve been suffering from dizziness and frequent migraines, plus my back has been bothering me. It's important that they accept my insurance and are located near my workplace, as I’m hoping to get in quickly.\" and another relevant experience with \"I'm looking to schedule an appointment with a mental health specialist because my doctor suggested it after I’ve been on antidepressants. I’ve already tried some home remedies like rest and ice, but I'm feeling pretty overwhelmed.\"\n\nOne of the previous dermatology associates I booked was Dermatology Associates for task: \"I need to schedule a follow-up appointment with a dermatologist for my eczema. Can you find me a specialist who accepts my insurance and has availability before noon? It’s been acting up and I want to get it sorted out as soon as possible.\"\n\nMy current location is 45 Elm St, Rochester NY 14623.\n\nI have booked an appointment at Dermatology Associates previously but need help finding one with better time slots. \n\nCan you book a follow-up appointment with a dermatologist who accepts BlueCross Dental Plus insurance and has availability before noon this week? I would like it to be within 20 minutes of my home address, which is 45 Elm St, Rochester NY 14623.\n\nPlease make sure the specialist can handle my health complaints accurately, given that I have eczema, occasional headaches, dizziness, and frequent migraines. \n\nI prefer appointments before noon this week. Thank you for your assistance in booking an appointment with a suitable dermatologist.\""
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 1.0,
+          "RLR": 1,
+          "RLRatio": 0.10204081632653061,
+          "leaked_seed": [
+            "eczema",
+            "headaches"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "eczema",
+            "eczema",
+            "dizziness",
+            "migraine"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 87,
+          "tokens_payload": 87
+        },
+        "privacyscope": {
+          "LR": 1,
+          "LRatio": 1.0,
+          "RLR": 1,
+          "RLRatio": 0.04081632653061224,
+          "leaked_seed": [
+            "eczema",
+            "headaches"
+          ],
+          "leaked_resid": [
+            "eczema",
+            "eczema"
+          ],
+          "PR": 0.5057471264367817,
+          "tokens_naive": 87,
+          "tokens_payload": 43
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 1.0,
+          "RLR": 1,
+          "RLRatio": 0.08163265306122448,
+          "leaked_seed": [
+            "eczema",
+            "headaches"
+          ],
+          "leaked_resid": [
+            "eczema",
+            "eczema",
+            "dizziness",
+            "migraine"
+          ],
+          "PR": 0.04597701149425287,
+          "tokens_naive": 87,
+          "tokens_payload": 83
+        }
+      }
+    },
+    {
+      "task_id": 18,
+      "seed_id": "seed_0029",
+      "variant_id": 1,
+      "domain": "restaurant_booking",
+      "prompt": "I'm looking for a lunch spot for me and a couple of colleagues. Ideally, it should have outdoor seating, and I need to ensure there are vegetarian and vegan meals available. I want a relaxing atmosphere without too many people, and something affordable would be great!",
+      "sensitive_info": [
+        "vegetarian",
+        "vegan",
+        "coworker dinner"
+      ],
+      "n_resid_facts": 51,
+      "latency": {
+        "lc_s": 14.444,
+        "ps_s": 0.199,
+        "ner_s": 0.033,
+        "total_s": 14.676
+      },
+      "payloads": {
+        "naive": "Hello, I'm Bob Smith, a 32-year-old looking for lunch recommendations that cater to halal cuisine. I'd like to dine with two colleagues and ensure we have vegetarian and vegan options available. It's ideal if the establishment has outdoor seating and maintains a relaxing atmosphere without being too crowded. Moreover, I'm on a budget, so affordable options would be appreciated.\n\nI previously visited Dorado and Salena's Restaurant, which suggests familiarity with their cuisines.\n\nAs for availability, I'd like to check for dates between [current date] and [next available weekend]. Please consider my preferred party size of three or more people when making recommendations.\n\nLastly, could you please confirm if the restaurant has BlueCross Dental Plus insurance coverage? My ID is [insert insurance ID].\n\nI'm looking forward to finding a spot that meets all these requirements. Thank you for your assistance!",
+        "privacyscope": "It's ideal if the establishment has outdoor seating and maintains a relaxing atmosphere without being too crowded.",
+        "ner_redact": "Hello, I'm [REDACTED_NAME], a 32-year-old looking for lunch recommendations that cater to halal cuisine. I'd like to dine with [REDACTED_NUMBER] colleagues and ensure we have vegetarian and vegan options available. It's ideal if the establishment has outdoor seating and maintains a relaxing atmosphere without being too crowded. Moreover, I'm on a budget, so affordable options would be appreciated.\n\nI previously visited [REDACTED_LOCATION] and [REDACTED_LOCATION]'s Restaurant, which suggests familiarity with their cuisines.\n\nAs for availability, I'd like to check for dates between [current date] and [next available [REDACTED_DATE]]. Please consider my preferred party size of [REDACTED_NUMBER] or more people when making recommendations.\n\nLastly, could you please confirm if the restaurant has [REDACTED_INSURANCE] insurance coverage? My ID is [insert insurance ID].\n\nI'm looking forward to finding a spot that meets all these requirements. Thank you for your assistance!",
+        "lc_reasoning": "Here's the rich natural-language message to be sent to the cloud:\n\n\"Hello, I'm Bob Smith, a 32-year-old looking for lunch recommendations that cater to halal cuisine. I'd like to dine with two colleagues and ensure we have vegetarian and vegan options available. It's ideal if the establishment has outdoor seating and maintains a relaxing atmosphere without being too crowded. Moreover, I'm on a budget, so affordable options would be appreciated.\n\nI previously visited Dorado and Salena's Restaurant, which suggests familiarity with their cuisines.\n\nAs for availability, I'd like to check for dates between [current date] and [next available weekend]. Please consider my preferred party size of three or more people when making recommendations.\n\nLastly, could you please confirm if the restaurant has BlueCross Dental Plus insurance coverage? My ID is [insert insurance ID].\n\nI'm looking forward to finding a spot that meets all these requirements. Thank you for your assistance!\"\n\nThis message includes:\n\n1. User's exact symptoms (halal preference)\n2. Full name, age, DOB, address, phone, and insurance details\n3. Past relevant bookings (previous restaurant visits)\n4. Availability dates\n5. Budget and party size preferences"
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 0.6666666666666666,
+          "RLR": 1,
+          "RLRatio": 0.13725490196078433,
+          "leaked_seed": [
+            "vegetarian",
+            "vegan"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "BlueCross Dental Plus",
+            "vegetarian",
+            "vegetarian",
+            "vegan",
+            "vegetarian",
+            "vegan"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 139,
+          "tokens_payload": 139
+        },
+        "privacyscope": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.8776978417266187,
+          "tokens_naive": 139,
+          "tokens_payload": 17
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 0.6666666666666666,
+          "RLR": 1,
+          "RLRatio": 0.09803921568627451,
+          "leaked_seed": [
+            "vegetarian",
+            "vegan"
+          ],
+          "leaked_resid": [
+            "vegetarian",
+            "vegetarian",
+            "vegan",
+            "vegetarian",
+            "vegan"
+          ],
+          "PR": 0.02158273381294964,
+          "tokens_naive": 139,
+          "tokens_payload": 136
+        }
+      }
+    },
+    {
+      "task_id": 19,
+      "seed_id": "seed_0026",
+      "variant_id": 2,
+      "domain": "travel_booking",
+      "prompt": "Please find me a refundable flight as I have a family emergency. I'd like to leave from the nearest airport because I’m anxious about flying alone at night. I can adjust my departure by a day if needed to get there quickly.",
+      "sensitive_info": [
+        "anxiety",
+        "dietary restriction",
+        "family emergency"
+      ],
+      "n_resid_facts": 54,
+      "latency": {
+        "lc_s": 13.977,
+        "ps_s": 0.074,
+        "ner_s": 0.003,
+        "total_s": 14.054
+      },
+      "payloads": {
+        "naive": "Hello Cloud Assistant,",
+        "privacyscope": "Hello Cloud Assistant,",
+        "ner_redact": "Hello Cloud Assistant,",
+        "lc_reasoning": "Here's the"
+      },
+      "metrics": {
+        "naive": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.0,
+          "tokens_naive": 3,
+          "tokens_payload": 3
+        },
+        "privacyscope": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.0,
+          "tokens_naive": 3,
+          "tokens_payload": 3
+        },
+        "ner_redact": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.0,
+          "tokens_naive": 3,
+          "tokens_payload": 3
+        }
+      }
+    },
+    {
+      "task_id": 20,
+      "seed_id": "seed_0006",
+      "variant_id": 3,
+      "domain": "travel_booking",
+      "prompt": "I need to book a round-trip flight for a medical trip soon. If possible, I’d like to see options with flexible dates but very short layovers since I have wheelchair assistance needs. Keeping the fare affordable is really important to me, too. Can you help with that?",
+      "sensitive_info": [
+        "medical trip",
+        "wheelchair assistance"
+      ],
+      "n_resid_facts": 57,
+      "latency": {
+        "lc_s": 16.744,
+        "ps_s": 0.346,
+        "ner_s": 0.019,
+        "total_s": 17.109
+      },
+      "payloads": {
+        "naive": "Hello, I'm Bob Smith, a 32-year-old male born on July 14, 1993, residing at 45 Elm St, Rochester NY 14623, with phone number 585-555-0192 and email bob@example.com. I have BlueCross Dental Plus insurance with ID [insert insurance ID if available].",
+        "privacyscope": "",
+        "ner_redact": "Hello, I'm [REDACTED_NAME], a 32-year-old male born on [REDACTED_DATE], residing at [REDACTED_ADDRESS], with phone number [REDACTED_PHONE] and email [REDACTED_EMAIL]. I have [REDACTED_INSURANCE] insurance with ID [insert insurance ID if available].",
+        "lc_reasoning": "Based on the available local data and inferred preferences, I will pack the richest possible cloud-bound message for the user's task. Here is the"
+      },
+      "metrics": {
+        "naive": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 1,
+          "RLRatio": 0.08771929824561403,
+          "leaked_seed": [],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192",
+            "bob@example.com",
+            "BlueCross Dental Plus"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 40,
+          "tokens_payload": 40
+        },
+        "privacyscope": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 1.0,
+          "tokens_naive": 40,
+          "tokens_payload": 0
+        },
+        "ner_redact": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.25,
+          "tokens_naive": 40,
+          "tokens_payload": 30
+        }
+      }
+    },
+    {
+      "task_id": 21,
+      "seed_id": "seed_0007",
+      "variant_id": 1,
+      "domain": "medical_booking",
+      "prompt": "Could you help me find an orthopedic specialist for my knee pain? I'm looking for someone who accepts my insurance and can see me before noon. I just need a follow-up after my urgent care visit, and I'd like the earliest appointment available.",
+      "sensitive_info": [
+        "eczema",
+        "knee pain"
+      ],
+      "n_resid_facts": 59,
+      "latency": {
+        "lc_s": 14.095,
+        "ps_s": 0.162,
+        "ner_s": 0.032,
+        "total_s": 14.289
+      },
+      "payloads": {
+        "naive": "Hello, I'm Bob Smith, 32 years old, born on July 14th, 1993. My current address is 45 Elm St, Rochester NY 14623, and my phone number is 585-555-0192. I've recently experienced knee pain, which prompted me to schedule a follow-up appointment with an orthopedic specialist. The insurance provider for my dental plan is BlueCross Dental Plus, with the ID [insert ID here if available]. I would like to inquire about female orthopedic specialists who accept BlueCross Dental Plus and can see patients before noon on any date this month/week. Prior to this, I visited urgent care for a knee injury, but I'd like to schedule a follow-up appointment specifically with an orthopedic specialist. Can you please help me find the earliest available appointment that meets these criteria?",
+        "privacyscope": "Hello, I'm <NAME_1>, in their 30s, born on 1990s. I've recently experienced orthopedic concern, which prompted me to schedule a follow-up appointment with orthopedic concern. Prior to this, I visited urgent care for a orthopedic concern injury, but I'd like to schedule a follow-up appointment specifically with orthopedic concern.",
+        "ner_redact": "Hello, I'm [REDACTED_NAME], 32 years old, born on [REDACTED_DATE]. My current address is [REDACTED_ADDRESS], and my phone number is [REDACTED_PHONE]. I've recently experienced knee pain, which prompted me to schedule a follow-up appointment with an orthopedic specialist. The insurance provider for my dental plan is [REDACTED_INSURANCE], with the ID [insert ID here if available]. I would like to inquire about female orthopedic specialists who accept [REDACTED_INSURANCE] and can see patients [REDACTED_DATE] on any date [REDACTED_DATE]. Prior to this, I visited urgent care for a knee injury, but I'd like to schedule a follow-up appointment specifically with an orthopedic specialist. Can you please help me find the earliest available appointment that meets these criteria?",
+        "lc_reasoning": "Here's a CLOUD QUERY that packs all the available local data into a rich natural-language message:\n\n\"Hello, I'm Bob Smith, 32 years old, born on July 14th, 1993. My current address is 45 Elm St, Rochester NY 14623, and my phone number is 585-555-0192. I've recently experienced knee pain, which prompted me to schedule a follow-up appointment with an orthopedic specialist. The insurance provider for my dental plan is BlueCross Dental Plus, with the ID [insert ID here if available]. I would like to inquire about female orthopedic specialists who accept BlueCross Dental Plus and can see patients before noon on any date this month/week. Prior to this, I visited urgent care for a knee injury, but I'd like to schedule a follow-up appointment specifically with an orthopedic specialist. Can you please help me find the earliest available appointment that meets these criteria?\"\n\nThis query includes:\n\n* User's personal details (name, age, DOB, address, phone)\n* Symptom and health complaint (knee pain and urgent care visit)\n* Insurance provider and ID\n* Inferred past medical history (urgent care visit for knee injury)\n* Availability requirements (female orthopedic specialist, accepts BlueCross Dental Plus, before noon)\n* Location (Rochester NY 14623)\n\nBy including all the available local data, the query should provide a comprehensive context for the cloud assistant to complete the task."
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 1,
+          "RLRatio": 0.1016949152542373,
+          "leaked_seed": [
+            "knee pain"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192",
+            "BlueCross Dental Plus",
+            "knee pain",
+            "knee pain"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 127,
+          "tokens_payload": 127
+        },
+        "privacyscope": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.6141732283464567,
+          "tokens_naive": 127,
+          "tokens_payload": 49
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 1,
+          "RLRatio": 0.03389830508474576,
+          "leaked_seed": [
+            "knee pain"
+          ],
+          "leaked_resid": [
+            "knee pain",
+            "knee pain"
+          ],
+          "PR": 0.11023622047244094,
+          "tokens_naive": 127,
+          "tokens_payload": 113
+        }
+      }
+    },
+    {
+      "task_id": 22,
+      "seed_id": "seed_0016",
+      "variant_id": 0,
+      "domain": "restaurant_booking",
+      "prompt": "Can you help me book a casual outdoor lunch for my family this Saturday? I’d prefer somewhere close to home that serves halal food. I want to keep things simple and relaxed.",
+      "sensitive_info": [
+        "halal",
+        "coworker dinner",
+        "family dinner"
+      ],
+      "n_resid_facts": 61,
+      "latency": {
+        "lc_s": 13.401,
+        "ps_s": 0.177,
+        "ner_s": 0.01,
+        "total_s": 13.589
+      },
+      "payloads": {
+        "naive": "Hello, I need help booking a casual outdoor lunch for my family this Saturday. I'd prefer somewhere close to home that serves halal food. I want to keep things simple and relaxed.",
+        "privacyscope": "Hello, I need help booking a casual outdoor lunch for my family this this week. I'd prefer somewhere close to home that serves halal food. I want to keep things simple and relaxed.",
+        "ner_redact": "Hello, I need help booking a casual outdoor lunch for my family this [REDACTED_DATE]. I'd prefer somewhere close to home that serves halal food. I want to keep things simple and relaxed.",
+        "lc_reasoning": "Based on the available local data and inferred preferences, I will assemble the richest possible cloud-bound message for the cloud assistant. Here is the"
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 0.3333333333333333,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [
+            "halal"
+          ],
+          "leaked_resid": [],
+          "PR": 0.0,
+          "tokens_naive": 32,
+          "tokens_payload": 32
+        },
+        "privacyscope": {
+          "LR": 1,
+          "LRatio": 0.3333333333333333,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [
+            "halal"
+          ],
+          "leaked_resid": [],
+          "PR": -0.03125,
+          "tokens_naive": 32,
+          "tokens_payload": 33
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 0.3333333333333333,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [
+            "halal"
+          ],
+          "leaked_resid": [],
+          "PR": 0.0,
+          "tokens_naive": 32,
+          "tokens_payload": 32
+        }
+      }
+    },
+    {
+      "task_id": 23,
+      "seed_id": "seed_0019",
+      "variant_id": 1,
+      "domain": "restaurant_booking",
+      "prompt": "I need you to reserve a table for us tomorrow evening. It’s a family dinner, and my cousin has a nut allergy, so check if the restaurant can accommodate that. It would be great if we could avoid a long wait, as I want the night to go smoothly.",
+      "sensitive_info": [
+        "family dinner",
+        "nut allergy"
+      ],
+      "n_resid_facts": 64,
+      "latency": {
+        "lc_s": 14.821,
+        "ps_s": 0.162,
+        "ner_s": 0.023,
+        "total_s": 15.005
+      },
+      "payloads": {
+        "naive": "Hi there, my name is Bob Smith, I'm 32 years old, born on July 14, 1993, and I live at 45 Elm St, Rochester NY 14623. My phone number is 585-555-0192 and my email address is bob@example.com. I have BlueCross Dental Plus insurance with ID [insert insurance ID if available]. I'm reaching out because I need to reserve a table for myself and my family tomorrow evening. One of my guests has a nut allergy, so please let me know if the restaurant can accommodate that request.",
+        "privacyscope": "",
+        "ner_redact": "Hi there, my name is [REDACTED_NAME], I'm 32 years old, born on [REDACTED_DATE], and I live at [REDACTED_ADDRESS]. My phone number is [REDACTED_PHONE] and my email address is [REDACTED_EMAIL]. I have [REDACTED_INSURANCE] insurance with ID [insert insurance ID if available]. I'm reaching out because I need to reserve a table for myself and my family [REDACTED_DATE] evening. [REDACTED_NUMBER] of my guests has a nut allergy, so please let me know if the restaurant can accommodate that request.",
+        "lc_reasoning": "Based on the available local data, I will pack the richest possible cloud-bound message for the user's restaurant reservation query. Here is the"
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 1,
+          "RLRatio": 0.078125,
+          "leaked_seed": [
+            "nut allergy"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192",
+            "bob@example.com",
+            "BlueCross Dental Plus"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 87,
+          "tokens_payload": 87
+        },
+        "privacyscope": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 1.0,
+          "tokens_naive": 87,
+          "tokens_payload": 0
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [
+            "nut allergy"
+          ],
+          "leaked_resid": [],
+          "PR": 0.11494252873563218,
+          "tokens_naive": 87,
+          "tokens_payload": 77
+        }
+      }
+    },
+    {
+      "task_id": 24,
+      "seed_id": "seed_0025",
+      "variant_id": 2,
+      "domain": "medical_booking",
+      "prompt": "Help me book a doctor appointment — after work, in network. I have been dealing with blood thinners. I recently started a new medication. I really need to find the earliest appointment.",
+      "sensitive_info": [
+        "blood thinners",
+        "surgery history"
+      ],
+      "n_resid_facts": 66,
+      "latency": {
+        "lc_s": 15.057,
+        "ps_s": 0.126,
+        "ner_s": 0.021,
+        "total_s": 15.203
+      },
+      "payloads": {
+        "naive": "Hey Cloud! Can you help me book an early doctor appointment for Bob Smith (32 years old, born July 14th, 1993) at his home address (45 Elm St, Rochester NY 14623) and phone number (585-555-0192)? Bob has been dealing with blood thinners and recently started a new medication. He's looking to schedule an appointment before noon at Dr. Jennifer Lee's office (1000 East Ridge Road, Rochester, NY), considering his recent medical changes due to the new medication.",
+        "privacyscope": "<NAME_1> has been dealing with blood thinners and recently started a new medication. He's looking to schedule an appointment before this week at Dr.",
+        "ner_redact": "Hey Cloud! Can you help me book an early doctor appointment for [REDACTED_NAME] (32 years old, born [REDACTED_DATE]) at his home address ([REDACTED_ADDRESS]) and phone number [REDACTED_PHONE])? [REDACTED_PERSON] has been dealing with blood thinners and recently started a new medication. He's looking to schedule an appointment before [REDACTED_DATE] at Dr. [REDACTED_PERSON]'s office ([REDACTED_DATE] [REDACTED_LOCATION], [REDACTED_LOCATION], [REDACTED_LOCATION]), considering his recent medical changes due to the new medication.",
+        "lc_reasoning": "Here's a rich natural-language message that I'd pack into the"
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 1,
+          "RLRatio": 0.045454545454545456,
+          "leaked_seed": [
+            "blood thinners"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 77,
+          "tokens_payload": 77
+        },
+        "privacyscope": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [
+            "blood thinners"
+          ],
+          "leaked_resid": [],
+          "PR": 0.6883116883116883,
+          "tokens_naive": 77,
+          "tokens_payload": 24
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [
+            "blood thinners"
+          ],
+          "leaked_resid": [],
+          "PR": 0.14285714285714285,
+          "tokens_naive": 77,
+          "tokens_payload": 66
+        }
+      }
+    },
+    {
+      "task_id": 25,
+      "seed_id": "seed_0017",
+      "variant_id": 3,
+      "domain": "medical_booking",
+      "prompt": "Can you help me book a doctor appointment — female provider preferred, before noon? I have been dealing with ER visit. It is interfering with sleep. I really need to avoid waiting too long.",
+      "sensitive_info": [
+        "ER visit",
+        "pregnancy",
+        "antidepressants"
+      ],
+      "n_resid_facts": 68,
+      "latency": {
+        "lc_s": 13.086,
+        "ps_s": 0.222,
+        "ner_s": 0.037,
+        "total_s": 13.345
+      },
+      "payloads": {
+        "naive": "Hi, I'm Bob Smith, 32 years old, born on July 14th, 1993. My address is 45 Elm St, Rochester NY 14623, and my phone number is 585-555-0192. I have been sending emails to bob@example.com. I am covered by BlueCross Dental Plus with ID [insurance ID].\n\nI'm dealing with an ER visit because of [ER visit symptoms], which has been interfering with my sleep. I really need to book a doctor appointment with a female provider before noon as soon as possible.\n\nI have some past medical history that might be relevant: in the past, I've had an ER visit, which suggests I may have an underlying condition that needs attention. I'd like the cloud assistant to take this into account when finding a suitable doctor for me.\n\nCould you please help me find a female doctor available before noon today and tomorrow, considering my insurance coverage? I appreciate your assistance in booking this appointment quickly.",
+        "privacyscope": "Hi, I'm <NAME_1>, in their 30s, born on 1990s. I have been sending emails to <EMAIL_3>. I am covered by dental insurance with ID [insurance ID]. I'm dealing with an ER visit because of [medical concern], which has been interfering with my sleep. I really need to book a doctor appointment with a female provider this week as soon as possible. I'd like the cloud assistant to take this into account when finding a suitable doctor for me. Could you please help me find a female doctor available this week this week and this week, considering my insurance coverage? I appreciate your assistance in booking this appointment quickly.",
+        "ner_redact": "Hi, I'm [REDACTED_NAME], 32 years old, born on [REDACTED_DATE]. My address is [REDACTED_ADDRESS], and my phone number is [REDACTED_PHONE]. I have been sending emails to [REDACTED_EMAIL]. I am covered by [REDACTED_INSURANCE] with ID [insurance ID].\n\nI'm dealing with an [REDACTED_LOCATION] visit because of [ER visit symptoms], which has been interfering with my sleep. I really need to book a doctor appointment with a female provider [REDACTED_DATE] as soon as possible.\n\nI have some past medical history that might be relevant: in the past, I've had an [REDACTED_LOCATION] visit, which suggests I may have an underlying condition that needs attention. I'd like the cloud assistant to take this into account when finding a suitable doctor for me.\n\nCould you please help me find a female doctor available before [REDACTED_DATE] [REDACTED_DATE] and [REDACTED_DATE], considering my insurance coverage? I appreciate your assistance in booking this appointment quickly.",
+        "lc_reasoning": "Based on the provided local data and rules for the CLOUD QUERY, I've assembled the richest possible message:\n\n\"Hi, I'm Bob Smith, 32 years old, born on July 14th, 1993. My address is 45 Elm St, Rochester NY 14623, and my phone number is 585-555-0192. I have been sending emails to bob@example.com. I am covered by BlueCross Dental Plus with ID [insurance ID].\n\nI'm dealing with an ER visit because of [ER visit symptoms], which has been interfering with my sleep. I really need to book a doctor appointment with a female provider before noon as soon as possible.\n\nI have some past medical history that might be relevant: in the past, I've had an ER visit, which suggests I may have an underlying condition that needs attention. I'd like the cloud assistant to take this into account when finding a suitable doctor for me.\n\nCould you please help me find a female doctor available before noon today and tomorrow, considering my insurance coverage? I appreciate your assistance in booking this appointment quickly.\"\n\nThis message includes all relevant local data, including personal details, symptoms, medical history, and availability dates, to maximize task utility and provide the cloud assistant with the most informative context for completing the task."
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 0.3333333333333333,
+          "RLR": 1,
+          "RLRatio": 0.11764705882352941,
+          "leaked_seed": [
+            "ER visit"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192",
+            "bob@example.com",
+            "BlueCross Dental Plus",
+            "ER visit",
+            "ER visit",
+            "ER visit"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 155,
+          "tokens_payload": 155
+        },
+        "privacyscope": {
+          "LR": 1,
+          "LRatio": 0.3333333333333333,
+          "RLR": 1,
+          "RLRatio": 0.04411764705882353,
+          "leaked_seed": [
+            "ER visit"
+          ],
+          "leaked_resid": [
+            "ER visit",
+            "ER visit",
+            "ER visit"
+          ],
+          "PR": 0.3032258064516129,
+          "tokens_naive": 155,
+          "tokens_payload": 108
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 0.3333333333333333,
+          "RLR": 1,
+          "RLRatio": 0.04411764705882353,
+          "leaked_seed": [
+            "ER visit"
+          ],
+          "leaked_resid": [
+            "ER visit",
+            "ER visit",
+            "ER visit"
+          ],
+          "PR": 0.07096774193548387,
+          "tokens_naive": 155,
+          "tokens_payload": 144
+        }
+      }
+    },
+    {
+      "task_id": 26,
+      "seed_id": "seed_0006",
+      "variant_id": 1,
+      "domain": "travel_booking",
+      "prompt": "I'm looking to book a round-trip flight for my medical trip and I need some assistance. I have some flexibility with my travel dates but would appreciate options that involve short layovers because I require wheelchair assistance. Please help me find the most budget-friendly options available.",
+      "sensitive_info": [
+        "medical trip",
+        "wheelchair assistance"
+      ],
+      "n_resid_facts": 71,
+      "latency": {
+        "lc_s": 15.545,
+        "ps_s": 0.478,
+        "ner_s": 0.055,
+        "total_s": 16.078
+      },
+      "payloads": {
+        "naive": "Hello Cloud Assistant,\n\nI'm Bob Smith, a 32-year-old male with a date of birth of July 14th, 1993, who is in need of assistance booking a round-trip flight for my upcoming medical trip due to health complaints that require wheelchair accessibility. I have some flexibility with my travel dates and would appreciate options that involve short layovers.\n\nMy current address is 45 Elm St, Rochester NY 14623, and I can be reached at 585-555-0192 or via email at bob@example.com. I am insured under BlueCross Dental Plus, and my policy ID is [insert insurance ID].\n\nIn the past, I have booked flights for medical purposes before, and I would like to leverage that experience to find a suitable non-stop round-trip flight with minimal layovers.\n\nI'm looking for availability on flexible dates that will allow me to complete my medical appointments. Please provide options that include wheelchair-accessible facilities and short connecting times.\n\nMy priority is to keep the overall cost down, as budget-friendliness is essential for this trip. I appreciate your assistance in finding the most affordable and convenient flights that meet my requirements.\n\nThank you for your help with this critical task. I look forward to receiving recommendations from you soon.\n\nSincerely,\nBob Smith",
+        "privacyscope": "I have some flexibility with my travel dates and would appreciate options that involve short layovers. I'm looking for availability on flexible dates that will allow me to complete my medical appointments. I look forward to receiving recommendations from you soon.",
+        "ner_redact": "Hello [REDACTED_PERSON] Assistant,\n\nI'm [REDACTED_NAME], a 32-year-old male with a date of birth of [REDACTED_DATE], who is in need of assistance booking a round-trip flight for my upcoming medical trip due to health complaints that require wheelchair accessibility. I have some flexibility with my travel dates and would appreciate options that involve short layovers.\n\nMy current address is [REDACTED_ADDRESS], and I can be reached at [REDACTED_PHONE] or via email at [REDACTED_EMAIL]. I am insured under [REDACTED_INSURANCE], and my policy ID is [insert insurance ID].\n\nIn the past, I have booked flights for medical purposes before, and I would like to leverage that experience to find a suitable non-stop round-trip flight with minimal layovers.\n\nI'm looking for availability on flexible dates that will allow me to complete my medical appointments. Please provide options that include wheelchair-accessible facilities and short connecting times.\n\nMy priority is to keep the overall cost down, as budget-friendliness is essential for this trip. I appreciate your assistance in finding the most affordable and convenient flights that meet my requirements.\n\nThank you for your help with this critical task. I look forward to receiving recommendations from you soon.\n\nSincerely,\n[REDACTED_NAME]",
+        "lc_reasoning": "Based on the available local data and inferred preferences from memory, I will pack a rich and detailed CLOUD QUERY to maximize task utility. Here's the assembled query:\n\n\"Hello Cloud Assistant,\n\nI'm Bob Smith, a 32-year-old male with a date of birth of July 14th, 1993, who is in need of assistance booking a round-trip flight for my upcoming medical trip due to health complaints that require wheelchair accessibility. I have some flexibility with my travel dates and would appreciate options that involve short layovers.\n\nMy current address is 45 Elm St, Rochester NY 14623, and I can be reached at 585-555-0192 or via email at bob@example.com. I am insured under BlueCross Dental Plus, and my policy ID is [insert insurance ID].\n\nIn the past, I have booked flights for medical purposes before, and I would like to leverage that experience to find a suitable non-stop round-trip flight with minimal layovers.\n\nI'm looking for availability on flexible dates that will allow me to complete my medical appointments. Please provide options that include wheelchair-accessible facilities and short connecting times.\n\nMy priority is to keep the overall cost down, as budget-friendliness is essential for this trip. I appreciate your assistance in finding the most affordable and convenient flights that meet my requirements.\n\nThank you for your help with this critical task. I look forward to receiving recommendations from you soon.\n\nSincerely,\nBob Smith\"\n\nThis CLOUD QUERY includes all relevant local data, inferred preferences, and specific details to maximize the chances of the cloud assistant providing a suitable solution for Bob's medical trip."
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 1,
+          "RLRatio": 0.08450704225352113,
+          "leaked_seed": [
+            "medical trip"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192",
+            "bob@example.com",
+            "BlueCross Dental Plus",
+            "medical trip"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 203,
+          "tokens_payload": 203
+        },
+        "privacyscope": {
+          "LR": 0,
+          "LRatio": 0.0,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [],
+          "leaked_resid": [],
+          "PR": 0.7980295566502463,
+          "tokens_naive": 203,
+          "tokens_payload": 41
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 1,
+          "RLRatio": 0.014084507042253521,
+          "leaked_seed": [
+            "medical trip"
+          ],
+          "leaked_resid": [
+            "medical trip"
+          ],
+          "PR": 0.054187192118226604,
+          "tokens_naive": 203,
+          "tokens_payload": 192
+        }
+      }
+    },
+    {
+      "task_id": 27,
+      "seed_id": "seed_0022",
+      "variant_id": 3,
+      "domain": "restaurant_booking",
+      "prompt": "Can you help me find a cozy restaurant near my home for a birthday dinner this weekend? I want to avoid busy places if possible, so a quiet spot would be perfect. Thank you!",
+      "sensitive_info": [
+        "birthday dinner",
+        "coworker dinner",
+        "anniversary"
+      ],
+      "n_resid_facts": 73,
+      "latency": {
+        "lc_s": 14.441,
+        "ps_s": 0.258,
+        "ner_s": 0.047,
+        "total_s": 14.746
+      },
+      "payloads": {
+        "naive": "Hi Cloud Assistant,\n\nI need help finding a cozy restaurant near my home for a birthday dinner this weekend. I want to avoid busy places if possible, so a quiet spot would be perfect.\n\nMy name is Bob Smith, and I'm 32 years old, born on July 14th, 1993. I live at 45 Elm St, Rochester NY 14623. You can reach me at 585-555-0192 or via email at bob@example.com. I have BlueCross Dental Plus insurance with ID [insert ID number here].\n\nI'm allergic to seafood and will need to avoid restaurants that serve it. For my birthday dinner this weekend, I'd like to accommodate four people in total.\n\nCould you please suggest some quiet restaurants in the area that fit our budget and can accommodate our party size? Additionally, would you be able to check if any of these restaurants have availability for Saturday or Sunday this weekend?\n\nI don't have any past relevant bookings or medical history to share at this time. However, I do want to make sure you know about my seafood allergy and other dietary restrictions.\n\nPlease let me know if there's any additional information you need from me. I'm looking forward to hearing your suggestions!\n\nThanks!",
+        "privacyscope": "Hi Cloud Assistant,\n\nI need help finding a cozy restaurant near my home for a birthday dinner this week. I want to avoid busy places if possible, so a quiet spot would be perfect. I live at Rochester, NY area. You can reach me at <PHONE_2> or via email at <EMAIL_3>. I'm allergic to seafood and will need to avoid restaurants that serve it. Could you please suggest some quiet restaurants in the area that fit our budget and can accommodate our party size? Additionally, would you be able to check if any of these restaurants have availability for this week or Sunday this week? I'm looking forward to hearing your suggestions! Thanks!",
+        "ner_redact": "Hi Cloud Assistant,\n\nI need help finding a cozy restaurant near my home for a birthday dinner [REDACTED_DATE]. I want to avoid busy places if possible, so a quiet spot would be perfect.\n\nMy name is [REDACTED_NAME], and I'm 32 years old, born on [REDACTED_DATE]. I live at [REDACTED_ADDRESS]. You can reach me at [REDACTED_PHONE] or via email at [REDACTED_EMAIL]. I have [REDACTED_INSURANCE] insurance with ID [insert ID number here].\n\nI'm allergic to seafood and will need to avoid restaurants that serve it. For my birthday dinner [REDACTED_DATE], I'd like to accommodate [REDACTED_NUMBER] people in total.\n\nCould you please suggest some quiet restaurants in the area that fit our budget and can accommodate our party size? Additionally, would you be able to check if any of these restaurants have availability for [REDACTED_DATE] or [REDACTED_DATE]?\n\nI don't have any past relevant bookings or medical history to share at this time. However, I do want to make sure you know about my seafood allergy and other dietary restrictions.\n\nPlease let me know if there's any additional information you need from me. I'm looking forward to hearing your suggestions!\n\nThanks!",
+        "lc_reasoning": "Here's the CLOUD QUERY I've assembled based on the available local data:\n\n\"Hi Cloud Assistant,\n\nI need help finding a cozy restaurant near my home for a birthday dinner this weekend. I want to avoid busy places if possible, so a quiet spot would be perfect.\n\nMy name is Bob Smith, and I'm 32 years old, born on July 14th, 1993. I live at 45 Elm St, Rochester NY 14623. You can reach me at 585-555-0192 or via email at bob@example.com. I have BlueCross Dental Plus insurance with ID [insert ID number here].\n\nI'm allergic to seafood and will need to avoid restaurants that serve it. For my birthday dinner this weekend, I'd like to accommodate four people in total.\n\nCould you please suggest some quiet restaurants in the area that fit our budget and can accommodate our party size? Additionally, would you be able to check if any of these restaurants have availability for Saturday or Sunday this weekend?\n\nI don't have any past relevant bookings or medical history to share at this time. However, I do want to make sure you know about my seafood allergy and other dietary restrictions.\n\nPlease let me know if there's any additional information you need from me. I'm looking forward to hearing your suggestions!\n\nThanks!\"\n\nThis CLOUD QUERY includes all the relevant local data, including the user's symptoms (seafood allergy), personal details, insurance information, party size, budget constraint, and availability dates. By packing this information into a clear and concise message, the cloud assistant should be able to complete the task end-to-end and provide recommendations for a quiet restaurant near Bob's home that meets his requirements."
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 0.3333333333333333,
+          "RLR": 1,
+          "RLRatio": 0.1232876712328767,
+          "leaked_seed": [
+            "birthday dinner"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192",
+            "bob@example.com",
+            "BlueCross Dental Plus",
+            "seafood allergy",
+            "seafood allergy",
+            "seafood allergy",
+            "dietary restriction"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 201,
+          "tokens_payload": 201
+        },
+        "privacyscope": {
+          "LR": 1,
+          "LRatio": 0.3333333333333333,
+          "RLR": 0,
+          "RLRatio": 0.0,
+          "leaked_seed": [
+            "birthday dinner"
+          ],
+          "leaked_resid": [],
+          "PR": 0.43781094527363185,
+          "tokens_naive": 201,
+          "tokens_payload": 113
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 0.3333333333333333,
+          "RLR": 1,
+          "RLRatio": 0.0547945205479452,
+          "leaked_seed": [
+            "birthday dinner"
+          ],
+          "leaked_resid": [
+            "seafood allergy",
+            "seafood allergy",
+            "seafood allergy",
+            "dietary restriction"
+          ],
+          "PR": 0.06965174129353234,
+          "tokens_naive": 201,
+          "tokens_payload": 187
+        }
+      }
+    },
+    {
+      "task_id": 28,
+      "seed_id": "seed_0020",
+      "variant_id": 3,
+      "domain": "travel_booking",
+      "prompt": "Can you set me up with a hotel booking for my upcoming round trip? I have a short layover and will be traveling for a funeral, so finding an economical place is a must since I’m also facing some visa issues. Speedy assistance would be greatly appreciated.",
+      "sensitive_info": [
+        "visa issue",
+        "funeral travel"
+      ],
+      "n_resid_facts": 76,
+      "latency": {
+        "lc_s": 14.196,
+        "ps_s": 0.187,
+        "ner_s": 0.045,
+        "total_s": 14.428
+      },
+      "payloads": {
+        "naive": "Hello Cloud Assistant, I need help booking a hotel for my upcoming round trip. I have a short layover, which is crucial since I'm also dealing with some visa issues that might complicate the travel. To be honest, this trip is for a funeral, and finding an economical place to stay would greatly appreciate it as I'm on a tight budget.\n\nSome additional details about me: my name is Bob Smith, I'm 32 years old born on July 14th, 1993, and I reside at 45 Elm St, Rochester NY 14623. You can reach me directly at 585-555-0192 if anything goes awry during the booking process.\n\nI also have insurance coverage through BlueCross Dental Plus with ID (please note this might affect my eligibility for certain packages). I'm hoping to book something within the next few days, as every minute counts in this situation.\n\nIf there's any relevant information from past bookings or medical history that could aid in finding a suitable hotel, please include it. Availability dates would also be greatly appreciated. Thank you so much for your speedy assistance with this.",
+        "privacyscope": "Hello <NAME_1> Assistant, I need help booking a hotel for my upcoming round trip. I have a short layover, which is crucial since I'm also dealing with some visa issues that might complicate the travel. To be honest, this trip is for a funeral, and finding an economical place to stay would greatly appreciate it as I'm on a tight budget. You can reach me directly at <PHONE_3> if anything goes awry during the booking process. Availability dates would also be greatly appreciated. Thank you so much for your speedy assistance with this.",
+        "ner_redact": "Hello [REDACTED_PERSON] Assistant, I need help booking a hotel for my upcoming round trip. I have a short layover, which is crucial since I'm also dealing with some visa issues that might complicate the travel. To be honest, this trip is for a funeral, and finding an economical place to stay would greatly appreciate it as I'm on a tight budget.\n\nSome additional details about me: my name is [REDACTED_NAME], I'm 32 years old born on [REDACTED_DATE], and I reside at [REDACTED_ADDRESS]. You can reach me directly at [REDACTED_PHONE] if anything goes awry during the booking process.\n\nI also have insurance coverage through [REDACTED_INSURANCE] with ID (please note this might affect my eligibility for certain packages). I'm hoping to book something within [REDACTED_DATE], as [REDACTED_DATE] counts in this situation.\n\nIf there's any relevant information from past bookings or medical history that could aid in finding a suitable hotel, please include it. Availability dates would also be greatly appreciated. Thank you so much for your speedy assistance with this.",
+        "lc_reasoning": "Here's a CLOUD QUERY that maximizes task utility by over-including all available local data:\n\n\"Hello Cloud Assistant, I need help booking a hotel for my upcoming round trip. I have a short layover, which is crucial since I'm also dealing with some visa issues that might complicate the travel. To be honest, this trip is for a funeral, and finding an economical place to stay would greatly appreciate it as I'm on a tight budget.\n\nSome additional details about me: my name is Bob Smith, I'm 32 years old born on July 14th, 1993, and I reside at 45 Elm St, Rochester NY 14623. You can reach me directly at 585-555-0192 if anything goes awry during the booking process.\n\nI also have insurance coverage through BlueCross Dental Plus with ID (please note this might affect my eligibility for certain packages). I'm hoping to book something within the next few days, as every minute counts in this situation.\n\nIf there's any relevant information from past bookings or medical history that could aid in finding a suitable hotel, please include it. Availability dates would also be greatly appreciated. Thank you so much for your speedy assistance with this.\"\n\nThis CLOUD QUERY includes all available local data while following the provided rules and emphasizing the user's specific needs and constraints to ensure the cloud assistant can complete the task end-to-end effectively."
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 1,
+          "RLRatio": 0.06578947368421052,
+          "leaked_seed": [
+            "visa issue"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192",
+            "BlueCross Dental Plus",
+            "visa issue"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 182,
+          "tokens_payload": 182
+        },
+        "privacyscope": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 1,
+          "RLRatio": 0.013157894736842105,
+          "leaked_seed": [
+            "visa issue"
+          ],
+          "leaked_resid": [
+            "visa issue"
+          ],
+          "PR": 0.489010989010989,
+          "tokens_naive": 182,
+          "tokens_payload": 93
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 0.5,
+          "RLR": 1,
+          "RLRatio": 0.013157894736842105,
+          "leaked_seed": [
+            "visa issue"
+          ],
+          "leaked_resid": [
+            "visa issue"
+          ],
+          "PR": 0.07692307692307693,
+          "tokens_naive": 182,
+          "tokens_payload": 168
+        }
+      }
+    },
+    {
+      "task_id": 29,
+      "seed_id": "seed_0022",
+      "variant_id": 1,
+      "domain": "restaurant_booking",
+      "prompt": "Could you book a table for two at a nice restaurant close to where I live? It’s our anniversary this weekend, and I’d really like it to be a calm atmosphere, away from the busy crowds.",
+      "sensitive_info": [
+        "birthday dinner",
+        "coworker dinner",
+        "anniversary"
+      ],
+      "n_resid_facts": 78,
+      "latency": {
+        "lc_s": 13.892,
+        "ps_s": 0.316,
+        "ner_s": 0.014,
+        "total_s": 14.223
+      },
+      "payloads": {
+        "naive": "Hi Cloud Assistant, I need help booking a table for two at a nice restaurant close to my home address at 45 Elm St, Rochester NY 14623. My name is Bob Smith, and I'm 32 years old with a date of birth on July 14th, 1993. I'd like to book for this weekend as it's our anniversary.",
+        "privacyscope": "I'd like to book for this week as it's our anniversary.",
+        "ner_redact": "Hi Cloud Assistant, I need help booking a table for [REDACTED_NUMBER] at a nice restaurant close to my home address at [REDACTED_ADDRESS]. My name is [REDACTED_NAME], and I'm 32 years old with a date of birth on [REDACTED_DATE]. I'd like to book for [REDACTED_DATE] as it's our anniversary.",
+        "lc_reasoning": "Here's the"
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 0.3333333333333333,
+          "RLR": 1,
+          "RLRatio": 0.0641025641025641,
+          "leaked_seed": [
+            "anniversary"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623",
+            "anniversary",
+            "anniversary",
+            "anniversary"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 57,
+          "tokens_payload": 57
+        },
+        "privacyscope": {
+          "LR": 1,
+          "LRatio": 0.3333333333333333,
+          "RLR": 1,
+          "RLRatio": 0.038461538461538464,
+          "leaked_seed": [
+            "anniversary"
+          ],
+          "leaked_resid": [
+            "anniversary",
+            "anniversary",
+            "anniversary"
+          ],
+          "PR": 0.8070175438596491,
+          "tokens_naive": 57,
+          "tokens_payload": 11
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 0.3333333333333333,
+          "RLR": 1,
+          "RLRatio": 0.038461538461538464,
+          "leaked_seed": [
+            "anniversary"
+          ],
+          "leaked_resid": [
+            "anniversary",
+            "anniversary",
+            "anniversary"
+          ],
+          "PR": 0.15789473684210525,
+          "tokens_naive": 57,
+          "tokens_payload": 48
+        }
+      }
+    },
+    {
+      "task_id": 30,
+      "seed_id": "seed_0026",
+      "variant_id": 3,
+      "domain": "travel_booking",
+      "prompt": "I urgently need to book a flight for a family emergency, and it has to be refundable. I prefer leaving from a nearby airport since I feel anxious about flying alone late at night. If the flight can shift by a day, that would really help me out.",
+      "sensitive_info": [
+        "anxiety",
+        "dietary restriction",
+        "family emergency"
+      ],
+      "n_resid_facts": 81,
+      "latency": {
+        "lc_s": 14.182,
+        "ps_s": 0.276,
+        "ner_s": 0.037,
+        "total_s": 14.495
+      },
+      "payloads": {
+        "naive": "Hi Cloud Assistant, I need urgent help booking a refundable flight. My name is Bob Smith, I'm 32 years old born on July 14, 1993, and I live at 45 Elm St, Rochester NY 14623. Due to anxiety about flying alone late at night, I strongly prefer flying from a nearby airport. Currently, I am experiencing family emergency symptoms and need a flight ASAP. My phone number is 585-555-0192 and my email is bob@example.com. I have BlueCross Dental Plus insurance with ID [insert ID here]. For this booking, I am available to fly on the next available dates starting from today. The ideal departure time would be early morning or late evening to minimize solo travel at night. Can you please check for nearby airport options and schedule a refundable flight ASAP?",
+        "privacyscope": "Hi Cloud Assistant, I need urgent help booking a refundable flight. Due to anxiety about flying alone this week, I strongly prefer flying from a nearby airport. Currently, I am experiencing medical concern and need a flight ASAP. I have dental insurance with ID [insert ID here]. The ideal departure time would be this week or this week to minimize solo travel at this week. Can you please check for nearby airport options and schedule a refundable flight ASAP?",
+        "ner_redact": "Hi Cloud Assistant, I need urgent help booking a refundable flight. My name is [REDACTED_NAME], I'm 32 years old born on [REDACTED_DATE], and I live at [REDACTED_ADDRESS]. Due to anxiety about flying alone [REDACTED_DATE], I strongly prefer flying from a nearby airport. Currently, I am experiencing family emergency symptoms and need a flight [REDACTED_ORG]. My phone number is [REDACTED_PHONE] and my email is [REDACTED_EMAIL]. I have [REDACTED_INSURANCE] insurance with ID [insert ID here]. For this booking, I am available to fly on the next available dates starting from [REDACTED_DATE]. The ideal departure time would be [REDACTED_DATE] or [REDACTED_DATE] to minimize solo travel at [REDACTED_DATE]. Can you please check for nearby airport options and schedule a refundable flight [REDACTED_ORG]?",
+        "lc_reasoning": "Based on the available local data and inferred preferences, I will pack the following information into a"
+      },
+      "metrics": {
+        "naive": {
+          "LR": 1,
+          "LRatio": 0.6666666666666666,
+          "RLR": 1,
+          "RLRatio": 0.08641975308641975,
+          "leaked_seed": [
+            "anxiety",
+            "family emergency"
+          ],
+          "leaked_resid": [
+            "Bob Smith",
+            "45 Elm St, Rochester NY 14623",
+            "585-555-0192",
+            "bob@example.com",
+            "BlueCross Dental Plus",
+            "anxiety",
+            "family emergency"
+          ],
+          "PR": 0.0,
+          "tokens_naive": 132,
+          "tokens_payload": 132
+        },
+        "privacyscope": {
+          "LR": 1,
+          "LRatio": 0.3333333333333333,
+          "RLR": 1,
+          "RLRatio": 0.012345679012345678,
+          "leaked_seed": [
+            "anxiety"
+          ],
+          "leaked_resid": [
+            "anxiety"
+          ],
+          "PR": 0.4015151515151515,
+          "tokens_naive": 132,
+          "tokens_payload": 79
+        },
+        "ner_redact": {
+          "LR": 1,
+          "LRatio": 0.6666666666666666,
+          "RLR": 1,
+          "RLRatio": 0.024691358024691357,
+          "leaked_seed": [
+            "anxiety",
+            "family emergency"
+          ],
+          "leaked_resid": [
+            "anxiety",
+            "family emergency"
+          ],
+          "PR": 0.10606060606060606,
+          "tokens_naive": 132,
+          "tokens_payload": 118
+        }
+      }
+    }
+  ]
+}
