@@ -19,7 +19,11 @@
     "hotel_loyalty_id": "HIL-12345",
     "vehicle_plate": "ABC-1234",
 
-    "insurance": "BlueCross Dental Plus"
+    "insurance": "BlueCross Dental Plus",
+
+    "doctor_gender_preference": "female physician",
+    "dietary_preference": "vegetarian",
+    "seat_preference": "window seat"
   },
   "contacts": []
 }

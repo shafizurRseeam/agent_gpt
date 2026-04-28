@@ -6,37 +6,36 @@ Stage 2 of PrivScope — Scope Control.
 Filters the U_med spans produced by Stage 1, retaining only those
 justified by the current delegated task.
 
-Each span u_j is evaluated against a task frame g_t (enriched description
-of the subtask offloaded to the CLM) using two signals:
+Each span u_j is evaluated against a task frame g_t using provenance-
+specific signals:
 
-  Rel(u_j, g_t) ∈ [-1, 1]  — embedding cosine similarity to the task frame
-  κ(u_j) ∈ {0, 1}           — carryover status (0=current, 1=prior history)
+  Rel(u_j, g_t) ∈ [-1, 1]   — embedding cosine similarity to the task frame;
+                               used only for spans expressed in r_t
+  κ(u_j) ∈ {0, 1}            — provenance status:
+                               0 = span text found in r_t (user-provided)
+                               1 = LC-injected from working state
+  TaskGain(u_j, g_t) ∈ [0,1] — local-LM estimate of task utility;
+                               used only for LC-injected spans
 
-Retention rules (matching paper formulation exactly):
+Retention rules:
 
-  Current-workflow (κ=0):
-    keep if  Rel(u_j, g_t) >= ρ_low
+  User-provided span (κ=0):
+    keep if  Rel(u_j, g_t) >= ρ
 
-  Carryover (κ=1):
-    keep if  Rel(u_j, g_t) >= ρ_high
-         AND TaskGain(u_j, g_t) >= γ
+  LC-injected span (κ=1):
+    keep if  TaskGain(u_j, g_t) >= γ
 
-    ρ_high > ρ_low ensures weakly-related carryover never reaches the
-    utility check. TaskGain is scored by the local LM; falls back to a
-    rule table if no LM is supplied.
-
-Carryover detection — two independent sources (both → κ=1):
-  1. Span text appears in memory_traces data from prior tasks  → "trace"
-  2. Span appears inside a historical-context sentence         → "historical_sentence"
-  kappa_reason records which source fired (for debug/trace only).
+LC-injected spans bypass the relevance gate because short structured
+values such as addresses, dates, times, ZIP codes, and insurance names
+may be task-critical despite weak embedding similarity to the task frame.
 
 Payload reconstruction:
   reconstruct_payload() fills C_t slots with retained span text (or
   [TYPE] for U_loc), drops empty slots, and cleans up orphaned fragments.
 
 Public API:
-    ScopeController(rho_low, rho_high, gamma)
-    ScopeController.filter(u_med, task, memory_traces, payload, local_llm) → ScopeResult
+    ScopeController(rho_low, gamma)
+    ScopeController.filter(u_med, task, payload, local_llm) → ScopeResult
     reconstruct_payload(extraction, retained_u_med, u_loc) → str
 """
 
@@ -44,7 +43,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from sentence_transformers import SentenceTransformer
 from sentence_transformers import util as st_util
@@ -68,12 +67,12 @@ def _st() -> SentenceTransformer:
 @dataclass
 class ScopeDecision:
     span:         Span
-    rel:          float
-    kappa:        int          # 0=current-workflow, 1=carryover
-    kappa_reason: str          # "trace" | "historical_sentence" | ""
-    task_gain:    float        # TaskGain score from LLM or rule table (0 if not computed)
+    rel:          Optional[float]  # set for κ=0 spans only; None for κ=1 (not used in decision)
+    kappa:        int              # 0 = in r_t, 1 = LC-injected
+    kappa_reason: str              # "" (in r_t) | "lc_injected"
+    task_gain:    float            # TaskGain score; 0.0 if not computed (κ=0)
     kept:         bool
-    reason:       str          # human-readable explanation always shown
+    reason:       str
 
 
 @dataclass
@@ -83,7 +82,6 @@ class ScopeResult:
     decisions:       List[ScopeDecision]
     task_frame:      str
     rho_low:         float
-    rho_high:        float
     gamma:           float
     task_gain_source: str   # "llm:<model>" | "rule" — what scored carryover TaskGain
 
@@ -176,6 +174,7 @@ _SPAN_REPR_TEMPLATE: Dict[str, str] = {
     "organization":   "service provider organization: {text}",
     "facility":       "facility name: {text}",
     "noun_phrase":    "relevant detail: {text}",
+    "preference":     "user preference: {text}",
     "group":          "group or affiliation: {text}",
 }
 
@@ -197,6 +196,7 @@ _RULE_GAIN: Dict[str, float] = {
     "noun_phrase":    0.60,
     "zip":            0.50,
     "party_size":     0.30,
+    "preference":     0.60,
     "organization":   0.05,
     "facility":       0.05,
     "group":          0.20,
@@ -204,34 +204,51 @@ _RULE_GAIN: Dict[str, float] = {
 }
 
 _LLM_GAIN_PROMPT = """\
-You are evaluating whether a piece of information from a user's prior history \
-is genuinely useful for a new task.
+You are estimating whether an LC-injected span should be included in a cloud-bound payload.
 
-Task: {task}
-Information: "{span_text}" (type: {span_type})
+Task frame: {g_t}
+Sentence containing the span: {context}
+Span: "{span_text}" (type: {span_type})
 
-This value comes from the user's memory of a past workflow. \
-Rate how much retaining it would help accomplish the current task \
-(not just related in topic — actually needed to complete the task).
+Return a TaskGain score as a decimal between 0.00 and 1.00, where higher means \
+retaining the span would more strongly improve the delegated cloud-side reasoning \
+step under the task frame. Use the full range and avoid defaulting to round bucket \
+values. Do not assign a high score merely because the span is related to the task. \
+If the span is a prior provider, prior venue, prior booking, organization, or \
+historical output, assign a low score unless the task frame explicitly requires \
+continuity, reuse, follow-up, avoidance, or comparison. If uncertain, assign a \
+lower score.
 
-Reply with ONLY a decimal number between 0.0 and 1.0. No explanation."""
+Reply with only one decimal number, such as 0.17, 0.43, or 0.82."""
 
-_FLOAT_RE = re.compile(r'\b(0(?:\.\d+)?|1(?:\.0+)?)\b')
+_FLOAT_RE = re.compile(r'\b(0\.\d+|1\.0+|0|1)\b')
 
 
-def _llm_task_gain(local_llm, task: str, span: Span) -> Tuple[float, str]:
+def _containing_sentence(payload: str, span_text: str) -> str:
+    """Return the first sentence in payload that contains span_text (case-insensitive)."""
+    tl = span_text.lower()
+    for sent in _split_sentences(payload):
+        if tl in sent.lower():
+            return sent.strip()
+    return span_text
+
+
+def _llm_task_gain(local_llm, g_t: str, span: Span, payload: str = "") -> Tuple[float, str]:
     """
-    Ask local LLM to score task gain for a trace-carryover span.
-    Returns (score, "llm") on success, falls back to (_rule_based_task_gain, "rule") on error.
+    Score TaskGain for an LC-injected span using g_t and the containing sentence.
+    Returns a 0.0-1.0 float parsed from the LLM response.
+    Falls back to rule table on parse error or exception.
     """
+    context = _containing_sentence(payload, span.text) if payload else span.text
     prompt = _LLM_GAIN_PROMPT.format(
-        task=task.strip(),
+        g_t=g_t.strip(),
+        context=context,
         span_text=span.text,
         span_type=span.span_type,
     )
     try:
         raw = local_llm.generate(prompt).strip()
-        m   = _FLOAT_RE.search(raw)
+        m = _FLOAT_RE.search(raw)
         if m:
             return float(m.group(0)), "llm"
     except Exception:
@@ -244,62 +261,29 @@ def _rule_based_task_gain(span: Span) -> Tuple[float, str]:
 
 
 # ── Carryover detection ────────────────────────────────────────────────────────
+# Provenance-based: κ=0 if the span text appears in the original user request
+# r_t; κ=1 ("lc_injected") if it was added by the LC from working state.
+# This captures all LC-injected context uniformly — profile data, calendar
+# preferences, and prior task history all get the stricter carryover gate.
 
-_HISTORY_RE = re.compile(
-    r"\b(previously|i'?ve had|prior to|in the past|had appointments? at|"
-    r"been to|seen at|visited|used to go)\b",
-    re.IGNORECASE,
-)
+def _carryover_status(span: Span, r_t: str) -> Tuple[int, str]:
+    """
+    Returns (κ, reason).
+      κ=0, ""            — span text found in r_t (user stated it explicitly)
+      κ=1, "lc_injected" — span was injected by LC from working state
+    """
+    if span.text.lower() in r_t.lower():
+        return 0, ""
+    return 1, "lc_injected"
 
 
-def _build_carryover_set(memory_traces: list) -> Set[str]:
-    """Extract lower-cased values from prior-task memory_traces."""
-    carryover: Set[str] = set()
-    for trace in memory_traces:
-        data = trace.get("data", {})
-        if isinstance(data, dict):
-            for val in data.values():
-                if isinstance(val, str) and len(val) > 3:
-                    carryover.add(val.lower())
-        elif isinstance(data, list):
-            for item in data:
-                if isinstance(item, dict):
-                    for val in item.values():
-                        if isinstance(val, str) and len(val) > 3:
-                            carryover.add(val.lower())
-    return carryover
-
+# ── Payload reconstruction ────────────────────────────────────────────────────
 
 def _split_sentences(text: str) -> List[str]:
     return re.split(r'(?<=[.!?])\s+', text.strip())
 
 
-def _is_in_historical_sentence(span: Span, payload: str) -> bool:
-    """True if span text appears in any _HISTORY_RE-matched sentence."""
-    for sent in _split_sentences(payload):
-        if _HISTORY_RE.search(sent):
-            if re.search(re.escape(span.text), sent, re.IGNORECASE):
-                return True
-    return False
-
-
-def _carryover_status(
-    span: Span, carryover: Set[str], payload: str
-) -> Tuple[int, str]:
-    """
-    Returns (κ, reason).
-      κ=0, ""                   — current workflow
-      κ=1, "trace"              — value found in memory_traces
-      κ=1, "historical_sentence"— span inside a historical-context sentence
-    """
-    if span.text.lower() in carryover:
-        return 1, "trace"
-    if _is_in_historical_sentence(span, payload):
-        return 1, "historical_sentence"
-    return 0, ""
-
-
-# ── Payload reconstruction ─────────────────────────────────────────────────────
+# ──────────────────────────────────────────────────────────────────────────────
 
 def reconstruct_payload(
     extraction:     dict,
@@ -360,6 +344,11 @@ def reconstruct_payload(
         result = re.sub(r'\.\s*\.', '.', result)
         result = re.sub(r'\s+([,.])', r'\1', result)
         result = re.sub(r' {2,}', ' ', result)
+        # Fix "I want to keep the cost" when the value was dropped
+        result = re.sub(
+            r'\bI want to keep the cost\s*[,.]?\s*',
+            '', result, flags=re.IGNORECASE,
+        )
 
     # ── Drop content-free sentences ───────────────────────────────────────────
     _SW = {
@@ -386,63 +375,72 @@ def reconstruct_payload(
 
 class ScopeController:
     """
-    Stage 2 filter. Hybrid: deterministic for current-workflow and
-    historical-sentence carryover; LLM-scored for trace-carryover spans
-    that pass the Rel gate (falls back to rule table if local_llm is None).
+    Stage 2 filter.
+
+    Two-path retention rule:
+      κ=0 (span in r_t)       : keep if  Rel(u_j, g_t) >= rho_low
+      κ=1 (LC-injected span)  : keep if  TaskGain(u_j, g_t) >= gamma
+
+    LC-injected spans bypass the relevance gate entirely — the LLM judges
+    directly whether the span is useful for the delegated task. This handles
+    structurally necessary spans (e.g. address for provider search) that
+    score low on embedding similarity but high on task utility.
 
     Parameters
     ----------
-    rho_low  : Rel threshold for current-workflow spans (default 0.15)
-    rho_high : Rel threshold for carryover (trace) spans (default 0.30)
-    gamma    : TaskGain threshold for trace-carryover spans (default 0.50)
+    rho_low : Rel threshold for r_t spans (default 0.10)
+    gamma   : TaskGain threshold for LC-injected spans (default 0.50)
     """
 
     def __init__(
         self,
-        rho_low:  float = 0.10,
-        rho_high: float = 0.30,
-        gamma:    float = 0.50,
+        rho_low: float = 0.10,
+        gamma:   float = 0.50,
     ):
-        assert rho_high > rho_low
-        self.rho_low  = rho_low
-        self.rho_high = rho_high
-        self.gamma    = gamma
+        self.rho_low = rho_low
+        self.gamma   = gamma
 
     def filter(
         self,
-        u_med:         List[Span],
-        task:          str,
-        memory_traces: list = None,
-        payload:       str  = "",
-        local_llm             = None,   # used for g_t generation and TaskGain scoring
-        g_t_override:  str  = None,    # if set, skip _derive_task_frame and use this directly
+        u_med:        List[Span],
+        task:         str,
+        payload:      str  = "",
+        local_llm           = None,
+        g_t_override: str  = None,
     ) -> ScopeResult:
         """
         Apply scope control to the U_med span set.
-        local_llm drives both g_t construction (richer task frame) and TaskGain
-        scoring for carryover spans. Falls back to span-type heuristics if None.
-        g_t_override bypasses all task-frame construction — useful for comparison runs.
-        Rel is computed on type-aware span representations (not raw span text).
-        """
-        traces     = memory_traces or []
-        g_t        = g_t_override if g_t_override is not None else _derive_task_frame(task, u_med, local_llm)
-        carryover  = _build_carryover_set(traces)
-        gain_source = f"llm:{local_llm.model}" if local_llm is not None else "rule"
 
-        st      = _st()
-        g_t_emb = st.encode(g_t, convert_to_tensor=True)
+        κ=0 spans (in r_t): filtered by Rel >= rho_low.
+        κ=1 spans (LC-injected): filtered by TaskGain >= gamma — no Rel gate.
+          This allows structurally necessary spans (e.g. address for provider
+          search) to pass even when embedding similarity to g_t is low.
+
+        local_llm is used for g_t construction and TaskGain scoring.
+        Falls back to rule table if None.
+        """
+        g_t         = g_t_override if g_t_override is not None else _derive_task_frame(task, u_med, local_llm)
+        gain_source = f"llm:{local_llm.model}" if local_llm is not None else "rule"
 
         decisions: List[ScopeDecision] = []
 
         if u_med:
-            span_embs = st.encode([_span_repr(s) for s in u_med], convert_to_tensor=True)
+            # Determine provenance first so we only encode κ=0 spans
+            kappas = [_carryover_status(span, task) for span in u_med]
+            k0_spans = [s for s, (k, _) in zip(u_med, kappas) if k == 0]
 
-            for i, span in enumerate(u_med):
-                rel            = float(st_util.cos_sim(span_embs[i], g_t_emb).item())
-                kappa, k_reason = _carryover_status(span, carryover, payload)
+            # Embed g_t and κ=0 spans only
+            if k0_spans:
+                st      = _st()
+                g_t_emb = st.encode(g_t, convert_to_tensor=True)
+                k0_embs = st.encode([_span_repr(s) for s in k0_spans], convert_to_tensor=True)
 
+            k0_idx = 0
+            for span, (kappa, k_reason) in zip(u_med, kappas):
                 if kappa == 0:
-                    # ── Current-workflow (κ=0): keep if Rel >= ρ_low ──────
+                    # ── In r_t (κ=0): keep if Rel >= ρ_low ───────────────
+                    rel       = float(st_util.cos_sim(k0_embs[k0_idx], g_t_emb).item())
+                    k0_idx   += 1
                     task_gain = 0.0
                     kept      = rel >= self.rho_low
                     reason    = (
@@ -450,30 +448,18 @@ class ScopeController:
                         else f"Rel={rel:.2f} < ρ_low={self.rho_low:.2f}"
                     )
                 else:
-                    # ── Carryover (κ=1): Rel >= ρ_high AND TaskGain >= γ ──
-                    # kappa_reason ("trace" | "historical_sentence") is logged
-                    # for debug transparency but does not change the policy.
-                    if rel < self.rho_high:
-                        task_gain = 0.0
-                        kept      = False
-                        reason    = (
-                            f"carryover [{k_reason}], "
-                            f"Rel={rel:.2f} < ρ_high={self.rho_high:.2f}"
-                        )
+                    # ── LC-injected (κ=1): TaskGain >= γ, Rel not computed ─
+                    rel = None
+                    if local_llm is not None:
+                        task_gain, gain_src = _llm_task_gain(local_llm, g_t, span, payload)
                     else:
-                        # Rel passes stricter gate — score TaskGain
-                        if local_llm is not None:
-                            task_gain, gain_src = _llm_task_gain(local_llm, task, span)
-                        else:
-                            task_gain, gain_src = _rule_based_task_gain(span)
-                        kept   = task_gain >= self.gamma
-                        reason = (
-                            f"carryover [{k_reason}], "
-                            f"TaskGain={task_gain:.2f} ({gain_src}) >= γ={self.gamma:.2f}" if kept
-                            else
-                            f"carryover [{k_reason}], "
-                            f"TaskGain={task_gain:.2f} ({gain_src}) < γ={self.gamma:.2f}"
-                        )
+                        task_gain, gain_src = _rule_based_task_gain(span)
+                    kept   = task_gain >= self.gamma
+                    reason = (
+                        f"lc_injected, TaskGain={task_gain:.2f} ({gain_src}) >= γ={self.gamma:.2f}" if kept
+                        else
+                        f"lc_injected, TaskGain={task_gain:.2f} ({gain_src}) < γ={self.gamma:.2f}"
+                    )
 
                 decisions.append(ScopeDecision(
                     span=span, rel=rel,
@@ -488,7 +474,7 @@ class ScopeController:
         return ScopeResult(
             retained=retained, dropped=dropped,
             decisions=decisions, task_frame=g_t,
-            rho_low=self.rho_low, rho_high=self.rho_high, gamma=self.gamma,
+            rho_low=self.rho_low, gamma=self.gamma,
             task_gain_source=gain_source,
         )
 
@@ -498,29 +484,31 @@ class ScopeController:
 def _debug_show(result: ScopeResult) -> None:
     print(f"\n  Task frame g_t:")
     print(f"    {result.task_frame}")
-    print(f"\n  Thresholds : ρ_low={result.rho_low}  ρ_high={result.rho_high}  γ={result.gamma}")
+    print(f"\n  Thresholds : ρ_low={result.rho_low}  γ={result.gamma}")
     print(f"  TaskGain   : {result.task_gain_source}")
+
+    def _fmt(d: ScopeDecision) -> str:
+        k_s     = f"κ={d.kappa}({'current' if d.kappa == 0 else 'lc_injected'})"
+        rel_s   = f"  Rel={d.rel:+.2f}" if d.rel is not None else ""
+        return f"  [{d.span.span_type:<20}] {d.span.text!r:40}{rel_s}  {k_s}  → {d.reason}"
 
     print(f"\n  Retained ({len(result.retained)}):")
     for d in result.decisions:
-        if not d.kept:
-            continue
-        k_s = f"κ={d.kappa}({d.kappa_reason or 'current'})"
-        print(f"    [KEEP] [{d.span.span_type:<20}] {d.span.text!r:40}"
-              f"  Rel={d.rel:+.2f}  {k_s}  → {d.reason}")
+        if d.kept:
+            print(f"    [KEEP]{_fmt(d)}")
 
     print(f"\n  Dropped ({len(result.dropped)}):")
     for d in result.decisions:
-        if d.kept:
-            continue
-        k_s = f"κ={d.kappa}({d.kappa_reason or 'current'})"
-        print(f"    [DROP] [{d.span.span_type:<20}] {d.span.text!r:40}"
-              f"  Rel={d.rel:+.2f}  {k_s}  → {d.reason}")
+        if not d.kept:
+            print(f"    [DROP]{_fmt(d)}")
 
 
 # ── Standalone ─────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
+    import sys
+    sys.stdout.reconfigure(encoding="utf-8")
+
     from state.state_io import load_state
     from privacy.span_extractor import SpanExtractor, _debug_show as _show_spans
     from llm.local_llm import LocalLLM
@@ -534,7 +522,7 @@ if __name__ == "__main__":
     print(f"  Prior bookings in trace: {len(booked)}")
     for b in booked:
         d = b.get("data", {})
-        print(f"    → {d.get('booked_at', '?')}  ({b.get('from_workflow','')[:55]}…)")
+        print(f"    -> {d.get('booked_at', '?')}  ({b.get('from_workflow','')[:55]}...)")
 
     # Try to connect to local LLM (Ollama); fall back gracefully if unavailable
     try:
@@ -580,11 +568,6 @@ if __name__ == "__main__":
     extraction = extractor.extract(p_t, profile)
     _show_spans(extraction)
 
-    # Strip U_loc from working payload before Stage 2
-    working = p_t
-    for span in sorted(extraction["U_loc"], key=lambda s: s.start, reverse=True):
-        working = working[:span.start] + f"[{span.span_type.upper()}]" + working[span.end:]
-
     # ── Stage 2: Scope Control — g_t derived from r_t, not p_t ────────────────
     print(f"\n{'═' * 70}")
     print(f"  STAGE 2 — SCOPE CONTROL  (g_t derived from r_t)")
@@ -592,33 +575,16 @@ if __name__ == "__main__":
     controller = ScopeController()
     result     = controller.filter(
         u_med=extraction["U_med"],
-        task=r_t,                   # task frame built from original request
-        memory_traces=traces,
-        payload=working,
+        task=r_t,
+        payload=extraction["working"],
         local_llm=local_llm,
     )
     _debug_show(result)
 
-    # ── Sanitized output ───────────────────────────────────────────────────────
+    # ── Stage 2 output → Stage 3a input ───────────────────────────────────────
     print(f"\n{'═' * 70}")
-    print(f"  SANITIZED PAYLOAD  — sent to cloud")
+    print(f"  STAGE 2 OUTPUT  — payload entering Stage 3a (retained spans verbatim; U_loc withheld)")
     print(f"{'═' * 70}")
     out = reconstruct_payload(extraction, result.retained, extraction["U_loc"])
     print(f"  {out}")
 
-    # ── Comparison: g_t = r_t directly (no LLM expansion, no heuristics) ──────
-    print(f"\n{'═' * 70}")
-    print(f"  COMPARISON — g_t = r_t (raw request, no expansion)")
-    print(f"{'═' * 70}")
-    result_rt = controller.filter(
-        u_med=extraction["U_med"],
-        task=r_t,
-        memory_traces=traces,
-        payload=working,
-        local_llm=local_llm,
-        g_t_override=r_t,           # bypass _derive_task_frame entirely
-    )
-    _debug_show(result_rt)
-    out_rt = reconstruct_payload(extraction, result_rt.retained, extraction["U_loc"])
-    print(f"\n  Sanitized payload (g_t = r_t):")
-    print(f"  {out_rt}")

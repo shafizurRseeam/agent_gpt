@@ -7,16 +7,25 @@ Partitions a candidate cloud-bound payload P_t into three disjoint components:
 
     P_t = U_loc  ∪  U_med  ∪  C_t
 
-  U_loc  — direct identifiers extracted from the user profile; withheld
-            from the cloud pipeline and stored in a private binding table.
-  U_med  — spans eligible for downstream scope control and transformation.
+  U_loc  — direct identifiers (name, phone, SSN, passport, IDs, credit card…).
+            Withheld from the cloud pipeline; stored in a private binding table.
+            Detected exclusively via profile exact-match (Layer 1a).
+  U_med  — mediation candidates eligible for downstream scope control.
+            Includes soft profile values (address, insurance plan name,
+            preferences — Layer 1b) plus regex and spaCy spans (Layers 2–3).
   C_t    — surrounding text (connectives, framing) that passes through unchanged.
 
-Extraction is fully automatic and uses three ordered layers:
+Profile matching uses two disjoint field sets:
 
-  1. Profile matching      — exact matches of known profile values → U_loc
-  2. Structured-pattern rules — regex for stable surface forms → U_med
-  3. spaCy NER + noun chunks  — less regular spans → U_med
+  _PROFILE_DIRECT_IDS  — hard identifiers → U_loc  (always withheld)
+  _PROFILE_SOFT_FIELDS — contextual values → U_med  (evaluated by scope control)
+
+Extraction layers in order:
+
+  1a. Profile direct IDs  — exact match on _PROFILE_DIRECT_IDS  → U_loc
+  1b. Profile soft fields — exact match on _PROFILE_SOFT_FIELDS → U_med
+  2.  Structured patterns — regex for stable surface forms        → U_med
+  3.  spaCy NER + chunks  — less regular spans                    → U_med
 
 Overlap resolution gives priority to U_loc spans, then to longer spans.
 """
@@ -50,29 +59,43 @@ class Span:
     subsource: str = "" # ner | noun_chunk | regex | exact_match
 
 
-# ── Profile fields routed to U_loc (direct identifiers) ──────────────────────
+# ── Profile field sets ────────────────────────────────────────────────────────
+#
+# Two disjoint sets. The split is based on disclosure risk, not detection method:
+#
+#   _PROFILE_DIRECT_IDS  — hard identifiers: always withheld (→ U_loc)
+#                           Includes anything that directly re-identifies the user
+#                           regardless of task context.
+#
+#   _PROFILE_SOFT_FIELDS — contextual values: evaluated by scope control (→ U_med)
+#                           User-set at profile construction time but may or may
+#                           not be needed for a given task (address, insurance plan
+#                           name, soft preferences). The scope control gate decides
+#                           whether each value reaches the cloud.
 
-_LOCAL_PROFILE_FIELDS = {
-    "name":                 "name",
-    "phone":                "phone",
-    "email":                "email",
-    "dob":                  "dob",
-    "ssn":                  "ssn",
-    "passport_number":      "passport_number",
-    "driver_license":       "driver_license",
-    "insurance_id":         "insurance_id",
-    "patient_id":           "patient_id",
-    "credit_card":          "credit_card",
-    "membership_id":        "membership_id",
-    "frequent_flyer_number":"frequent_flyer_number",
-    "hotel_loyalty_id":     "hotel_loyalty_id",
-    "vehicle_plate":        "vehicle_plate",
+_PROFILE_DIRECT_IDS = {
+    "name":                  "name",
+    "phone":                 "phone",
+    "email":                 "email",
+    "dob":                   "dob",
+    "ssn":                   "ssn",
+    "passport_number":       "passport_number",
+    "driver_license":        "driver_license",
+    "insurance_id":          "insurance_id",
+    "patient_id":            "patient_id",
+    "credit_card":           "credit_card",
+    "membership_id":         "membership_id",
+    "frequent_flyer_number": "frequent_flyer_number",
+    "hotel_loyalty_id":      "hotel_loyalty_id",
+    "vehicle_plate":         "vehicle_plate",
 }
 
-# Profile fields routed to U_med (contextual — may carry task utility)
-_MED_PROFILE_FIELDS = {
-    "address":  "address",
-    "insurance":"insurance_name",
+_PROFILE_SOFT_FIELDS = {
+    "address":                  "address",
+    "insurance":                "insurance_name",
+    "doctor_gender_preference": "preference",
+    "dietary_preference":       "preference",
+    "seat_preference":          "preference",
 }
 
 
@@ -130,8 +153,8 @@ class SpanExtractor:
     def extract(self, payload: str, profile: Dict) -> Dict:
         candidates: List[Span] = []
 
-        # Layer 1 — profile exact matches → U_loc
-        for field, span_type in _LOCAL_PROFILE_FIELDS.items():
+        # Layer 1a — direct identifiers (hard profile fields) → U_loc
+        for field, span_type in _PROFILE_DIRECT_IDS.items():
             value = profile.get(field)
             if not value or not isinstance(value, str):
                 continue
@@ -139,11 +162,11 @@ class SpanExtractor:
                 candidates.append(Span(
                     text=m.group(0), start=m.start(), end=m.end(),
                     span_type=span_type, source="profile",
-                    bucket="U_loc", subsource="exact_match",
+                    bucket="U_loc", subsource="direct_id",
                 ))
 
-        # Layer 1b — contextual profile fields → U_med
-        for field, span_type in _MED_PROFILE_FIELDS.items():
+        # Layer 1b — soft profile fields (address, insurance plan, preferences) → U_med
+        for field, span_type in _PROFILE_SOFT_FIELDS.items():
             value = profile.get(field)
             if not value or not isinstance(value, str):
                 continue
@@ -151,7 +174,7 @@ class SpanExtractor:
                 candidates.append(Span(
                     text=m.group(0), start=m.start(), end=m.end(),
                     span_type=span_type, source="profile",
-                    bucket="U_med", subsource="exact_match",
+                    bucket="U_med", subsource="soft_field",
                 ))
 
         # Layer 2 — structured patterns → U_med
@@ -185,13 +208,17 @@ class SpanExtractor:
         spans = _merge_overlaps(candidates)
         U_loc = [s for s in spans if s.bucket == "U_loc"]
         U_med = [s for s in spans if s.bucket == "U_med"]
-        C_t   = _build_context(payload, spans)
+        C_t     = _build_context(payload, spans)
+        tagged  = _build_tagged_payload(payload, spans)
+        working = _build_working_payload(payload, U_loc)
 
         return {
             "P_t":       payload,
             "U_loc":     U_loc,
             "U_med":     U_med,
             "C_t":       C_t,
+            "tagged":    tagged,   # annotated view: [U_LOC:name], [U_MED:address], …
+            "working":   working,  # Stage 2 input: U_loc withheld, U_med verbatim
             "all_spans": spans,
         }
 
@@ -237,6 +264,7 @@ def _merge_overlaps(spans: List[Span]) -> List[Span]:
 
 
 def _build_context(text: str, spans: List[Span]) -> str:
+    """Internal C_t skeleton used by reconstruct_payload (generic [SPAN] slots)."""
     parts, cursor = [], 0
     for s in spans:
         if cursor < s.start:
@@ -246,6 +274,23 @@ def _build_context(text: str, spans: List[Span]) -> str:
     if cursor < len(text):
         parts.append(text[cursor:])
     return "".join(parts)
+
+
+def _build_tagged_payload(text: str, spans: List[Span]) -> str:
+    """Debug view: each span replaced with [U_LOC:type] or [U_MED:type]."""
+    result = text
+    for s in sorted(spans, key=lambda s: s.start, reverse=True):
+        prefix = "U_LOC" if s.bucket == "U_loc" else "U_MED"
+        result = result[:s.start] + f"[{prefix}:{s.span_type}]" + result[s.end:]
+    return result
+
+
+def _build_working_payload(text: str, u_loc: List[Span]) -> str:
+    """Stage 2 input: U_loc spans withheld ([TYPE] placeholder), U_med verbatim."""
+    result = text
+    for s in sorted(u_loc, key=lambda s: s.start, reverse=True):
+        result = result[:s.start] + f"[{s.span_type.upper()}]" + result[s.end:]
+    return result
 
 
 def spans_to_records(spans: List[Span]) -> List[dict]:
@@ -258,14 +303,17 @@ def _debug_show(result: Dict) -> None:
     print("P_t:")
     print(result["P_t"])
     print("\n" + "=" * 80)
-    print("C_t:")
-    print(result["C_t"])
+    print("Annotated payload  [U_LOC:type] = withheld   [U_MED:type] = mediation candidate:")
+    print(result["tagged"])
     print("\nU_loc spans:")
     for s in result["U_loc"]:
         print(f"  [{s.bucket}] [{s.span_type:<20}] {s.text!r:40}  ({s.source}/{s.subsource})")
     print("\nU_med spans:")
     for s in result["U_med"]:
         print(f"  [{s.bucket}] [{s.span_type:<20}] {s.text!r:40}  ({s.source}/{s.subsource})")
+    print("\n" + "=" * 80)
+    print("Stage 2 input  (U_loc withheld; U_med spans verbatim):")
+    print(result["working"])
 
 
 if __name__ == "__main__":
