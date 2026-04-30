@@ -143,8 +143,7 @@ Each standalone shows the payload at every stage boundary:
 | `privacyscope.py` | Original PrivacyScope | DO NOT MODIFY |
 | `privscope.py` | New PrivScope (in dev) | Stages 1–3b active, Stage 4 TODO |
 | `presidio.py` | Presidio | Replaced old NER-REDACT |
-| `privacy_enhancing_prompt.py` | PEP | System-prompt baseline |
-| `agentdam.py` | AGENTDAM | CoT self-redaction baseline |
+| `pep.py` | PEP | Local-LLM light-touch privacy filter |
 | `legacy/ner_redact.py` | NER-REDACT (archived) | Replaced by Presidio |
 
 ---
@@ -155,7 +154,6 @@ Mode 1 — naive (no privacy)
 Mode 2 — PrivacyScope baseline
 Mode 3 — Presidio baseline
 Mode 4 — PEP baseline
-Mode 5 — AGENTDAM baseline
 (PrivScope not yet wired into eval pipeline — do not add without being asked)
 
 ---

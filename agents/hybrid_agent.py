@@ -9,8 +9,7 @@ from llm.local_llm import LocalLLM
 from llm.cloud_router import CloudLLM
 from tools.web_form_tool import get_form_fields, submit_form
 from privacy.privacyscope import PrivacyScope
-import privacy.privacy_enhancing_prompt as pep_baseline
-import privacy.agentdam as agentdam_baseline
+import privacy.pep as pep_baseline
 import privacy.presidio as ner_redact_baseline
 from results.task_logger import append_task
 
@@ -473,21 +472,20 @@ CLOUD QUERY: <rich natural-language message to the cloud packed with symptoms, p
           2 → Naive  vs  PrivacyScope
           3 → Naive  vs  PrivacyScope  vs  PRESIDIO
           4 → Naive  vs  PrivacyScope  vs  PRESIDIO  vs  PEP
-          5 → Naive  vs  PrivacyScope  vs  PRESIDIO  vs  PEP  vs  AGENTDAM
-        Returns 1–5.
+          4 → Naive  vs  PrivacyScope  vs  PRESIDIO  vs  PEP
+        Returns 1–4.
         """
         print("\n  ┌─ Privacy Baseline Mode ─────────────────────────────────────")
         print("  │  1  →  Naive only")
         print("  │  2  →  Naive  vs  PrivacyScope")
         print("  │  3  →  Naive  vs  PrivacyScope  vs  PRESIDIO")
         print("  │  4  →  Naive  vs  PrivacyScope  vs  PRESIDIO  vs  PEP")
-        print("  │  5  →  Naive  vs  PrivacyScope  vs  PRESIDIO  vs  PEP  vs  AGENTDAM")
         print("  └─────────────────────────────────────────────────────────────")
         while True:
-            choice = input("  Select mode [1-5]: ").strip()
-            if choice in ("1", "2", "3", "4", "5"):
+            choice = input("  Select mode [1-4]: ").strip()
+            if choice in ("1", "2", "3", "4"):
                 return int(choice)
-            print("  Please enter a number between 1 and 5.")
+            print("  Please enter a number between 1 and 4.")
 
     # ── Main run ────────────────────────────────────────────────────────────────
 
@@ -496,17 +494,15 @@ CLOUD QUERY: <rich natural-language message to the cloud packed with symptoms, p
             mode = self._select_mode()
 
         # Derive which baselines are active from the mode number
-        run_ps      = mode >= 2   # PrivacyScope
-        run_ner     = mode >= 3   # PRESIDIO
-        run_pep     = mode >= 4   # Privacy-Enhancing Prompt
-        run_agentdam = mode >= 5  # AGENTDAM
+        run_ps  = mode >= 2   # PrivacyScope
+        run_ner = mode >= 3   # PRESIDIO
+        run_pep = mode >= 4   # Privacy-Enhancing Prompt
 
         _MODE_LABEL = {
             1: "Naive only",
             2: "Naive  vs  PrivacyScope",
             3: "Naive  vs  PrivacyScope  vs  PRESIDIO",
             4: "Naive  vs  PrivacyScope  vs  PRESIDIO  vs  PEP",
-            5: "Naive  vs  PrivacyScope  vs  PRESIDIO  vs  PEP  vs  AGENTDAM",
         }
 
         print(f"\n{'═' * 63}")
@@ -598,10 +594,10 @@ CLOUD QUERY: <rich natural-language message to the cloud packed with symptoms, p
 
             _box("Sanitized Cloud-Bound Payload  (PrivacyScope output)", sanitized_query.splitlines())
 
-        # ── Phase 2b: Additional baselines (modes 3–5) ───────────────────────
-        ner_query = pep_query = agentdam_query = None
+        # ── Phase 2b: Additional baselines (modes 3–4) ───────────────────────
+        ner_query = pep_query = None
 
-        if run_ner or run_pep or run_agentdam:
+        if run_ner or run_pep:
             print(f"\n{'─' * 55}")
             print(f"  PHASE 2b — Additional Privacy Baselines")
             print(f"{'─' * 55}")
@@ -625,14 +621,6 @@ CLOUD QUERY: <rich natural-language message to the cloud packed with symptoms, p
                 pep_query = f"[PEP error: {e}]"
             _box("Privacy-Enhancing Prompt  (PEP output)", pep_query.splitlines())
 
-        if run_agentdam:
-            print("\n  [Running AGENTDAM baseline …]")
-            try:
-                agentdam_query = agentdam_baseline.sanitize(cloud_query, p, task, traces, self.local)
-            except Exception as e:
-                agentdam_query = f"[AGENTDAM error: {e}]"
-            _box("AGENTDAM  (output)", agentdam_query.splitlines())
-
         # ── Phase 3: CLM Responses ────────────────────────────────────────────
         print(f"\n{'─' * 55}")
         print(f"  PHASE 3 — CLM Response")
@@ -642,7 +630,6 @@ CLOUD QUERY: <rich natural-language message to the cloud packed with symptoms, p
         clm_response_sanitized = self._cloud_search(sanitized_query) if sanitized_query else None
         clm_ner_resp           = self._cloud_search(ner_query)      if ner_query      else None
         clm_pep_resp           = self._cloud_search(pep_query)      if pep_query      else None
-        clm_agentdam_resp      = self._cloud_search(agentdam_query) if agentdam_query else None
 
         _box("CLM Response  (naive payload)", clm_response.splitlines())
         if clm_response_sanitized:
@@ -651,8 +638,6 @@ CLOUD QUERY: <rich natural-language message to the cloud packed with symptoms, p
             _box("CLM Response  (PRESIDIO payload)", clm_ner_resp.splitlines())
         if clm_pep_resp:
             _box("CLM Response  (PEP payload)", clm_pep_resp.splitlines())
-        if clm_agentdam_resp:
-            _box("CLM Response  (AGENTDAM payload)", clm_agentdam_resp.splitlines())
 
         # ── Parse CLM output → register dynamic mock services ────────────────
         parsed    = self._parse_clm_providers(clm_response)
@@ -746,14 +731,12 @@ CLOUD QUERY: <rich natural-language message to the cloud packed with symptoms, p
                 "naive":        cloud_query,
                 "privacyscope": sanitized_query,
                 "pep":          pep_query,
-                "agentdam":     agentdam_query,
                 "presidio":     ner_query,
             },
             clm_responses={
                 "naive":        clm_response,
                 "privacyscope": clm_response_sanitized,
                 "pep":          clm_pep_resp,
-                "agentdam":     clm_agentdam_resp,
                 "presidio":     clm_ner_resp,
             },
         )

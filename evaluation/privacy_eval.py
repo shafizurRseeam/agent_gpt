@@ -60,7 +60,7 @@ _RESULTS_PATH = _ROOT / "results"  / "task_results.json"
 _TASKS_PATH   = _ROOT / "task_generated" / "task_prompts.json"
 _PROFILE_PATH = _ROOT / "state" / "profile_state.json"
 
-_BASELINES = ("naive", "privacyscope", "presidio", "pep", "agentdam")
+_BASELINES = ("naive", "privacyscope", "presidio", "pep")
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

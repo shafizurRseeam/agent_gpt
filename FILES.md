@@ -60,8 +60,7 @@ cp .env.example .env   # then edit OPENAI_API_KEY=...
 | `privacy/span_abstraction.py` | Stage 3b of the new PrivScope. Semantic type inference + calibrated abstraction for 35+ types. Runs Stage 1–3b end-to-end. | `uv run python privacy/span_abstraction.py` |
 | `privacy/abstraction_policy.py` | Calibrated abstraction policy π_ψ: type hierarchies and levels for all 35+ semantic types. | — |
 | `privacy/presidio.py` | **Presidio baseline.** PII detection and redaction using Microsoft Presidio. Replaces the old NER-REDACT baseline. | `uv run python privacy/presidio.py` |
-| `privacy/privacy_enhancing_prompt.py` | **PEP baseline.** Prepends a short privacy-conscious system prompt before the local model generates the cloud payload. | — |
-| `privacy/agentdam.py` | **AGENTDAM baseline.** Uses a system prompt with 3 chain-of-thought examples to instruct the model to self-redact. | — |
+| `privacy/pep.py` | **PEP baseline.** Local LLM light-touch filter: removes personal identifiers while preserving task-relevant content. | `uv run python privacy/pep.py` |
 | `privacy/legacy/ner_redact.py` | **Archived.** Old NER-REDACT baseline (spaCy NER + regex). Replaced by Presidio. Kept for reference only. | — |
 
 ---
