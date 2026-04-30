@@ -12,7 +12,7 @@ Pipeline (stages added incrementally):
   Stage 1 — Span Extraction      (privacy/span_extractor.py)       ← ACTIVE
   Stage 2 — Scope Control        (privacy/scope_control.py)        ← ACTIVE
   Stage 3a — Sensitivity Classification (privacy/span_classification.py) ← ACTIVE
-  Stage 3b — Abstraction / Transformation                           [TODO]
+  Stage 3b — Abstraction / Transformation (privacy/span_abstraction.py)  ← ACTIVE
   Stage 4  — Local Restoration                                      [TODO]
 
 Public API (mirrors privacyscope.py for drop-in replacement):
@@ -23,11 +23,12 @@ Public API (mirrors privacyscope.py for drop-in replacement):
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 from privacy.span_extractor      import SpanExtractor, Span, spans_to_records
-from privacy.scope_control       import ScopeController, reconstruct_payload
+from privacy.scope_control       import ScopeController
 from privacy.span_classification import SpanClassifier
+from privacy.span_abstraction    import SpanAbstractor
 
 
 class PrivScope:
@@ -52,6 +53,7 @@ class PrivScope:
         self._extractor   = SpanExtractor()
         self._scope       = ScopeController(rho_low=rho_low, gamma=gamma)
         self._classifier  = SpanClassifier()
+        self._abstractor  = SpanAbstractor()
         self._local_llm   = local_llm
 
     # ── Public API ────────────────────────────────────────────────────────────
@@ -81,10 +83,12 @@ class PrivScope:
         Returns (sanitized_payload, trace_dict).
 
         trace_dict keys:
-            stage1          — span extraction output
-            stage2          — scope control output
-            binding_table   — {span_text: span_type} for U_loc spans (never sent to cloud)
-            method          — "privscope"
+            stage1        — span extraction output
+            stage2        — scope control output
+            stage3a       — PTH/CSS classification output
+            stage3b       — abstraction decisions
+            binding_table — {span_text: span_type} for U_loc (never sent to cloud)
+            method        — "privscope"
         """
         profile = user_profile or {}
         traces  = memory_traces or []
@@ -98,14 +102,11 @@ class PrivScope:
         # Private binding table — U_loc identifiers withheld from cloud
         binding_table: Dict[str, str] = {s.text: s.span_type for s in u_loc}
 
-        # Remove U_loc spans from the working text (replaced with [TYPE])
-        working = _remove_u_loc(payload, u_loc)
-
         # ── Stage 2: Scope Control ────────────────────────────────────────────
         scope_result = self._scope.filter(
             u_med=u_med,
             task=task,
-            payload=working,
+            payload=extraction["working"],
             local_llm=self._local_llm,
         )
 
@@ -116,19 +117,25 @@ class PrivScope:
             local_llm=self._local_llm,
         )
 
-        # PTH spans are released verbatim; CSS spans pending Stage 3b abstraction.
-        # Until Stage 3b is implemented, CSS spans are also passed through.
-        released = class_result.passthrough + class_result.context_sensitive
-        sanitized = reconstruct_payload(extraction, released, u_loc)
+        # ── Stage 3b: Span Abstraction ────────────────────────────────────────
+        abstraction_result = self._abstractor.abstract(
+            css_spans  = class_result.context_sensitive,
+            pth_spans  = class_result.passthrough,
+            g_t        = class_result.task_frame,
+            extraction = extraction,
+            u_loc      = u_loc,
+            local_llm  = self._local_llm,
+        )
 
-        # ── Stage 3b / Stage 4 placeholder ───────────────────────────────────
-        # CSS spans will be abstracted here before reconstruction.
-        # Local restoration of U_loc will be wired in Stage 4.
+        sanitized = abstraction_result.final_payload
+
+        # ── Stage 4 placeholder ───────────────────────────────────────────────
+        # Local restoration of U_loc spans will be wired here.
 
         trace = {
             "stage1": {
-                "u_loc":    spans_to_records(u_loc),
-                "u_med":    spans_to_records(u_med),
+                "u_loc": spans_to_records(u_loc),
+                "u_med": spans_to_records(u_med),
             },
             "stage2": {
                 "task_frame": scope_result.task_frame,
@@ -147,22 +154,22 @@ class PrivScope:
                 "passthrough":       [s.text for s in class_result.passthrough],
                 "context_sensitive": [s.text for s in class_result.context_sensitive],
             },
+            "stage3b": {
+                "method": abstraction_result.method,
+                "decisions": [
+                    {
+                        "original":   d.original_text,
+                        "abstracted": d.abstracted_text,
+                        "level":      d.level,
+                        "level_desc": d.level_desc,
+                        "method":     d.method,
+                    }
+                    for d in abstraction_result.decisions
+                ],
+            },
             "binding_table": binding_table,
             "method":        "privscope",
         }
 
         return sanitized, trace
 
-
-# ── Helper ────────────────────────────────────────────────────────────────────
-
-def _remove_u_loc(text: str, u_loc: List[Span]) -> str:
-    """
-    Strip U_loc spans from text right-to-left to preserve offsets.
-    Each span is replaced with a neutral [TYPE] placeholder.
-    """
-    result = text
-    for span in sorted(u_loc, key=lambda s: s.start, reverse=True):
-        placeholder = f"[{span.span_type.upper()}]"
-        result = result[:span.start] + placeholder + result[span.end:]
-    return result
