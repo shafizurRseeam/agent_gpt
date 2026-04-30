@@ -142,7 +142,7 @@ Each standalone shows the payload at every stage boundary:
 |------|----------|-------|
 | `privacyscope.py` | Original PrivacyScope | DO NOT MODIFY |
 | `privscope.py` | New PrivScope (in dev) | Stages 1–3b active, Stage 4 TODO |
-| `presidio_redact.py` | Presidio | Replaced old NER-REDACT |
+| `presidio.py` | Presidio | Replaced old NER-REDACT |
 | `privacy_enhancing_prompt.py` | PEP | System-prompt baseline |
 | `agentdam.py` | AGENTDAM | CoT self-redaction baseline |
 | `legacy/ner_redact.py` | NER-REDACT (archived) | Replaced by Presidio |

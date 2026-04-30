@@ -65,6 +65,31 @@ from privacy.abstraction_policy import (
 )
 
 
+# ── U_loc placeholder registry ────────────────────────────────────────────────
+# All bracket placeholders that Stage 1 inserts for direct identifiers.
+# Used by prepare_cloud_payload() to strip them before CLM release.
+
+U_LOC_PLACEHOLDERS = {
+    "[NAME]", "[PHONE]", "[EMAIL]", "[DOB]", "[SSN]",
+    "[PASSPORT_NUMBER]", "[DRIVER_LICENSE]", "[INSURANCE_ID]",
+    "[PATIENT_ID]", "[CREDIT_CARD]", "[MEMBERSHIP_ID]",
+    "[FREQUENT_FLYER_NUMBER]", "[HOTEL_LOYALTY_ID]",
+    "[VEHICLE_PLATE]",
+}
+
+# Stopwords for the cloud-payload content filter (no [bracket] shortcut)
+_CLOUD_SW = {
+    'i', 'me', 'my', 'hi', 'is', 'am', 'are', 'was', 'were', 'be',
+    'the', 'a', 'an', 'if', 'it', 'its', 'and', 'or', 'but', 'so',
+    'for', 'in', 'on', 'at', 'to', 'of', 'by', 'not', 'do', 'did',
+    'have', 'has', 'had', 'can', 'will', 'would', 'may', 'might',
+    'possible', 'preferably', 'previously', 'visited', 'book', 'keep',
+    'want', 'need', 'get', 'also', 'just', 'that', 'this', 'with',
+    'you', 'your', 'we', 'they', 'them', 'their', 'him', 'her',
+    'reach', 'contact', 'call', 'send', 'tell', 'please',
+}
+
+
 # ── Span types that support adjacent-span joint abstraction ───────────────────
 
 _GROUPABLE_TYPES = {"medical_symptom", "medical_condition"}
@@ -631,9 +656,10 @@ class AbstractionDecision:
 
 @dataclass
 class AbstractionResult:
-    decisions:     List[AbstractionDecision]
-    final_payload: str
-    method:        str   # "llm:<model>" | "rule"
+    decisions:           List[AbstractionDecision]
+    final_payload:       str   # internal: C_t with [TYPE] placeholders (debug / trace only)
+    final_cloud_payload: str   # cleaned: U_loc stripped, ready for CLM
+    method:              str   # "llm:<model>" | "rule"
 
 
 # ── SpanAbstractor ─────────────────────────────────────────────────────────────
@@ -731,10 +757,16 @@ class SpanAbstractor:
                     validation=validation, note="",
                 ))
 
-        final_payload = _assemble_final_payload(extraction, pth_spans, abstraction_map, u_loc)
-        method        = f"llm:{local_llm.model}" if local_llm else "rule"
+        final_payload       = _assemble_final_payload(extraction, pth_spans, abstraction_map, u_loc)
+        final_cloud_payload = prepare_cloud_payload(final_payload)
+        method              = f"llm:{local_llm.model}" if local_llm else "rule"
 
-        return AbstractionResult(decisions=decisions, final_payload=final_payload, method=method)
+        return AbstractionResult(
+            decisions=decisions,
+            final_payload=final_payload,
+            final_cloud_payload=final_cloud_payload,
+            method=method,
+        )
 
     # ── Internal ──────────────────────────────────────────────────────────────
 
@@ -873,6 +905,70 @@ def _assemble_final_payload(
     return " ".join(kept).strip()
 
 
+# ── Cloud payload preparation ─────────────────────────────────────────────────
+
+def prepare_cloud_payload(internal_payload: str) -> str:
+    """
+    Strip U_loc placeholders from the internally reconstructed sanitized
+    payload and remove the empty identifier-only fragments they leave behind.
+
+    The internal payload uses [NAME], [PHONE], etc. for debug traceability.
+    This function produces the cleaned text actually sent to the cloud CLM.
+
+    Steps:
+      1. Remove all direct-identifier bracket placeholders.
+      2. Eliminate known identifier-introduction fragments
+         (greeting/contact lines, "My X is ." artefacts).
+      3. Multi-pass punctuation and whitespace cleanup.
+      4. Drop sentences that become content-free after removal.
+    """
+    text = internal_payload
+
+    # Step 1 — Remove U_loc placeholders
+    for ph in U_LOC_PLACEHOLDERS:
+        text = text.replace(ph, "")
+
+    # Step 2 — Remove identifier-introduction fragments (multi-pass)
+    for _ in range(3):
+        # Greeting + contact intro: "Hi, I'm  and you can reach me at  or ."
+        text = re.sub(r"Hi,?\s+I'?m\b[^.!?]*[.!?]", "", text, flags=re.IGNORECASE)
+        # Residual contact fragment: "you can reach me at  or ."
+        text = re.sub(r"[Yy]ou can reach me\b[^.!?]*[.!?]?", "", text)
+        # "My X is ." where X is a 1–3-word field name (value was a placeholder)
+        text = re.sub(
+            r"\bMy\s+\w+(?:\s+\w+){0,2}\s+is\s*[,.]",
+            "", text, flags=re.IGNORECASE,
+        )
+        # Empty preposition slots: "near ." "at ." "before ." etc.
+        text = re.sub(
+            r'\b(on|at|before|after|for|near|is|are|and|or|of|in|by)\s*([,.])',
+            r'\2', text, flags=re.IGNORECASE,
+        )
+        text = re.sub(r'\b(\w+)\s+is\s*([,.])', r'\2', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bMy\s+\w+\s+is\s+and\s+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\s{2,}and\s+', ' ', text)
+        text = re.sub(r',\s*\.', '.', text)
+        text = re.sub(r',\s*,', ',', text)
+        text = re.sub(r'\.\s*\.', '.', text)
+        text = re.sub(r'\s+([,.])', r'\1', text)
+        text = re.sub(r' {2,}', ' ', text)
+        text = text.strip()
+
+    # Step 3 — Drop sentences that are content-free after removal
+    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    kept = []
+    for sent in sentences:
+        sent = sent.strip()
+        if not sent:
+            continue
+        words    = re.findall(r'\b[a-zA-Z]{3,}\b', sent.lower())
+        meaningful = sum(1 for w in words if w not in _CLOUD_SW)
+        if meaningful >= 2:
+            kept.append(sent)
+
+    return ' '.join(kept).strip()
+
+
 # ── Debug display ──────────────────────────────────────────────────────────────
 
 def _debug_show(result: AbstractionResult) -> None:
@@ -1007,6 +1103,11 @@ if __name__ == "__main__":
     _debug_show(abstraction_result)
 
     print(f"\n{'═' * W}")
-    print(f"  FINAL SANITIZED PAYLOAD  P̂_t  — sent to cloud CLM")
+    print(f"  INTERNAL SANITIZED PAYLOAD  — U_loc as [TYPE] placeholders (debug / trace only)")
     print(f"{'═' * W}")
     print(f"  {abstraction_result.final_payload}")
+
+    print(f"\n{'═' * W}")
+    print(f"  FINAL CLOUD PAYLOAD  P̂_t  — U_loc stripped and cleaned, sent to CLM")
+    print(f"{'═' * W}")
+    print(f"  {abstraction_result.final_cloud_payload}")

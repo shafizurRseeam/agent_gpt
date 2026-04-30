@@ -53,11 +53,13 @@ cp .env.example .env   # then edit OPENAI_API_KEY=...
 | File | Description | Run |
 |------|-------------|-----|
 | `privacy/privacyscope.py` | **Original PrivacyScope** (4-stage: span extraction → scope control → classification → transformation). Currently used in the full evaluation pipeline. **Do not modify.** | — |
-| `privacy/privscope.py` | **New PrivScope** under development. Same public API as `privacyscope.py`. Stage 1 (span extraction) active; Stages 2–4 pending. References `span_extractor.py`. | — |
+| `privacy/privscope.py` | **New PrivScope** governor. Stages 1–3b active. Full pipeline debug runner. | `uv run python privacy/privscope.py` |
 | `privacy/span_extractor.py` | Stage 1 of the new PrivScope. Partitions payload into U_loc (withheld identifiers), U_med (mediation candidates), and C_t (context). Three-layer extractor: profile matching → structured regex → spaCy. | `uv run python privacy/span_extractor.py` |
 | `privacy/scope_control.py` | Stage 2 of the new PrivScope. Filters U_med spans using Rel + κ + TaskGain. Runs Stage 1 + Stage 2 end-to-end and shows sanitized output. | `uv run python privacy/scope_control.py` |
 | `privacy/span_classification.py` | Stage 3a of the new PrivScope. Joint PTH/CSS classification of retained spans using a single local-LM call. Runs Stage 1 + Stage 2 + Stage 3a end-to-end. | `uv run python privacy/span_classification.py` |
-| `privacy/presidio_redact.py` | **Presidio baseline.** PII detection and redaction using Microsoft Presidio. Replaces the old NER-REDACT baseline. | — |
+| `privacy/span_abstraction.py` | Stage 3b of the new PrivScope. Semantic type inference + calibrated abstraction for 35+ types. Runs Stage 1–3b end-to-end. | `uv run python privacy/span_abstraction.py` |
+| `privacy/abstraction_policy.py` | Calibrated abstraction policy π_ψ: type hierarchies and levels for all 35+ semantic types. | — |
+| `privacy/presidio.py` | **Presidio baseline.** PII detection and redaction using Microsoft Presidio. Replaces the old NER-REDACT baseline. | `uv run python privacy/presidio.py` |
 | `privacy/privacy_enhancing_prompt.py` | **PEP baseline.** Prepends a short privacy-conscious system prompt before the local model generates the cloud payload. | — |
 | `privacy/agentdam.py` | **AGENTDAM baseline.** Uses a system prompt with 3 chain-of-thought examples to instruct the model to self-redact. | — |
 | `privacy/legacy/ner_redact.py` | **Archived.** Old NER-REDACT baseline (spaCy NER + regex). Replaced by Presidio. Kept for reference only. | — |

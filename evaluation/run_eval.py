@@ -79,7 +79,7 @@ class PayloadGenerator:
     def __init__(self):
         from llm.local_llm import LocalLLM
         from privacy.privacyscope import PrivacyScope
-        import privacy.presidio_redact as presidio_mod
+        import privacy.presidio as presidio_mod
         from state.state_io import load_state
 
         self.local      = LocalLLM()

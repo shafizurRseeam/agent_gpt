@@ -11,7 +11,7 @@ from tools.web_form_tool import get_form_fields, submit_form
 from privacy.privacyscope import PrivacyScope
 import privacy.privacy_enhancing_prompt as pep_baseline
 import privacy.agentdam as agentdam_baseline
-import privacy.presidio_redact as ner_redact_baseline
+import privacy.presidio as ner_redact_baseline
 from results.task_logger import append_task
 
 from state.state_io import load_state, save_state, append_trace

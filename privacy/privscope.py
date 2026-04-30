@@ -127,8 +127,6 @@ class PrivScope:
             local_llm  = self._local_llm,
         )
 
-        sanitized = abstraction_result.final_payload
-
         # ── Stage 4 placeholder ───────────────────────────────────────────────
         # Local restoration of U_loc spans will be wired here.
 
@@ -167,9 +165,120 @@ class PrivScope:
                     for d in abstraction_result.decisions
                 ],
             },
+            "sanitized_internal_payload": abstraction_result.final_payload,
+            "final_cloud_payload":        abstraction_result.final_cloud_payload,
             "binding_table": binding_table,
             "method":        "privscope",
         }
 
-        return sanitized, trace
+        return abstraction_result.final_cloud_payload, trace
 
+
+# ── Standalone — runs the full PrivScope governor on the dentist example ───────
+
+if __name__ == "__main__":
+    import sys
+    sys.stdout.reconfigure(encoding="utf-8")
+
+    from state.state_io import load_state
+    from llm.local_llm import LocalLLM
+
+    state   = load_state()
+    profile = state.get("user_profile", {})
+
+    try:
+        local_llm = LocalLLM()
+        local_llm.generate("ping")
+        print(f"\n  Local LLM: connected ({local_llm.model})")
+    except Exception:
+        local_llm = None
+        print(f"\n  Local LLM: unavailable — rule/fallback for g_t, TaskGain, classification, abstraction")
+
+    r_t = (
+        "I have tooth pain and bleeding gums, "
+        "book me a dentist appointment at the earliest."
+    )
+    p_t = (
+        "Hi, I'm Bob Smith and you can reach me at 585-555-1212 or bob@example.com. "
+        "I need a dentist near 12 ABC St, Rochester, NY. I have BlueCross Dental Plus. "
+        "My insurance ID is BC-123456-A9. I am available on March 18 and March 19, "
+        "preferably before 10:30 AM. If possible, book for 2 people. "
+        "I previously visited Bright Smile Dental and Lake Dental Care. "
+        "I have tooth pain and bleeding gums. My ZIP is 14623 and I want to keep "
+        "the cost under $500."
+    )
+
+    W = 70
+
+    print(f"\n{'═' * W}")
+    print(f"  ORIGINAL USER REQUEST  (r_t)")
+    print(f"{'═' * W}")
+    print(f"  {r_t}")
+
+    print(f"\n{'═' * W}")
+    print(f"  LC-ENRICHED PAYLOAD  (p_t)  — input to sanitization pipeline")
+    print(f"{'═' * W}")
+    print(f"  {p_t}")
+
+    privscope            = PrivScope(local_llm=local_llm)
+    cloud_payload, trace = privscope.sanitize_with_trace(
+        payload=p_t, user_profile=profile, task=r_t,
+    )
+
+    # ── Stage 1 ───────────────────────────────────────────────────────────────
+    print(f"\n{'═' * W}")
+    print(f"  STAGE 1 — SPAN EXTRACTION")
+    print(f"{'═' * W}")
+    s1 = trace["stage1"]
+    print(f"  U_loc withheld  ({len(s1['u_loc'])} spans):")
+    for s in s1["u_loc"]:
+        print(f"    [{s['span_type']:<20}] {s['text']!r}")
+    print(f"  U_med mediation ({len(s1['u_med'])} spans):")
+    for s in s1["u_med"]:
+        print(f"    [{s['span_type']:<20}] {s['text']!r}")
+
+    # ── Stage 2 ───────────────────────────────────────────────────────────────
+    print(f"\n{'═' * W}")
+    print(f"  STAGE 2 — SCOPE CONTROL")
+    print(f"{'═' * W}")
+    s2 = trace["stage2"]
+    print(f"  Task frame g_t : {s2['task_frame']}")
+    print(f"  Thresholds     : ρ_low={s2['rho_low']}  γ={s2['gamma']}")
+    print(f"  Retained ({len(s2['retained'])}):")
+    for t in s2["retained"]:
+        print(f"    [KEEP]  {t!r}")
+    print(f"  Dropped  ({len(s2['dropped'])}):")
+    for d in s2["dropped"]:
+        print(f"    [DROP]  {d['text']!r}  ({d['reason']})")
+
+    # ── Stage 3a ──────────────────────────────────────────────────────────────
+    print(f"\n{'═' * W}")
+    print(f"  STAGE 3a — SENSITIVITY CLASSIFICATION  [{trace['stage3a']['method']}]")
+    print(f"{'═' * W}")
+    s3a = trace["stage3a"]
+    print(f"  PTH (passthrough)      : {s3a['passthrough']}")
+    print(f"  CSS (context-sensitive): {s3a['context_sensitive']}")
+
+    # ── Stage 3b ──────────────────────────────────────────────────────────────
+    print(f"\n{'═' * W}")
+    print(f"  STAGE 3b — SPAN ABSTRACTION  [{trace['stage3b']['method']}]")
+    print(f"{'═' * W}")
+    for d in trace["stage3b"]["decisions"]:
+        if d["method"] == "grouped":
+            continue
+        print(
+            f"    {d['original']!r:<35} → "
+            f"l{d['level']} ({d['level_desc']}) → "
+            f"{d['abstracted']!r}  [{d['method']}]"
+        )
+
+    # ── Payloads ──────────────────────────────────────────────────────────────
+    print(f"\n{'═' * W}")
+    print(f"  INTERNAL SANITIZED PAYLOAD  — U_loc as [TYPE] placeholders (debug/trace only)")
+    print(f"{'═' * W}")
+    print(f"  {trace['sanitized_internal_payload']}")
+
+    print(f"\n{'═' * W}")
+    print(f"  FINAL CLOUD PAYLOAD  P̂_t  — U_loc stripped and cleaned, sent to CLM")
+    print(f"{'═' * W}")
+    print(f"  {cloud_payload}")
