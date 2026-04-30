@@ -9,96 +9,320 @@ and recording the least specific level that still allows the CLM response
 to be grounded locally into an actionable result. This module stores the
 output of that calibration process for runtime use by Stage 3b.
 
-Abstraction types are semantic types inferred from extractor span types.
-Unlike raw span types (noun_phrase, organization, facility), semantic
-abstraction types capture the role of a span in context: medical_symptom,
-prior_provider, service_need, etc. This lets Stage 3b select type-
-appropriate hierarchies and calibrated levels regardless of which
-extraction layer produced the span.
+Semantic abstraction types are inferred from raw extractor span types by
+Stage 3b. Unlike raw types (noun_phrase, organization, facility), semantic
+types capture the role of a span in context: medical_condition,
+prior_provider, dietary_preference, occasion_relationship, etc. This lets
+Stage 3b select type-appropriate hierarchies and calibrated levels
+regardless of which extraction layer produced the span.
+
+Supported domains:
+  Medical booking   — conditions, symptoms, care history, medication,
+                      pregnancy, mental health, accessibility, medical travel
+  Travel booking    — purpose, itinerary, transport, baggage, flexibility,
+                      child travel, budget, proximity
+  Restaurant booking — dietary preferences, allergies, atmosphere, seating,
+                       occasion / relationship context
 """
 
 from typing import Dict, List
 
 # ── Type-specific abstraction hierarchies H_T = (h^0, h^1, h^2, h^3) ─────────
-# h^0 = coarsest, h^3 = finest (verbatim).
-# Hierarchy strings serve as target-level descriptions in LLM prompts.
+# h^0 = coarsest (maximum privacy reduction), h^3 = finest (verbatim).
+# Hierarchy level strings are used as target-level descriptions in LLM prompts.
 
 ABSTRACTION_HIERARCHIES: Dict[str, List[str]] = {
-    # Structured span types
-    "address":            ["region",                      "city or area",             "neighborhood",              "exact address"],
-    "location":           ["region",                      "city or area",             "neighborhood",              "exact location"],
-    "zip":                ["region",                      "state",                    "city",                      "zip code"],
-    "date":               ["month",                       "week range",               "specific day",              "exact date"],
-    "time":               ["part of day",                 "time window",              "hour block",                "exact time"],
-    "money":              ["cost constraint",             "budget range",             "approximate budget",        "exact budget"],
-    "party_size":         ["group size context",          "approximate group size",   "group size",                "exact count"],
 
-    # Account-linked
-    "insurance_name":     ["type of insurance",           "coverage category",        "plan category",             "exact plan name"],
+    # ── Structured / semi-structured ──────────────────────────────────────────
+    "address": [
+        "region",
+        "city",
+        "neighborhood or area",
+        "exact address",
+    ],
+    "location": [
+        "region",
+        "city",
+        "neighborhood or area",
+        "exact location",
+    ],
+    "zip": [
+        "region",
+        "city",
+        "local area",
+        "exact zip code",
+    ],
+    "date": [
+        "month",
+        "week",
+        "day",
+        "exact date",
+    ],
+    "time": [
+        "part of day",
+        "multi-hour window",
+        "hour block",
+        "exact time",
+    ],
+    "distance_proximity": [
+        "nearby",
+        "broad distance range",
+        "travel-time range",
+        "exact distance or travel time",
+    ],
+    "budget_cost": [
+        "cost preference",
+        "budget tier",
+        "approximate limit",
+        "exact amount",
+    ],
+    "party_size": [
+        "group size category",
+        "approximate party size",
+        "group size",
+        "exact party size",
+    ],
 
-    # Semantic types inferred from noun_phrase / organization / facility
-    "medical_symptom":    ["health concern",              "care category",            "symptom category",          "specific symptom"],
-    "prior_provider":     ["prior provider",              "prior dental provider",    "local dental office",       "specific provider name"],
-    "service_need":       ["service requirement",         "provider capability",      "service category",          "specific service need"],
-    "dietary_constraint": ["dining constraint",           "diet or allergy type",     "constraint category",       "specific diet or allergen"],
-    "travel_purpose":     ["travel context",              "personal or work travel",  "purpose category",          "specific travel purpose"],
-    "preference":         ["general preference",          "preference category",      "preference type",           "exact preference"],
+    # ── Provider / service constraints ────────────────────────────────────────
+    "provider_preference": [
+        "provider constraint",
+        "provider attribute",
+        "specific requirement",
+        "exact provider preference",
+    ],
+    "provider_requirement": [
+        "service requirement",
+        "provider capability",
+        "specific service requirement",
+        "exact requirement",
+    ],
+    "insurance_name": [
+        "insurance context",
+        "coverage category",
+        "plan category",
+        "exact plan name",
+    ],
+    "service_need": [
+        "service need",
+        "service category",
+        "specific service type",
+        "exact service request",
+    ],
+    "accessibility_need": [
+        "assistance need",
+        "accessibility category",
+        "specific accommodation type",
+        "exact accessibility request",
+    ],
 
-    # Identity / social
-    "person":             ["person reference",            "role or relation",         "name initial",              "full name"],
-    "group":              ["group type",                  "group category",           "group name",                "exact group"],
+    # ── Medical ───────────────────────────────────────────────────────────────
+    "medical_condition": [
+        "health concern",
+        "condition category",
+        "specific condition",
+        "exact condition phrase",
+    ],
+    "medical_symptom": [
+        "health concern",
+        "symptom category",
+        "specific symptom category",
+        "exact symptom",
+    ],
+    "care_history": [
+        "prior care context",
+        "care-history category",
+        "specific care event",
+        "exact care-history detail",
+    ],
+    "medication": [
+        "medication context",
+        "medication class",
+        "specific medication category",
+        "exact medication name",
+    ],
+    "medical_trip": [
+        "travel context",
+        "health-related travel",
+        "medical travel purpose",
+        "exact medical trip detail",
+    ],
+    "pregnancy_status": [
+        "health context",
+        "pregnancy-related context",
+        "pregnancy status",
+        "exact pregnancy statement",
+    ],
+    "mental_health_concern": [
+        "health concern",
+        "mental-health category",
+        "specific mental-health concern",
+        "exact mental-health phrase",
+    ],
 
-    # Catch-all
-    "generic_detail":     ["general category",            "subcategory",              "specific detail",           "exact value"],
+    # ── Travel ────────────────────────────────────────────────────────────────
+    "travel_itinerary": [
+        "travel plan",
+        "transport or lodging need",
+        "route or trip constraint",
+        "exact itinerary detail",
+    ],
+    "travel_purpose": [
+        "travel context",
+        "purpose category",
+        "specific purpose category",
+        "exact travel purpose",
+    ],
+    "transport_constraint": [
+        "transport constraint",
+        "flight or route preference",
+        "specific travel constraint",
+        "exact transport detail",
+    ],
+    "baggage_constraint": [
+        "baggage constraint",
+        "baggage category",
+        "specific baggage limit",
+        "exact baggage detail",
+    ],
+    "ticket_flexibility": [
+        "ticket flexibility",
+        "booking flexibility category",
+        "specific ticket flexibility need",
+        "exact ticket requirement",
+    ],
+    "child_travel": [
+        "family travel context",
+        "child-related travel need",
+        "specific child-travel constraint",
+        "exact child-travel detail",
+    ],
+
+    # ── Restaurant / dining ───────────────────────────────────────────────────
+    "dietary_preference": [
+        "food preference",
+        "dietary category",
+        "specific diet",
+        "exact dietary preference",
+    ],
+    "allergy": [
+        "health-related food constraint",
+        "allergy constraint",
+        "specific allergen category",
+        "exact allergen",
+    ],
+    "restaurant_atmosphere": [
+        "dining atmosphere",
+        "ambience category",
+        "specific atmosphere preference",
+        "exact atmosphere phrase",
+    ],
+    "seating_preference": [
+        "seating preference",
+        "seating category",
+        "specific seating type",
+        "exact seating request",
+    ],
+    "occasion_relationship": [
+        "social context",
+        "occasion category",
+        "specific occasion or relationship",
+        "exact occasion or relationship",
+    ],
+
+    # ── Named entities / fallback ─────────────────────────────────────────────
+    "prior_provider": [
+        "prior provider",
+        "prior provider category",
+        "local provider type",
+        "specific provider name",
+    ],
+    "prior_venue": [
+        "prior venue",
+        "prior venue category",
+        "local venue type",
+        "specific venue name",
+    ],
+    "person": [
+        "person reference",
+        "role or relation",
+        "name initial",
+        "full name",
+    ],
+    "generic_detail": [
+        "general context",
+        "type-consistent category",
+        "more specific abstraction",
+        "original span",
+    ],
 }
 
-# ── Calibrated abstraction level per semantic type ─────────────────────────────
-# Runtime policy table representing the output of offline calibration.
-# Key: semantic abstraction type.
-# Value: integer level k ∈ {0, 1, 2, 3} from ABSTRACTION_HIERARCHIES[type][k].
+# ── Runtime policy table — output of offline calibration ──────────────────────
+# Each entry k gives the calibrated abstraction level for spans of that type.
+# Calibration criterion: least specific level that still allows the CLM to
+# ground its response into an actionable result for the relevant task class.
 #
-# Calibration rationale (least specific level that preserves task utility):
+#   0 = coarsest (maximum privacy reduction)
+#   3 = finest   (verbatim — use only when exact value is task-required)
 #
-#   address/location → 1  city/area is sufficient for provider discovery
-#   zip              → 0  zip + health + schedule combination is linkable
-#   date/time        → 3  exact values required for calendar-grounded booking
-#   money/party_size → 3  exact values required as hard task constraints
-#   insurance_name   → 1  coverage category sufficient; plan name reveals account
-#   medical_symptom  → 2  symptom category reduces specificity while preserving
-#                         care-type signal needed for provider matching
-#   prior_provider   → 0  category only; named providers are high-linkability
-#                         history unless task requires continuity or follow-up
-#   service_need     → 1  capability sufficient; specific service over-specified
-#   dietary/travel   → 2  constraint category sufficient
-#   preference       → 2  preference type sufficient; exact form is over-specified
-#   person           → 0  named persons outside U_loc still linkable
-#   group/generic    → 1
+# Rationale by group:
+#   date / time       → 3  exact values required for calendar-grounded booking
+#   address / location → 1  city/area sufficient for provider or venue discovery
+#   budget_cost       → 2  approximate limit sufficient; exact amount over-specified
+#   medical (all)     → 1  condition / medication / pregnancy category sufficient
+#   accessibility     → 2  functional type (wheelchair) must be retained for service match
+#   dietary / allergy → 2  specific type usually needed for menu filtering
+#   occasion          → 1  occasion category sufficient; relationship detail unnecessary
+#   prior providers   → 0  named provider history dropped to category
+#   dates / times     → 3  exact values required for calendar-grounded booking
 
 CALIBRATED_ABSTRACTION_POLICY: Dict[str, int] = {
-    "address":            1,
-    "location":           1,
-    "zip":                0,
+    # Structured constraints
+    "address":               1,
+    "location":              1,
+    "zip":                   1,
+    "date":                  3,
+    "time":                  3,
+    "distance_proximity":    2,
+    "budget_cost":           2,
+    "party_size":            2,
 
-    "date":               3,
-    "time":               3,
+    # Provider / service
+    "provider_preference":   2,
+    "provider_requirement":  2,
+    "insurance_name":        1,
+    "service_need":          2,
+    "accessibility_need":    2,
 
-    "money":              3,
-    "party_size":         3,
+    # Medical
+    "medical_condition":     1,
+    "medical_symptom":       1,
+    "care_history":          1,
+    "medication":            1,
+    "medical_trip":          1,
+    "pregnancy_status":      1,
+    "mental_health_concern": 1,
 
-    "insurance_name":     1,
+    # Travel
+    "travel_itinerary":      2,
+    "travel_purpose":        1,
+    "transport_constraint":  2,
+    "baggage_constraint":    2,
+    "ticket_flexibility":    2,
+    "child_travel":          1,
 
-    "medical_symptom":    2,
-    "prior_provider":     0,
-    "service_need":       1,
-    "dietary_constraint": 2,
-    "travel_purpose":     2,
-    "preference":         2,
+    # Restaurant / dining
+    "dietary_preference":    2,
+    "allergy":               2,
+    "restaurant_atmosphere": 2,
+    "seating_preference":    2,
+    "occasion_relationship": 1,
 
-    "person":             0,
-    "group":              1,
-
-    "generic_detail":     1,
+    # Named entities / fallback
+    "prior_provider":        0,
+    "prior_venue":           0,
+    "person":                0,
+    "generic_detail":        1,
 }
 
-# Default for types not listed above
+# Default level for types absent from the policy table
 DEFAULT_ABSTRACTION_LEVEL = 1

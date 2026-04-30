@@ -4,40 +4,46 @@ privacy/span_abstraction.py
 Stage 3b of PrivScope — Span Abstraction.
 
 Replaces each context-sensitive span u_j ∈ C_t with a less specific,
-type-consistent representation before cloud release. Specifically:
+type-consistent representation before cloud release:
 
   P̂_t = Assemble(R_t, D_t, {h_{T(u_j)}^{k_j}(u_j) : u_j ∈ C_t})
 
 where:
-  R_t   — residual scaffold (C_t slots)
-  D_t   — PTH spans, released verbatim
-  k_j   = π_ψ(u_j, T(u_j), g_t) — calibrated abstraction level
-  T(u_j) — semantic abstraction type inferred from the extractor span type
+  R_t    — residual scaffold (C_t slots)
+  D_t    — PTH spans, released verbatim
+  k_j    = π_ψ(u_j, T(u_j), g_t) — calibrated abstraction level
+  T(u_j) — semantic abstraction type inferred from extractor span type
 
-Key design decisions:
+Semantic type inference
+  Raw extractor types (noun_phrase, organization, facility) are too coarse.
+  Stage 3b first infers a semantic abstraction type — medical_symptom,
+  prior_provider, dietary_preference, occasion_relationship, etc. — using
+  priority-ordered keyword matching, then looks up the type's hierarchy and
+  calibrated policy level.
 
-  Semantic type inference
-    The extractor's raw span_type (noun_phrase, organization, facility) is
-    not specific enough for abstraction. Stage 3b first infers a semantic
-    abstraction type — medical_symptom, prior_provider, service_need, etc.
-    — using keyword matching and proper-noun detection. This prevents
-    semantic drift such as abstracting a prior provider as a symptom.
+Adjacent span grouping
+  Spans of the same groupable type (medical_symptom, medical_condition) in
+  the same sentence are jointly abstracted. The anchor span gets the joint
+  abstraction; remaining spans are collapsed to empty.
 
-  Adjacent symptom grouping
-    Multiple medical_symptom spans in the same sentence are jointly
-    abstracted into one phrase (e.g., "tooth pain" + "bleeding gums" →
-    "dental symptoms"). The anchor span receives the grouped abstraction;
-    remaining spans are set to empty and removed by the cleanup pass.
+LLM abstraction with type-constrained prompting
+  The prompt explicitly names the inferred abstraction_type to prevent entity
+  class changes. Constraints prevent diagnosis, hallucination, over-specificity.
 
-  LLM abstraction with type-constrained prompting
-    The LLM prompt explicitly names the inferred abstraction type so the
-    model cannot change the entity class. Constraints prevent diagnosis,
-    hallucination, and over-specification.
+Post-abstraction validation
+  Lightweight signal checks verify the output preserved its semantic role.
+  Failures fall back to deterministic phrases from _FALLBACK.
 
-  Post-abstraction validation
-    After LLM abstraction, lightweight signal checks verify the output
-    preserved its semantic role. Failures fall back to deterministic
-    phrases from _FALLBACK.
+Supported semantic types (35+):
+  address, location, zip, date, time, distance_proximity, budget_cost,
+  party_size, provider_preference, provider_requirement, insurance_name,
+  service_need, accessibility_need, medical_condition, medical_symptom,
+  care_history, medication, medical_trip, pregnancy_status,
+  mental_health_concern, travel_itinerary, travel_purpose,
+  transport_constraint, baggage_constraint, ticket_flexibility,
+  child_travel, dietary_preference, allergy, restaurant_atmosphere,
+  seating_preference, occasion_relationship, prior_provider, prior_venue,
+  person, generic_detail.
 
 Public API:
     SpanAbstractor()
@@ -59,10 +65,14 @@ from privacy.abstraction_policy import (
 )
 
 
-# ── Semantic type inference ────────────────────────────────────────────────────
-# Maps raw extractor span types to semantic abstraction types.
-# noun_phrase, organization, and facility require keyword/pattern matching
-# because the extractor type is too coarse for abstraction.
+# ── Span types that support adjacent-span joint abstraction ───────────────────
+
+_GROUPABLE_TYPES = {"medical_symptom", "medical_condition"}
+
+
+# ── Direct type map: structured extractor types ───────────────────────────────
+# Types whose semantic meaning is already captured by the extractor type.
+# "preference" and "group" require sub-classification; excluded here.
 
 _DIRECT_TYPE_MAP: Dict[str, str] = {
     "address":        "address",
@@ -71,102 +81,280 @@ _DIRECT_TYPE_MAP: Dict[str, str] = {
     "date":           "date",
     "time":           "time",
     "insurance_name": "insurance_name",
-    "money":          "money",
+    "money":          "budget_cost",
     "party_size":     "party_size",
-    "preference":     "preference",
     "person":         "person",
-    "group":          "group",
+}
+
+
+# ── Keyword sets for semantic type inference (noun_phrase classification) ─────
+# Priority order matters: more specific types are checked first.
+
+_PREGNANCY_WORDS = {
+    "pregnant", "pregnancy", "trimester", "prenatal", "postnatal", "postpartum",
+    "expecting", "maternity", "obgyn", "obstetrician", "midwife", "gestational",
+}
+
+_MEDICATION_WORDS = {
+    "medication", "medicine", "drug", "prescription", "pill", "tablet", "capsule",
+    "dose", "dosage", "antibiotic", "insulin", "inhaler", "ointment", "cream",
+    "supplement", "vitamin", "aspirin", "ibuprofen", "acetaminophen", "metformin",
+    "statin", "antidepressant", "anxiolytic", "refill", "pharmacy",
+}
+
+_MENTAL_HEALTH_WORDS = {
+    "anxiety", "depression", "stress", "mental", "psychiatric", "therapy",
+    "therapist", "counseling", "counselor", "psychologist", "psychiatrist",
+    "ptsd", "adhd", "bipolar", "panic", "phobia", "ocd", "schizophrenia",
+}
+
+_CARE_HISTORY_WORDS = {
+    "history", "previously", "previous", "former", "past", "surgery", "operation",
+    "hospitalized", "procedure", "treated", "diagnosed", "prescribed", "removed",
+    "hospitalization", "implant", "biopsy", "extraction",
+}
+
+_MEDICAL_CONDITION_WORDS = {
+    "diabetes", "hypertension", "asthma", "cancer", "arthritis", "epilepsy",
+    "condition", "disease", "disorder", "chronic", "syndrome", "infection",
+    "eczema", "psoriasis", "thyroid", "cardiac", "heart", "stroke", "autism",
+    "sclerosis", "fibromyalgia", "colitis", "crohn",
 }
 
 _SYMPTOM_WORDS = {
     "pain", "ache", "aches", "gum", "gums", "tooth", "teeth", "bleed", "bleeding",
     "sore", "soreness", "hurt", "hurts", "swollen", "swelling", "cavity", "cavities",
-    "sensitivity", "tenderness", "discomfort", "symptom", "toothache",
-}
-_DIETARY_WORDS = {
-    "vegetarian", "vegan", "gluten", "kosher", "halal", "allergy", "allergen",
-    "lactose", "shellfish", "pescatarian", "nut", "dairy",
-}
-_TRAVEL_WORDS = {
-    "trip", "travel", "flight", "hotel", "business", "vacation", "leisure",
-    "journey", "tour",
-}
-_SERVICE_WORDS = {
-    "accepting", "emergency", "accessible", "wheelchair", "appointment", "same-day",
+    "sensitivity", "tenderness", "discomfort", "symptom", "toothache", "nausea",
+    "fatigue", "headache", "dizziness", "rash", "itch", "itchy", "cough", "fever",
+    "vomiting", "shortness", "stiffness", "cramping", "bruising", "lesion",
 }
 
+_MEDICAL_TRIP_WORDS = {
+    "treatment", "specialist", "follow-up", "checkup", "scan", "mri", "biopsy",
+    "procedure", "surgery", "hospital",
+}
+_TRAVEL_GENERAL_WORDS = {
+    "trip", "travel", "flight", "journey", "abroad", "overseas", "destination",
+    "hotel", "vacation", "holiday",
+}
+
+_ACCESSIBILITY_WORDS = {
+    "wheelchair", "accessible", "accessibility", "mobility", "disabled", "disability",
+    "hearing", "visual", "blind", "deaf", "elevator", "ramp", "handicap", "ada",
+    "assistance", "impaired",
+}
+
+_CHILD_TRAVEL_WORDS = {
+    "child", "children", "kid", "kids", "baby", "infant", "toddler", "stroller",
+    "minor", "pediatric", "nursery", "lap", "unaccompanied",
+}
+
+_ALLERGY_WORDS = {
+    "allergy", "allergic", "allergen", "peanut", "tree nut", "shellfish", "seafood",
+    "gluten", "celiac", "lactose", "soy", "wheat", "sesame", "egg", "intolerance",
+    "anaphylactic",
+}
+
+_DIETARY_PREF_WORDS = {
+    "vegetarian", "vegan", "pescatarian", "kosher", "halal", "omnivore",
+    "plant-based", "organic", "low-carb", "keto", "paleo", "mediterranean",
+    "low-sodium", "low-fat", "gluten-free", "dairy-free", "lactose-free",
+}
+
+_TICKET_FLEX_WORDS = {
+    "refundable", "non-refundable", "flexible", "changeable", "cancel",
+    "cancellation", "exchange", "rebook", "open-ticket", "standby", "upgrade",
+}
+
+_BAGGAGE_WORDS = {
+    "luggage", "baggage", "bag", "suitcase", "carry-on", "checked", "oversize",
+    "sports equipment", "golf", "ski", "stroller", "extra bag",
+}
+
+_TRANSPORT_WORDS = {
+    "nonstop", "direct", "layover", "stopover", "connection", "airline",
+    "business class", "economy", "first class", "window seat", "aisle seat",
+    "seat preference", "flight number", "departure",
+}
+
+_TRAVEL_PURPOSE_WORDS = {
+    "business", "conference", "meeting", "work trip", "vacation", "holiday",
+    "leisure", "tourism", "sightseeing", "backpacking", "honeymoon",
+}
+
+_OCCASION_WORDS = {
+    "birthday", "anniversary", "wedding", "engagement", "graduation", "promotion",
+    "romantic", "proposal", "celebration", "reunion", "memorial", "retirement",
+    "bachelorette", "bachelor", "client dinner", "colleague",
+}
+
+_ATMOSPHERE_WORDS = {
+    "quiet", "lively", "cozy", "romantic", "trendy", "casual", "formal",
+    "upscale", "rustic", "modern", "traditional", "vibrant", "intimate",
+    "atmosphere", "ambiance", "ambience", "vibe", "family-friendly",
+}
+
+_SEATING_WORDS = {
+    "outdoor", "indoor", "patio", "terrace", "booth", "bar seating", "counter",
+    "window seat", "high chair", "seating", "corner table", "private room",
+    "balcony",
+}
+
+_BUDGET_WORDS = {
+    "budget", "affordable", "cheap", "inexpensive", "mid-range", "luxury",
+    "economical", "splurge", "cost-effective", "upscale", "under", "limit",
+}
+
+_SERVICE_WORDS = {
+    "accepting", "accepting new", "emergency", "same-day", "walk-in",
+    "appointment", "telehealth", "online", "multilingual", "late hours",
+    "weekend", "house call",
+}
+
+_VENUE_WORDS = {
+    "restaurant", "cafe", "bistro", "bar", "pub", "grill", "diner", "eatery",
+    "kitchen", "lounge", "brasserie", "tavern", "inn", "hotel", "resort",
+    "spa", "theater", "theatre", "museum", "gallery", "buffet",
+}
+
+
+# ── Semantic type inference ────────────────────────────────────────────────────
 
 def _infer_abstraction_type(span: Span) -> str:
     """
-    Infer semantic abstraction type from the extractor span type and text.
+    Infer semantic abstraction type from extractor span type and text content.
 
-    Structured span types map directly. noun_phrase, organization, and
-    facility use keyword matching and proper-noun detection.
+    Structured types map directly via _DIRECT_TYPE_MAP.
+    noun_phrase uses priority-ordered keyword matching across all domains.
+    organization / facility are distinguished as prior_provider vs prior_venue.
+    preference is sub-classified into dietary_preference, seating_preference,
+    or provider_preference.
     """
     if span.span_type in _DIRECT_TYPE_MAP:
         return _DIRECT_TYPE_MAP[span.span_type]
 
+    if span.span_type == "group":
+        return "party_size"
+
+    if span.span_type == "preference":
+        words = set(re.findall(r'\b[a-z]+\b', span.text.lower()))
+        if words & _DIETARY_PREF_WORDS:
+            return "dietary_preference"
+        if words & _SEATING_WORDS:
+            return "seating_preference"
+        return "provider_preference"
+
     if span.span_type in ("organization", "facility"):
+        words = set(re.findall(r'\b[a-z]+\b', span.text.lower()))
+        if words & _VENUE_WORDS:
+            return "prior_venue"
         return "prior_provider"
 
     if span.span_type == "noun_phrase":
-        words = set(re.findall(r'\b[a-z]+\b', span.text.lower()))
+        text_lower = span.text.lower()
+        words      = set(re.findall(r'\b[a-z]+\b', text_lower))
 
+        # ── Medical (highest specificity first) ───────────────────────────────
+        if words & _PREGNANCY_WORDS:
+            return "pregnancy_status"
+        if words & _MEDICATION_WORDS:
+            return "medication"
+        if words & _MENTAL_HEALTH_WORDS:
+            return "mental_health_concern"
+        if words & _CARE_HISTORY_WORDS:
+            return "care_history"
+        if words & _MEDICAL_CONDITION_WORDS:
+            return "medical_condition"
         if words & _SYMPTOM_WORDS:
             return "medical_symptom"
-        if words & _DIETARY_WORDS:
-            return "dietary_constraint"
-        if words & _TRAVEL_WORDS:
+        if words & _ACCESSIBILITY_WORDS:
+            return "accessibility_need"
+        # Medical trip: needs BOTH a medical purpose word AND a travel word
+        if words & _MEDICAL_TRIP_WORDS and words & _TRAVEL_GENERAL_WORDS:
+            return "medical_trip"
+
+        # ── Travel sub-types ──────────────────────────────────────────────────
+        if words & _CHILD_TRAVEL_WORDS:
+            return "child_travel"
+        if words & _BAGGAGE_WORDS:
+            return "baggage_constraint"
+        if words & _TICKET_FLEX_WORDS:
+            return "ticket_flexibility"
+        if words & _TRANSPORT_WORDS:
+            return "transport_constraint"
+        if words & _TRAVEL_PURPOSE_WORDS:
             return "travel_purpose"
+        if words & _TRAVEL_GENERAL_WORDS:
+            return "travel_itinerary"
+
+        # ── Dining sub-types ──────────────────────────────────────────────────
+        if words & _ALLERGY_WORDS:
+            return "allergy"
+        if words & _DIETARY_PREF_WORDS:
+            return "dietary_preference"
+        if words & _OCCASION_WORDS:
+            return "occasion_relationship"
+        if words & _ATMOSPHERE_WORDS:
+            return "restaurant_atmosphere"
+        if words & _SEATING_WORDS:
+            return "seating_preference"
+
+        # ── Generic service / budget ──────────────────────────────────────────
+        if words & _BUDGET_WORDS:
+            return "budget_cost"
         if words & _SERVICE_WORDS:
             return "service_need"
 
-        # Proper noun pattern → likely a named entity (provider, venue, etc.)
+        # ── Proper noun → named entity (provider or venue) ────────────────────
         alpha = [w for w in span.text.split() if w.isalpha()]
         if alpha and all(w[0].isupper() for w in alpha):
+            if any(w.lower() in _VENUE_WORDS for w in alpha):
+                return "prior_venue"
             return "prior_provider"
-
-        return "generic_detail"
 
     return "generic_detail"
 
 
-# ── Adjacent symptom grouping ──────────────────────────────────────────────────
+# ── Adjacent span grouping (same type, same sentence) ─────────────────────────
 
-def _group_symptoms(
+def _group_spans(
     spans_with_types: List[Tuple[Span, str]],
     payload_text:     str,
 ) -> List[Tuple[str, List[Span]]]:
     """
-    Group adjacent medical_symptom spans within the same sentence.
+    Group adjacent same-type spans within the same sentence for all
+    types in _GROUPABLE_TYPES (medical_symptom, medical_condition).
 
-    Returns a list of (abstraction_type, [spans]) tuples. Groups with
-    multiple spans are jointly abstracted; the anchor slot receives the
-    joint abstraction, remaining slots are set to empty.
-    Non-symptom spans are returned as single-element groups.
+    Returns a list of (abstraction_type, [spans]) tuples.
+    Groups of 2+ spans yield one anchor entry + N-1 empty entries.
+    Non-groupable spans are returned as single-element groups.
     """
-    symptoms = [(s, t) for s, t in spans_with_types if t == "medical_symptom"]
-    others   = [(s, t) for s, t in spans_with_types if t != "medical_symptom"]
+    groupable = [(s, t) for s, t in spans_with_types if t in _GROUPABLE_TYPES]
+    others    = [(s, t) for s, t in spans_with_types if t not in _GROUPABLE_TYPES]
 
     result: List[Tuple[str, List[Span]]] = []
 
-    if len(symptoms) >= 2:
-        symptoms.sort(key=lambda x: x[0].start)
-        current_group = [symptoms[0][0]]
+    # Group per type separately (medical_symptom stays separate from medical_condition)
+    by_type: Dict[str, List[Span]] = {}
+    for s, t in groupable:
+        by_type.setdefault(t, []).append(s)
 
-        for i in range(1, len(symptoms)):
-            s = symptoms[i][0]
-            between = payload_text[current_group[-1].end:s.start]
-            if re.search(r'[.!?]', between):
-                result.append(("medical_symptom", current_group))
-                current_group = [s]
-            else:
-                current_group.append(s)
-
-        result.append(("medical_symptom", current_group))
-    else:
-        for s, t in symptoms:
-            result.append((t, [s]))
+    for abs_type, type_spans in by_type.items():
+        if len(type_spans) >= 2:
+            type_spans.sort(key=lambda s: s.start)
+            current_group = [type_spans[0]]
+            for i in range(1, len(type_spans)):
+                s       = type_spans[i]
+                between = payload_text[current_group[-1].end:s.start]
+                if re.search(r'[.!?]', between):
+                    result.append((abs_type, current_group))
+                    current_group = [s]
+                else:
+                    current_group.append(s)
+            result.append((abs_type, current_group))
+        else:
+            for s in type_spans:
+                result.append((abs_type, [s]))
 
     for s, t in others:
         result.append((t, [s]))
@@ -241,7 +429,7 @@ def _rule_address(text: str, level: int) -> Optional[str]:
     elif level == 1:
         if len(parts) >= 3:
             return f"{parts[-2].strip()}, {parts[-1].strip()}"
-        return text  # already "City, State"
+        return text
     return None
 
 
@@ -253,36 +441,67 @@ def _rule_abstract(span: Span, abs_type: str, level: int) -> Optional[str]:
     if abs_type in ("address", "location"):
         return _rule_address(span.text, level)
     if abs_type == "zip":
-        return "local area" if level == 0 else "nearby"
+        return "local area" if level == 0 else "nearby area"
     return None
 
 
-# ── Fallback phrases (no LLM, rule fails) ─────────────────────────────────────
+# ── Fallback phrases ──────────────────────────────────────────────────────────
 
 _FALLBACK: Dict[str, Dict[int, str]] = {
-    "address":            {0: "local area",            1: "the local area",          2: "a nearby neighborhood"},
-    "location":           {0: "local area",            1: "the local area"},
-    "zip":                {0: "local area",             1: "nearby"},
-    "insurance_name":     {0: "insurance",             1: "dental insurance",        2: "a dental plan"},
-    "medical_symptom":    {0: "a health concern",      1: "a dental care need",      2: "a dental symptom"},
-    "prior_provider":     {0: "a prior provider",      1: "a prior dental provider", 2: "a local dental office"},
-    "service_need":       {0: "a service requirement", 1: "a provider capability"},
-    "dietary_constraint": {0: "a dining constraint",   1: "a dietary preference",    2: "a dietary constraint"},
-    "travel_purpose":     {0: "travel context",        1: "personal travel",         2: "a travel purpose"},
-    "preference":         {0: "a preference",          1: "a personal preference",   2: "a scheduling preference"},
-    "person":             {0: "a person"},
-    "group":              {0: "a group",               1: "a local group"},
-    "generic_detail":     {0: "a general detail",      1: "a relevant detail"},
-}
+    # Structured
+    "address":               {0: "local area",                  1: "the local area",                2: "a nearby neighborhood"},
+    "location":              {0: "local area",                  1: "the local area",                2: "a nearby area"},
+    "zip":                   {0: "local area",                  1: "nearby area",                   2: "the local zip area"},
+    "date":                  {0: "a month",                     1: "a week",                        2: "a day"},
+    "time":                  {0: "part of day",                 1: "a time window",                 2: "an hour block"},
+    "distance_proximity":    {0: "nearby",                      1: "within a broad area",           2: "within a travel-time range"},
+    "budget_cost":           {0: "a budget preference",         1: "a budget tier",                 2: "an approximate limit"},
+    "party_size":            {0: "a group",                     1: "an approximate group size",     2: "a group size"},
 
-GROUP_SYMPTOM_FALLBACK = "dental symptoms"
+    # Provider / service
+    "provider_preference":   {0: "a provider constraint",       1: "a provider attribute",          2: "a specific requirement"},
+    "provider_requirement":  {0: "a service requirement",       1: "a provider capability",         2: "a specific service need"},
+    "insurance_name":        {0: "insurance context",           1: "a coverage category",           2: "an insurance plan category"},
+    "service_need":          {0: "a service need",              1: "a service category",            2: "a specific service type"},
+    "accessibility_need":    {0: "an assistance need",          1: "an accessibility need",         2: "a specific accommodation type"},
+
+    # Medical
+    "medical_condition":     {0: "a health concern",            1: "a condition category",          2: "a specific condition"},
+    "medical_symptom":       {0: "a health concern",            1: "a symptom category",            2: "a specific symptom"},
+    "care_history":          {0: "prior care context",          1: "a care history category",       2: "a prior care event"},
+    "medication":            {0: "medication context",          1: "a medication class",            2: "a medication category"},
+    "medical_trip":          {0: "travel context",              1: "health-related travel",         2: "a medical travel need"},
+    "pregnancy_status":      {0: "a health context",            1: "a pregnancy-related context",   2: "pregnancy status"},
+    "mental_health_concern": {0: "a health concern",            1: "a mental health category",      2: "a mental health concern"},
+
+    # Travel
+    "travel_itinerary":      {0: "a travel plan",               1: "a transport or lodging need",   2: "a route or trip constraint"},
+    "travel_purpose":        {0: "travel context",              1: "a purpose category",            2: "a specific travel purpose"},
+    "transport_constraint":  {0: "a transport constraint",      1: "a flight or route preference",  2: "a specific travel constraint"},
+    "baggage_constraint":    {0: "a baggage constraint",        1: "a baggage category",            2: "a specific baggage need"},
+    "ticket_flexibility":    {0: "ticket flexibility",          1: "a booking flexibility need",    2: "a specific ticket requirement"},
+    "child_travel":          {0: "family travel context",       1: "a child travel need",           2: "a child-related travel constraint"},
+
+    # Dining
+    "dietary_preference":    {0: "a food preference",           1: "a dietary category",            2: "a specific diet"},
+    "allergy":               {0: "a food constraint",           1: "an allergy constraint",         2: "a specific allergen category"},
+    "restaurant_atmosphere": {0: "a dining atmosphere",         1: "an ambience category",          2: "a specific atmosphere preference"},
+    "seating_preference":    {0: "a seating preference",        1: "a seating category",            2: "a specific seating type"},
+    "occasion_relationship": {0: "a social context",            1: "an occasion category",          2: "a specific occasion"},
+
+    # Named entities / fallback
+    "prior_provider":        {0: "a prior provider",            1: "a prior provider category",     2: "a local provider type"},
+    "prior_venue":           {0: "a prior venue",               1: "a prior venue category",        2: "a local venue type"},
+    "person":                {0: "a person reference",          1: "a role or relation"},
+    "generic_detail":        {0: "general context",             1: "a relevant detail",             2: "a more specific detail"},
+}
 
 
 def _fallback_abstract(abs_type: str, level: int) -> str:
     fb = _FALLBACK.get(abs_type, {})
     if level in fb:
         return fb[level]
-    hier = ABSTRACTION_HIERARCHIES.get(abs_type, ["general detail"])
+    hier = ABSTRACTION_HIERARCHIES.get(abs_type, ["general context"])
     return hier[min(level, len(hier) - 1)]
 
 
@@ -297,10 +516,10 @@ Extractor type: {extractor_type}
 Abstraction type: {abstraction_type}
 Target abstraction level: {level_desc}
 
-Rewrite this span as a "{level_desc}". You must follow all rules below:
+Rewrite this span as a "{level_desc}". Follow all rules:
 - Preserve the semantic role exactly: the output must remain {abstraction_type}-like
-- Do not change the entity type (a provider stays provider-like; a symptom stays symptom-like)
-- Do not diagnose, infer, or introduce facts not present in the original span
+- Do not change the entity type (a prior provider stays provider-like; a symptom stays symptom-like)
+- Do not diagnose, infer, or introduce facts not in the original span
 - The result must be less specific than the original
 - Return a short noun phrase only (2–5 words), not a sentence
 - No trailing punctuation
@@ -308,18 +527,18 @@ Rewrite this span as a "{level_desc}". You must follow all rules below:
 Reply with only the abstracted phrase."""
 
 _GROUP_ABSTRACTION_PROMPT = """\
-You are jointly generalizing multiple symptom spans before sending a payload to a cloud agent.
+You are jointly generalizing multiple co-occurring spans before sending a payload to a cloud agent.
 
 Task frame: {g_t}
-Individual symptoms: {symptom_list}
-Abstraction type: medical_symptom
+Spans (all of type "{abstraction_type}"): {span_list}
+Abstraction type: {abstraction_type}
 Target abstraction level: {level_desc}
 
-Generate a single short noun phrase covering all these symptoms at the "{level_desc}" level.
+Generate a single short noun phrase covering all these spans at the "{level_desc}" level.
 Rules:
-- The output must be symptom-like (not a diagnosis, not a condition name, not a disease)
-- Do not name specific medical conditions (e.g., periodontitis, gingivitis)
-- Use natural phrasing like "dental symptoms", "oral discomfort", "gum and tooth pain"
+- The output must be {abstraction_type}-like (do not change the entity class)
+- Do not diagnose, name specific entities, or introduce facts not in the originals
+- Use natural phrasing appropriate to the abstraction type
 - Return a short noun phrase only (2–5 words)
 - No trailing punctuation
 
@@ -328,33 +547,68 @@ Reply with only the abstracted phrase."""
 
 # ── Post-abstraction validation ────────────────────────────────────────────────
 
-_PROVIDER_SIGNALS = {
-    "provider", "clinic", "office", "practice", "dental", "medical", "health",
-    "center", "specialist", "doctor", "dentist", "physician", "care", "prior", "local",
-}
-_DIAGNOSIS_SIGNALS = {
-    "disease", "disorder", "syndrome", "diagnosis", "pathology",
-    "periodontitis", "gingivitis", "abscess", "inflammation",
+_VALIDATION_SIGNALS: Dict[str, Dict] = {
+    "prior_provider": {
+        "required_positive": {
+            "provider", "clinic", "office", "practice", "dental", "medical",
+            "health", "center", "specialist", "doctor", "dentist", "physician",
+            "care", "prior", "local",
+        },
+    },
+    "prior_venue": {
+        "required_positive": {
+            "restaurant", "venue", "bar", "cafe", "bistro", "diner", "eatery",
+            "place", "spot", "local", "prior", "dining",
+        },
+    },
+    "medical_symptom": {
+        "prohibited": {
+            "disease", "disorder", "syndrome", "diagnosis", "pathology",
+            "periodontitis", "gingivitis", "abscess", "inflammation",
+        },
+        "no_proper_noun": True,
+    },
+    "medical_condition": {
+        "no_proper_noun": True,
+    },
+    "mental_health_concern": {
+        "no_proper_noun": True,
+    },
+    "allergy": {
+        "required_positive": {
+            "allergy", "allergen", "allergic", "constraint", "food",
+            "dietary", "intolerance", "health",
+        },
+    },
+    "dietary_preference": {
+        "required_positive": {
+            "food", "diet", "dietary", "preference", "eating", "vegan",
+            "vegetarian", "kosher", "halal", "plant", "organic",
+        },
+    },
 }
 
 
 def _validate(abs_type: str, abstracted_text: str) -> str:
     """Return 'passed' or 'failed:reason'."""
-    words = set(re.findall(r'\b[a-z]+\b', abstracted_text.lower()))
+    if len(abstracted_text.strip()) < 2:
+        return "failed:empty output"
 
-    if abs_type == "prior_provider":
-        if not (words & _PROVIDER_SIGNALS):
-            return "failed:not provider-like"
+    words   = set(re.findall(r'\b[a-z]+\b', abstracted_text.lower()))
+    signals = _VALIDATION_SIGNALS.get(abs_type, {})
 
-    if abs_type == "medical_symptom":
+    required = signals.get("required_positive", set())
+    if required and not (words & required):
+        return f"failed:not {abs_type}-like"
+
+    prohibited = signals.get("prohibited", set())
+    if prohibited and (words & prohibited):
+        return "failed:contains prohibited terms"
+
+    if signals.get("no_proper_noun"):
         alpha = [w for w in abstracted_text.split() if w.isalpha()]
         if alpha and all(w[0].isupper() for w in alpha):
             return "failed:appears to be a proper noun (entity type change)"
-        if words & _DIAGNOSIS_SIGNALS:
-            return "failed:contains diagnostic terminology"
-
-    if len(abstracted_text.strip()) < 2:
-        return "failed:empty output"
 
     return "passed"
 
@@ -390,7 +644,7 @@ class SpanAbstractor:
 
     For each CSS span:
       1. Infer semantic abstraction type from extractor type + text.
-      2. Group adjacent medical_symptom spans within the same sentence.
+      2. Group adjacent spans of groupable types (medical_symptom, medical_condition).
       3. Look up calibrated level from CALIBRATED_ABSTRACTION_POLICY.
       4. Abstract: rule-based for structured types; LLM for free-form.
       5. Validate output preserves semantic role; fall back if not.
@@ -408,11 +662,8 @@ class SpanAbstractor:
     ) -> AbstractionResult:
         payload_text = extraction["P_t"]
 
-        # Infer semantic abstraction types for all CSS spans
         spans_with_types = [(s, _infer_abstraction_type(s)) for s in css_spans]
-
-        # Group adjacent symptoms
-        groups = _group_symptoms(spans_with_types, payload_text)
+        groups           = _group_spans(spans_with_types, payload_text)
 
         decisions:       List[AbstractionDecision] = []
         abstraction_map: Dict[str, str]            = {}
@@ -426,11 +677,12 @@ class SpanAbstractor:
             level_desc = hier[level]
 
             if len(span_group) > 1:
-                # ── Joint abstraction for grouped symptoms ────────────────────
-                anchor    = min(span_group, key=lambda s: s.start)
-                rest      = [s for s in span_group if s is not anchor]
+                # ── Joint abstraction for grouped spans ───────────────────────
+                anchor = min(span_group, key=lambda s: s.start)
+                rest   = [s for s in span_group if s is not anchor]
+
                 abstracted, method = self._abstract_group(
-                    span_group, level_desc, g_t, local_llm
+                    span_group, abs_type, level, level_desc, g_t, local_llm
                 )
                 validation = _validate(abs_type, abstracted)
                 if validation.startswith("failed"):
@@ -520,16 +772,19 @@ class SpanAbstractor:
     def _abstract_group(
         self,
         spans:      List[Span],
+        abs_type:   str,
+        level:      int,
         level_desc: str,
         g_t:        str,
         local_llm,
     ) -> Tuple[str, str]:
         if local_llm is not None:
             try:
-                symptom_list = ", ".join(f'"{s.text}"' for s in spans)
+                span_list = ", ".join(f'"{s.text}"' for s in spans)
                 prompt = _GROUP_ABSTRACTION_PROMPT.format(
                     g_t=g_t.strip(),
-                    symptom_list=symptom_list,
+                    span_list=span_list,
+                    abstraction_type=abs_type,
                     level_desc=level_desc,
                 )
                 raw    = local_llm.generate(prompt).strip()
@@ -538,7 +793,7 @@ class SpanAbstractor:
                     return result, "llm"
             except Exception:
                 pass
-        return GROUP_SYMPTOM_FALLBACK, "rule"
+        return _fallback_abstract(abs_type, level), "rule"
 
 
 # ── Final payload assembly ─────────────────────────────────────────────────────
@@ -551,9 +806,9 @@ def _assemble_final_payload(
 ) -> str:
     """
     Fill C_t skeleton slots:
-      U_loc  → [TYPE]
-      PTH    → verbatim span text
-      CSS    → abstracted text  (or "" for grouped-away spans)
+      U_loc   → [TYPE]
+      PTH     → verbatim span text
+      CSS     → abstracted text (or "" for grouped-away spans)
       dropped → ""  (triggers cleanup below)
     """
     c_t       = extraction["C_t"]
@@ -629,14 +884,14 @@ def _debug_show(result: AbstractionResult) -> None:
             continue
         print(
             f"    [CSS]\n"
-            f"      original:         {d.original_text!r}\n"
+            f"      original_text:    {d.original_text!r}\n"
             f"      extractor_type:   {d.extractor_type}\n"
             f"      abstraction_type: {d.abstraction_type}\n"
-            f"      level:            l{d.level} / {d.level_desc}\n"
-            f"      replacement:      {d.abstracted_text!r}\n"
+            f"      selected_level:   l{d.level} / {d.level_desc}\n"
+            f"      abstracted_text:  {d.abstracted_text!r}\n"
             f"      method:           {d.method}\n"
             f"      validation:       {d.validation}"
-            + (f"\n      note:             {d.note}" if d.note else "")
+            + (f"\n      grouping_note:    {d.note}" if d.note else "")
         )
 
 
@@ -647,9 +902,9 @@ if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8")
 
     from state.state_io import load_state
-    from privacy.span_extractor      import SpanExtractor,    _debug_show as _show_spans
-    from privacy.scope_control       import ScopeController,  reconstruct_payload, _debug_show as _show_scope
-    from privacy.span_classification import SpanClassifier,   _debug_show as _show_class
+    from privacy.span_extractor      import SpanExtractor,   _debug_show as _show_spans
+    from privacy.scope_control       import ScopeController, reconstruct_payload, _debug_show as _show_scope
+    from privacy.span_classification import SpanClassifier,  _debug_show as _show_class
     from llm.local_llm import LocalLLM
 
     state   = load_state()
@@ -711,7 +966,7 @@ if __name__ == "__main__":
     _show_scope(scope_result)
 
     print(f"\n{'═' * W}")
-    print(f"  STAGE 2 OUTPUT  — payload entering Stage 3a")
+    print(f"  STAGE 2 OUTPUT  — payload entering Stage 3a (retained spans verbatim; U_loc withheld)")
     print(f"{'═' * W}")
     stage2_out = reconstruct_payload(extraction, scope_result.retained, extraction["U_loc"])
     print(f"  {stage2_out}")
@@ -729,7 +984,7 @@ if __name__ == "__main__":
     _show_class(class_result)
 
     print(f"\n{'═' * W}")
-    print(f"  STAGE 3a OUTPUT  — PTH verbatim; [css:...] pending abstraction")
+    print(f"  STAGE 3a OUTPUT  — PTH verbatim; [css:...] pending Stage 3b abstraction")
     print(f"{'═' * W}")
     stage3a_out = reconstruct_payload(extraction, scope_result.retained, extraction["U_loc"])
     for span in class_result.context_sensitive:

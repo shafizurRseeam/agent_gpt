@@ -37,7 +37,7 @@ PrivScope sanitization pipeline
   Stage 1 — Span Extraction       (privacy/span_extractor.py)       ← ACTIVE
   Stage 2 — Scope Control         (privacy/scope_control.py)        ← ACTIVE
   Stage 3a — Sensitivity Classification (privacy/span_classification.py) ← ACTIVE
-  Stage 3b — Abstraction / Transformation                            [TODO]
+  Stage 3b — Abstraction / Transformation (privacy/span_abstraction.py) ← ACTIVE
   Stage 4  — Local Restoration                                       [TODO]
       │
       ▼
@@ -91,6 +91,27 @@ Classification is **joint**: all retained spans are presented together in a sing
 
 **Debug display**: Stage 3a output shows the payload with PTH spans verbatim and CSS spans annotated as `[css:text]`, pending Stage 3b abstraction.
 
+### Stage 3b: Span Abstraction
+
+Replaces each CSS span with a less specific, type-consistent representation at a calibrated abstraction level before cloud release:
+
+  P̂_t = Assemble(R_t, D_t, {h_{T(u_j)}^{k_j}(u_j) : u_j ∈ C_t})
+
+**Semantic type inference** — Raw extractor types (noun_phrase, organization, facility) are too coarse. Stage 3b first infers a semantic abstraction type (medical_symptom, prior_provider, dietary_preference, occasion_relationship, etc.) using priority-ordered keyword matching, then selects the type's hierarchy and calibrated policy level. This prevents semantic drift (e.g. abstracting a prior provider as a symptom).
+
+**Calibrated abstraction policy** π_ψ — offline-calibrated level per semantic type, materialized at runtime in `abstraction_policy.py`. Levels 0–3: 0 = coarsest, 3 = verbatim. Stored as `CALIBRATED_ABSTRACTION_POLICY`. Key calibrations:
+- `date / time` → level 3 (exact values required for calendar-grounded booking)
+- `address / location / insurance_name` → level 1 (city/category sufficient for discovery)
+- `medical_*` → level 1 (condition/symptom category sufficient; verbatim over-specific)
+- `dietary_preference / allergy / accessibility_need` → level 2 (specific type needed for filtering)
+- `prior_provider / prior_venue / person` → level 0 (drop to category; history not required)
+
+**Supported semantic types (35+)**: address, location, zip, date, time, distance_proximity, budget_cost, party_size, provider_preference, provider_requirement, insurance_name, service_need, accessibility_need, medical_condition, medical_symptom, care_history, medication, medical_trip, pregnancy_status, mental_health_concern, travel_itinerary, travel_purpose, transport_constraint, baggage_constraint, ticket_flexibility, child_travel, dietary_preference, allergy, restaurant_atmosphere, seating_preference, occasion_relationship, prior_provider, prior_venue, person, generic_detail.
+
+**Adjacent span grouping** — Spans of the same groupable type (medical_symptom, medical_condition) in the same sentence are jointly abstracted via one LLM call. The anchor span gets the joint abstraction; remaining spans collapse to empty.
+
+**Post-abstraction validation** — `_VALIDATION_SIGNALS` per type: required positive signals (output must contain at least one), prohibited signals (must contain none), and no-proper-noun flag. Failures fall back to deterministic `_FALLBACK` phrases.
+
 ### Default thresholds
 - `ρ_low = 0.10`, `γ = 0.50`
 
@@ -102,6 +123,7 @@ Each standalone shows the payload at every stage boundary:
 - **Stage 1 → Stage 2 input** (`working`): U_loc replaced with `[TYPE]`; U_med spans verbatim.
 - **Stage 2 → Stage 3a input**: reconstructed payload with only retained spans; U_loc as `[TYPE]`.
 - **Stage 3a → Stage 3b input**: retained payload with PTH spans verbatim and CSS spans as `[css:text]`.
+- **Stage 3b output** (`final_payload`): P̂_t with CSS spans replaced by abstracted phrases, U_loc as `[TYPE]`, PTH verbatim.
 
 ---
 
@@ -119,7 +141,7 @@ Each standalone shows the payload at every stage boundary:
 | File | Baseline | Notes |
 |------|----------|-------|
 | `privacyscope.py` | Original PrivacyScope | DO NOT MODIFY |
-| `privscope.py` | New PrivScope (in dev) | Stages 1–3a active, 3b–4 TODO |
+| `privscope.py` | New PrivScope (in dev) | Stages 1–3b active, Stage 4 TODO |
 | `presidio_redact.py` | Presidio | Replaced old NER-REDACT |
 | `privacy_enhancing_prompt.py` | PEP | System-prompt baseline |
 | `agentdam.py` | AGENTDAM | CoT self-redaction baseline |
@@ -177,6 +199,8 @@ address, insurance (→ insurance_name), doctor_gender_preference (→ preferenc
 | `privacy/span_extractor.py` | Stage 1: span extraction |
 | `privacy/scope_control.py` | Stage 2: scope control |
 | `privacy/span_classification.py` | Stage 3a: PTH/CSS sensitivity classification |
+| `privacy/span_abstraction.py` | Stage 3b: span abstraction (35+ semantic types) |
+| `privacy/abstraction_policy.py` | Calibrated abstraction policy π_ψ (hierarchies + levels) |
 | `privacy/privscope.py` | PrivScope governor |
 | `config.py` | Provider, model, threshold config |
 | `FILES.md` | Full file reference with run commands |
@@ -199,6 +223,9 @@ uv run python privacy/scope_control.py
 
 # Standalone Stage 1+2+3a debug (shows full pipeline through classification)
 uv run python privacy/span_classification.py
+
+# Standalone Stage 1+2+3a+3b debug (shows full pipeline through abstraction → P̂_t)
+uv run python privacy/span_abstraction.py
 
 # Main privacy eval
 uv run python evaluation/run_eval.py --n-tasks 10 --seed 42
