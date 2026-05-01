@@ -5,8 +5,8 @@ Baseline — PRESIDIO-REDACT
 
 PII detection and redaction using Microsoft Presidio.
 Detects a broad set of entity types (PERSON, EMAIL_ADDRESS, PHONE_NUMBER,
-LOCATION, DATE_TIME, US_SSN, CREDIT_CARD, NRP, etc.) and replaces each
-with a typed [REDACTED_<TYPE>] placeholder.
+LOCATION, DATE_TIME, US_SSN, CREDIT_CARD, NRP, etc.) and removes each
+detected span from the text entirely (no placeholder left behind).
 
 Install:
     pip install presidio-analyzer presidio-anonymizer spacy
@@ -21,6 +21,8 @@ Interface:
 """
 
 from __future__ import annotations
+
+import re
 
 from presidio_analyzer import AnalyzerEngine
 from presidio_analyzer.nlp_engine import NlpEngineProvider
@@ -84,7 +86,7 @@ def sanitize_with_trace(
     entity_types = sorted(set(r.entity_type for r in results))
 
     operators = {
-        ent: OperatorConfig("replace", {"new_value": f"[REDACTED_{ent}]"})
+        ent: OperatorConfig("redact", {})
         for ent in entity_types
     }
 
@@ -94,13 +96,16 @@ def sanitize_with_trace(
         operators=operators,
     )
 
+    # Collapse whitespace artifacts left by removed spans
+    cleaned = re.sub(r' {2,}', ' ', anonymized.text).strip()
+
     # Build span trace: sort by start offset so trace reads left-to-right
     spans = [
         (payload[r.start:r.end], r.entity_type)
         for r in sorted(results, key=lambda x: x.start)
     ]
 
-    return anonymized.text, {"spans": spans, "method": "presidio"}
+    return cleaned, {"spans": spans, "method": "presidio"}
 
 
 # ── Standalone — runs Presidio baseline on the dentist example payload ─────────
@@ -139,6 +144,6 @@ if __name__ == "__main__":
         print(f"    [{etype:<25}] {text!r}")
 
     print(f"\n{'═' * W}")
-    print(f"  REDACTED OUTPUT")
+    print(f"  OUTPUT  (PII spans removed)")
     print(f"{'═' * W}")
     print(f"  {redacted}")

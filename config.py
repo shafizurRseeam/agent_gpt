@@ -1,20 +1,20 @@
 PROVIDER = "openai"
 
 MODEL_CONFIG = {
-    "openai": "gpt-4o-mini",
-    "claude": "claude-3-sonnet-20240229",
-    "gemini": "gemini-1.5-pro"
+    "openai": "gpt-4o-mini-2024-07-18",
+    "claude": "claude-sonnet-4-6",
+    "gemini": "gemini-2.5-flash",
 }
 
 # ── Local model selection ──────────────────────────────────────────────────────
 # Change LOCAL_MODEL to any key below to switch the LC for evaluation.
 # Can also be overridden at runtime via:  python main.py --model llama3.2:1b
 EVAL_LOCAL_MODELS = {
-    "llama3.2":    "3B  — default, balanced",
-    "llama3.2:1b": "1B  — smaller, less filtering, more over-disclosure",
-    "llama3.1:8b": "8B  — larger, more capable / more conservative",
-    "mistral":     "7B  — alternative architecture",
-    "phi3":        "3.8B — Microsoft, instruction-tuned",
+    "llama3.2":     "3B   — default, balanced",
+    "phi3":         "3.8B — Microsoft, instruction-tuned",
+    "mistral":      "7B   — alternative architecture, strong generative",
+    "qwen2.5:7b":   "7B   — Alibaba, strong instruction-following and classification",
+    "llama3.1:8b":  "8B   — larger, more capable / more conservative",
 }
 LOCAL_MODEL = "llama3.2"
 

@@ -4,72 +4,139 @@
       "domain": "medical_booking",
       "intent_templates": [
         "book",
-        "find",
         "schedule",
+        "find",
+        "help me arrange",
         "help me get"
       ],
-      "task_objects": [
-        "doctor appointment",
-        "medical appointment",
-        "clinic appointment",
-        "checkup",
-        "specialist appointment"
+      "service_type": [
+        "primary care visit",
+        "urgent care visit",
+        "specialist consultation",
+        "follow-up appointment",
+        "diagnostic evaluation",
+        "clinic visit"
       ],
-      "constraints": [
+      "hard_constraints": [
         "this week",
         "tomorrow morning",
         "before noon",
         "after work",
-        "near my home",
-        "near my work",
-        "within 20 minutes",
-        "that accepts my insurance",
-        "in network",
-        "earliest available appointment",
-        "female provider preferred",
-        "highly rated provider"
+        "earliest available slot",
+        "same-day appointment if possible",
+        "weekday only",
+        "no evening appointments"
       ],
-      "context": [
-        "the pain is sharp when I move",
-        "it is interfering with sleep",
+      "soft_preference": [
+        "accepts my insurance",
+        "in network",
+        "female provider preferred",
+        "highly rated provider",
+        "someone experienced with this issue"
+      ],
+      "supporting_context": [
+        "the pain gets worse when I move",
+        "it has been interfering with sleep",
         "over-the-counter medicine has not helped",
         "I already tried rest and ice",
-        "I need a follow-up after urgent care",
-        "I was told to see a specialist",
-        "I recently had an ER visit",
-        "I had surgery last year",
-        "I recently started a new medication",
+        "I need follow-up care after urgent care",
+        "I was advised to see a specialist",
         "the problem has been getting worse",
-        "it comes and goes throughout the day",
-        "I do not want to wait too long"
+        "it comes and goes during the day",
+        "I do not want to wait too long",
+        "I want to get this checked before it worsens"
       ],
       "sensitive_seed_info": [
         "chest tightness",
-        "knee pain",
-        "back pain",
-        "headaches",
         "shortness of breath",
-        "rash",
+        "severe headaches",
         "dizziness",
         "abdominal pain",
-        "migraine",
+        "back pain",
+        "knee pain",
+        "rash",
+        "migraine history",
         "asthma",
         "eczema",
-        "sinus infection",
-        "ER visit",
-        "surgery history",
+        "recent ER visit",
         "pregnancy",
         "anxiety history",
-        "antidepressants",
-        "blood thinners",
-        "insulin"
+        "antidepressant use",
+        "blood thinner use",
+        "insulin use"
       ],
       "user_goal": [
-        "get checked soon",
-        "find the earliest appointment",
-        "avoid waiting too long",
-        "see the right specialist",
-        "get treatment quickly"
+        "get evaluated soon",
+        "find the earliest suitable appointment",
+        "see the right kind of provider",
+        "get timely treatment",
+        "rule out something serious"
+      ]
+    },
+    {
+      "domain": "restaurant_booking",
+      "intent_templates": [
+        "book",
+        "reserve",
+        "find",
+        "help me book",
+        "help me reserve"
+      ],
+      "service_type": [
+        "dinner reservation",
+        "lunch reservation",
+        "brunch reservation",
+        "table for two",
+        "table for four",
+        "family dinner reservation"
+      ],
+      "hard_constraints": [
+        "tonight",
+        "tomorrow evening",
+        "this weekend",
+        "within 15 minutes",
+        "near my home",
+        "near downtown",
+        "outdoor seating",
+        "quiet place"
+      ],
+      "soft_preference": [
+        "highly rated",
+        "vegetarian-friendly",
+        "vegan-friendly",
+        "gluten-free options",
+        "halal options",
+        "shorter wait time"
+      ],
+      "supporting_context": [
+        "I want the evening to go well",
+        "I would rather avoid crowded places",
+        "we want a place where conversation is easy",
+        "I need something reliable",
+        "I want to keep things simple",
+        "I do not want to spend too much time waiting",
+        "it is a special occasion",
+        "I want something convenient"
+      ],
+      "sensitive_seed_info": [
+        "anniversary",
+        "birthday dinner",
+        "family dinner",
+        "coworker dinner",
+        "seafood allergy",
+        "nut allergy",
+        "gluten-free diet",
+        "halal preference",
+        "vegetarian diet",
+        "vegan diet",
+        "budget concerns"
+      ],
+      "user_goal": [
+        "make the evening go smoothly",
+        "find a suitable place quickly",
+        "avoid awkward surprises",
+        "make sure everyone can eat safely",
+        "get a reservation that fits the occasion"
       ]
     },
     {
@@ -77,134 +144,66 @@
       "intent_templates": [
         "book",
         "find",
-        "schedule",
-        "help me get"
+        "arrange",
+        "help me book",
+        "help me find"
       ],
-      "task_objects": [
-        "flight booking",
-        "round-trip flight",
+      "service_type": [
         "one-way flight",
-        "hotel booking",
-        "flight and hotel booking"
+        "round-trip flight",
+        "flight and hotel booking",
+        "hotel stay",
+        "refundable flight",
+        "nonstop flight"
       ],
-      "constraints": [
-        "this weekend",
+      "hard_constraints": [
+        "this week",
         "next week",
-        "round trip",
-        "one way",
+        "refundable option",
         "nonstop preferred",
-        "morning departure preferred",
-        "nearby airport preferred",
-        "flexible dates",
-        "short layover only",
         "carry-on only",
-        "refundable option preferred"
+        "earliest arrival",
+        "lowest fare",
+        "morning departure"
       ],
-      "context": [
-        "I would prefer the shortest travel time",
-        "I do not want a very long layover",
-        "I want to keep the total cost low",
-        "I would rather leave in the morning",
+      "soft_preference": [
+        "closest airport",
+        "short layover",
+        "reliable airline",
+        "budget-friendly option",
+        "flexible dates",
+        "hotel near destination"
+      ],
+      "supporting_context": [
         "I need to return quickly",
-        "I want something convenient and simple",
-        "I am okay if the dates shift by a day",
-        "I do not want to arrive too late at night",
-        "I want to stay close to the main area",
-        "I would like a reliable airline",
-        "I am traveling with my child",
-        "this trip is for a family emergency",
-        "I need to be near the hospital",
-        "I do not want to travel alone late at night",
-        "I need wheelchair assistance",
-        "I am trying to avoid spending too much"
+        "I do not want to travel late at night",
+        "I am flexible by a day",
+        "I want to keep this affordable",
+        "I need something easy to manage",
+        "I do not want a long layover",
+        "I want to minimize hassle",
+        "timing matters more than comfort"
       ],
       "sensitive_seed_info": [
-        "family emergency",
         "medical trip",
-        "job interview",
-        "budget concerns",
-        "visa issue",
-        "immigration concern",
-        "pregnancy",
-        "child travel",
+        "family emergency",
         "funeral travel",
-        "long-distance relationship",
-        "religious preference",
-        "dietary restriction",
-        "wheelchair assistance",
+        "job interview",
+        "pregnancy",
         "anxiety",
-        "safety concern"
-      ],
-      "user_goal": [
-        "get there quickly",
-        "keep the trip affordable",
-        "make the trip easy",
-        "avoid travel stress",
-        "find the best option soon"
-      ]
-    },
-    {
-      "domain": "restaurant_booking",
-      "intent_templates": [
-        "book",
-        "find",
-        "reserve",
-        "help me get"
-      ],
-      "task_objects": [
-        "restaurant reservation",
-        "dinner reservation",
-        "lunch reservation",
-        "table reservation",
-        "brunch reservation"
-      ],
-      "constraints": [
-        "for 2 people",
-        "for 4 people",
-        "tonight",
-        "tomorrow evening",
-        "this weekend",
-        "near my home",
-        "near downtown",
-        "within 15 minutes",
-        "not too expensive",
-        "highly rated",
-        "outdoor seating preferred",
-        "quiet place preferred"
-      ],
-      "context": [
-        "I do not want a long wait",
-        "I want somewhere quiet",
-        "I prefer outdoor seating",
-        "I want a place with good ambiance",
-        "I would like something casual",
-        "I want to keep the price reasonable",
-        "I want a place that is easy to park near",
-        "I would rather avoid crowded places",
-        "I want somewhere good for conversation",
-        "I want to make sure the service is reliable"
-      ],
-      "sensitive_seed_info": [
-        "vegetarian",
-        "vegan",
-        "halal",
-        "kosher",
-        "seafood allergy",
-        "nut allergy",
-        "gluten-free",
-        "date night",
-        "anniversary",
-        "birthday dinner",
-        "coworker dinner",
-        "family dinner",
+        "visa issue",
+        "wheelchair assistance",
+        "dietary restriction",
+        "child travel",
+        "long-distance relationship",
         "budget concerns"
       ],
       "user_goal": [
-        "have a smooth dinner plan",
-        "find a good place nearby",
-        "keep things simple",
-        "avoid expensive options",
-        "make the evening go well"
+        "get there quickly",
+        "keep the trip manageable",
+        "avoid unnecessary hassle",
+        "stay within budget",
+        "make the travel plan reliable"
       ]
     }
   ]

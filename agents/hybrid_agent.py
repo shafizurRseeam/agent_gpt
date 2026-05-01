@@ -8,10 +8,9 @@ from datetime import datetime
 from llm.local_llm import LocalLLM
 from llm.cloud_router import CloudLLM
 from tools.web_form_tool import get_form_fields, submit_form
-from privacy.privacyscope import PrivacyScope
+from privacy.privscope import PrivScope
 import privacy.pep as pep_baseline
 import privacy.presidio as ner_redact_baseline
-from results.task_logger import append_task
 
 from state.state_io import load_state, save_state, append_trace
 
@@ -55,7 +54,7 @@ class HybridAgent:
         self.local = LocalLLM(model=local_model) if local_model else LocalLLM()
         self.cloud = CloudLLM()
         self.state = self._load_state()
-        self.ps    = PrivacyScope()
+        self.ps    = PrivScope(local_llm=self.local)
 
     # ── State ──────────────────────────────────────────────────────────────────
 
@@ -545,54 +544,55 @@ CLOUD QUERY: <rich natural-language message to the cloud packed with symptoms, p
         def _trunc(s, n=38):
             return (s[:n] + "…") if len(s) > n else s
 
-        # ── Phase 2: PrivacyScope Sanitization (modes 2–5) ────────────────────
+        # ── Phase 2: PrivScope Sanitization (modes 2–4) ──────────────────────
         sanitized_query = None
         if run_ps:
             print(f"\n{'─' * 55}")
-            print(f"  PHASE 2 — PrivacyScope Sanitization")
+            print(f"  PHASE 2 — PrivScope Sanitization  (Stages 1–3b)")
             print(f"{'─' * 55}")
 
-            sanitized_query, ps_stages = self.ps.sanitize_with_trace(
+            sanitized_query, ps_trace = self.ps.sanitize_with_trace(
                 cloud_query, p, task, traces
             )
-            ps_spans    = ps_stages["spans"]
-            ps_tasktype = ps_stages["task_type"]
-            rho         = ps_stages.get("rho", 0.20)
+
+            s1  = ps_trace.get("stage1",  {})
+            s2  = ps_trace.get("stage2",  {})
+            s3a = ps_trace.get("stage3a", {})
+            s3b = ps_trace.get("stage3b", {})
 
             _box("Stage 1 — Span Extraction", [
-                f"  [{s.source:<11}]  {s.span_type:<16}  \"{_trunc(s.text)}\""
-                for s in ps_spans
-            ] or ["  (no candidate spans found)"])
+                f"  U_loc ({len(s1.get('u_loc', []))} withheld): "
+                + ", ".join(_trunc(s["text"], 25) for s in s1.get("u_loc", [])[:5]),
+                f"  U_med ({len(s1.get('u_med', []))} candidates): "
+                + ", ".join(_trunc(s["text"], 25) for s in s1.get("u_med", [])[:5]),
+            ])
 
+            dropped = s2.get("dropped", [])
+            retained = s2.get("retained", [])
             scope_lines = [
-                f"  task type: {ps_tasktype}   ρ = {rho}",
-                f"  {'span':<16}  {'SemRel':>7}  {'Resid':>6}  {'Keep':>5}  decision",
-                f"  {'─'*16}  {'─'*7}  {'─'*6}  {'─'*5}  {'─'*20}",
+                f"  task frame : {_trunc(s2.get('task_frame', ''), 50)}",
+                f"  ρ_low={s2.get('rho_low', '?')}  γ={s2.get('gamma', '?')}",
+                f"  retained ({len(retained)}): " + ", ".join(_trunc(r, 20) for r in retained[:5]),
+                f"  dropped  ({len(dropped)}): "
+                + ", ".join(f"{_trunc(d['text'], 18)} [{d['reason']}]" for d in dropped[:3]),
             ]
-            for s in ps_spans:
-                decision = "KEPT" if s.kept else f"REMOVED ({s.removal_reason})"
-                scope_lines.append(
-                    f"  {_trunc(s.span_type, 16):<16}  "
-                    f"{s.sem_rel:>7.3f}  {s.resid:>6}  {s.keep:>5}  {decision}"
-                )
             _box("Stage 2 — Scope Control", scope_lines)
 
-            classify_lines = [
-                f"  {s.span_class:<5}  {s.span_type:<16}  \"{_trunc(s.text)}\""
-                for s in ps_spans if s.kept
-            ] + ["  BEN    [remaining task text]"]
-            _box("Stage 3 — Span Classification", classify_lines)
+            pth = s3a.get("passthrough", [])
+            css = s3a.get("context_sensitive", [])
+            _box("Stage 3a — Sensitivity Classification", [
+                f"  PTH ({len(pth)}): " + ", ".join(_trunc(v, 20) for v in pth[:5]),
+                f"  CSS ({len(css)}): " + ", ".join(_trunc(v, 20) for v in css[:5]),
+            ])
 
-            transform_lines = []
-            for s in ps_spans:
-                if not s.kept:
-                    transform_lines.append(f"  ---   \"{_trunc(s.text, 30)}\"  →  [removed]")
-                elif s.span_class in ("DI", "CSS"):
-                    transform_lines.append(f"  {s.span_class:<5}  \"{_trunc(s.text, 30)}\"  →  {s.result}")
-            transform_lines.append("  BEN    [remaining task text]  →  unchanged")
-            _box("Stage 4 — Transformation", transform_lines)
+            decisions = s3b.get("decisions", [])
+            abs_lines = [
+                f"  {_trunc(d['original'], 22):<24} →  {_trunc(d['abstracted'], 28)}  (L{d['level']})"
+                for d in decisions[:6]
+            ] or ["  (no abstractions)"]
+            _box("Stage 3b — Abstraction", abs_lines)
 
-            _box("Sanitized Cloud-Bound Payload  (PrivacyScope output)", sanitized_query.splitlines())
+            _box("PrivScope Cloud-Bound Payload  (final)", sanitized_query.splitlines())
 
         # ── Phase 2b: Additional baselines (modes 3–4) ───────────────────────
         ner_query = pep_query = None

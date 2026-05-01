@@ -21,11 +21,20 @@ cp .env.example .env   # then edit OPENAI_API_KEY=...
 
 ---
 
-## Entry Point
+## Entry Points
 
 | File | Description | Run |
 |------|-------------|-----|
 | `main.py` | Interactive agent loop. Prompts the user for a task, runs HybridAgent, and logs results. | `uv run python main.py` |
+| `agents/run_comparison.py` | Given a task, builds the naive payload via LC, applies PrivScope + Presidio + PEP, sends all 4 to CLM, shows payloads + responses + summary table. | `uv run python agents/run_comparison.py` `uv run python agents/run_comparison.py --task "book a dentist"` |
+
+---
+
+## Evaluation
+
+| File | Description | Run |
+|------|-------------|-----|
+| `evaluation/run_evaluation.py` | Full evaluation pipeline. Loads tasks, builds naive payloads via LC, applies all 4 methods (naive/PrivScope/Presidio/PEP), sends to CLM, computes LR/LRatio/RLR/RLRatio/URR/TSR/PR/Latency. Saves per-task + aggregate results to `run_evaluation.json`. | `uv run python evaluation/run_evaluation.py` `uv run python evaluation/run_evaluation.py --n-tasks 20` |
 
 ---
 

@@ -26,31 +26,27 @@ Interface:
 from __future__ import annotations
 
 _SYSTEM_PROMPT = (
-    "You are a helpful assistant preparing messages for a cloud search service. "
-    "Your job is to lightly clean up the user's message: remove or generalise "
-    "personal details that the search engine does not need to see, such as full "
-    "names, phone numbers, email addresses, account IDs, and precise home "
-    "addresses. "
-    "Keep everything that helps the cloud service answer the user's request — "
-    "symptoms, preferences, dates, location context, insurance type, and any "
-    "other task-relevant detail should stay. "
-    "Do not over-redact. The goal is utility with light privacy protection, "
-    "not a fully anonymised payload."
+    "You are a helpful privacy-concious assistant preparing a message for a cloud search service. "
+    "Rewrite the user's message so it is clear and useful for finding suitable options. "
+    "Remove obvious direct identifiers when they are not needed for the search, but keep "
+    "details that may help the cloud service return relevant results. Do not over-redact; "
+    "the rewritten request should preserve enough context for the service to be useful."
 )
 
 _USER_TEMPLATE = """\
 The user wants to: {task}
 
-Their full message:
+Full message:
 {payload}
 
-Please prepare a cleaned version to send to the cloud search service.
-- Keep all task-relevant content: symptoms, preferences, dates, location \
-context, service requirements.
-- Remove or generalise direct personal identifiers: full name, phone, email, \
-account or ID numbers, exact home address.
-- Do not remove or replace anything else.
-- Return only the cleaned message. No explanation, no label, no preamble.\
+Rewrite this as a cleaned search request for a cloud search service.
+
+Guidelines:
+- Remove obvious direct identifiers when they are not needed for search.
+- Keep details that may help find relevant options.
+- Keep the request natural, specific, and actionable.
+- Phrase it as finding suitable options, not completing the final booking.
+- Return only the rewritten request. No explanation.
 """
 
 
