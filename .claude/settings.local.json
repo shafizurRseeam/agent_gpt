@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv run *)",
+      "Bash(git push *)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(python -c ' *)",
+      "Bash(uv sync *)"
+    ]
+  }
+}

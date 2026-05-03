@@ -7,7 +7,7 @@ from google.genai import types as genai_types
 
 from config import PROVIDER, MODEL_CONFIG, CLOUD_MAX_TOKENS, CLOUD_TEMPERATURE
 
-load_dotenv()
+load_dotenv(override=True)
 
 
 class CloudLLM:
@@ -38,8 +38,16 @@ class CloudLLM:
         return self.chat([{"role": "user", "content": prompt}])
 
     def chat(self, messages: list) -> str:
-        """Multi-turn conversation. messages is a list of {role, content} dicts."""
+        """Multi-turn conversation. Returns response text only."""
+        text, _, _ = self.chat_with_usage(messages)
+        return text
 
+    def chat_with_usage(self, messages: list) -> tuple:
+        """
+        Multi-turn conversation.
+        Returns (text, input_tokens, output_tokens).
+        Token counts come from each API's native usage object.
+        """
         if self.provider == "openai":
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -47,10 +55,12 @@ class CloudLLM:
                 max_tokens=CLOUD_MAX_TOKENS,
                 temperature=CLOUD_TEMPERATURE,
             )
-            return response.choices[0].message.content
+            text = response.choices[0].message.content
+            in_tok  = response.usage.prompt_tokens
+            out_tok = response.usage.completion_tokens
+            return text, in_tok, out_tok
 
         elif self.provider == "claude":
-            # Anthropic API: system message is a separate top-level field
             system_content = ""
             chat_messages = []
             for msg in messages:
@@ -68,29 +78,35 @@ class CloudLLM:
                 kwargs["system"] = system_content
 
             response = self.client.messages.create(**kwargs)
-            return response.content[0].text
+            text    = response.content[0].text
+            in_tok  = response.usage.input_tokens
+            out_tok = response.usage.output_tokens
+            return text, in_tok, out_tok
 
         elif self.provider == "gemini":
-            # Build a single prompt string: prepend system text to first user turn
             system_text = ""
             parts = []
             for msg in messages:
                 if msg["role"] == "system":
                     system_text = msg["content"]
                 elif msg["role"] == "user":
-                    text = (system_text + "\n\n" + msg["content"]).strip() if system_text else msg["content"]
-                    parts.append(text)
-                    system_text = ""
+                    parts.append(msg["content"])
                 elif msg["role"] == "assistant":
                     parts.append(msg["content"])
 
             prompt = "\n".join(parts)
+            config_kwargs = dict(
+                max_output_tokens=CLOUD_MAX_TOKENS,
+                temperature=CLOUD_TEMPERATURE,
+            )
+            if system_text:
+                config_kwargs["system_instruction"] = system_text
             response = self.client.models.generate_content(
                 model=self.model,
                 contents=prompt,
-                config=genai_types.GenerateContentConfig(
-                    max_output_tokens=CLOUD_MAX_TOKENS,
-                    temperature=CLOUD_TEMPERATURE,
-                ),
+                config=genai_types.GenerateContentConfig(**config_kwargs),
             )
-            return response.text
+            meta    = response.usage_metadata
+            in_tok  = getattr(meta, "prompt_token_count",     0) or 0
+            out_tok = getattr(meta, "candidates_token_count", 0) or 0
+            return response.text, in_tok, out_tok
