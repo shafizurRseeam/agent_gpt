@@ -418,7 +418,9 @@ def _rule_date(text: str, level: int) -> Optional[str]:
             return f"{q}-{month}"
         return f"in {month}"
     elif level == 2:
-        return f"{month} {days[0]}" if days else f"in {month}"
+        if len(days) >= 2:
+            return f"{month} {days[0]}–{days[-1]}"
+        return f"around {month} {days[0]}" if days else f"in {month}"
     return None
 
 
@@ -437,12 +439,15 @@ def _rule_time(text: str, level: int) -> Optional[str]:
             hour = int(m2.group(1))
     if hour is None:
         return None
-    if level == 0:
+    if level == 0:   # day part
         return "morning" if hour < 12 else ("afternoon" if hour < 17 else "evening")
-    elif level == 1:
-        return "before noon" if hour < 12 else ("midday" if hour < 14 else "afternoon")
-    elif level == 2:
+    elif level == 1: # hour block
         return f"{hour}:00–{hour + 1}:00"
+    elif level == 2: # time window — round to nearest 2-hour mark, no leading preposition
+        rounded = (hour // 2) * 2
+        am_pm   = "AM" if rounded < 12 else "PM"
+        hr_12   = rounded if rounded <= 12 else rounded - 12
+        return f"around {hr_12 or 12} {am_pm}"
     return None
 
 
@@ -477,8 +482,8 @@ _FALLBACK: Dict[str, Dict[int, str]] = {
     "address":               {0: "local area",                  1: "the local area",                2: "a nearby neighborhood"},
     "location":              {0: "local area",                  1: "the local area",                2: "a nearby area"},
     "zip":                   {0: "local area",                  1: "nearby area",                   2: "the local zip area"},
-    "date":                  {0: "a month",                     1: "a week",                        2: "a day"},
-    "time":                  {0: "part of day",                 1: "a time window",                 2: "an hour block"},
+    "date":                  {0: "a month",                     1: "a week",                        2: "a day range"},
+    "time":                  {0: "part of day",                 1: "an hour block",                 2: "around a time window"},
     "distance_proximity":    {0: "nearby",                      1: "within a broad area",           2: "within a travel-time range"},
     "budget_cost":           {0: "a budget preference",         1: "a budget tier",                 2: "an approximate limit"},
     "party_size":            {0: "a group",                     1: "an approximate group size",     2: "a group size"},
@@ -532,39 +537,43 @@ def _fallback_abstract(abs_type: str, level: int) -> str:
 
 # ── LLM abstraction prompts ────────────────────────────────────────────────────
 
+_BATCH_ABSTRACTION_PROMPT = """\
+You are abstracting spans from a user payload before it is sent to a cloud search agent.
+
+Task frame: {g_t}
+
+For each numbered item below, write ONE short abstracted noun phrase (2–5 words).
+Each phrase must:
+- Preserve the semantic role (type) exactly — do not change the entity class
+- Be less specific than the original
+- Not diagnose, infer, or introduce facts not present in the original
+- Contain no proper nouns for medical or mental health types
+- Have no trailing punctuation
+- Be a noun phrase only, not a sentence
+
+Items:
+{items_text}
+
+Reply with ONLY one line per item, numbered to match. No explanations.
+1. <phrase>
+2. <phrase>
+..."""
+
+# Kept as fallback for single-item calls if batch parsing fails entirely
 _ABSTRACTION_PROMPT = """\
 You are generalizing a span from a user payload before it is sent to a cloud search agent.
 
 Task frame: {g_t}
 Original span: "{span_text}"
-Extractor type: {extractor_type}
 Abstraction type: {abstraction_type}
 Target abstraction level: {level_desc}
 
-Rewrite this span as a "{level_desc}". Follow all rules:
-- Preserve the semantic role exactly: the output must remain {abstraction_type}-like
-- Do not change the entity type (a prior provider stays provider-like; a symptom stays symptom-like)
-- Do not diagnose, infer, or introduce facts not in the original span
+Rewrite this span as a "{level_desc}". Rules:
+- Preserve the semantic role exactly: output must remain {abstraction_type}-like
+- Do not change the entity type
+- Do not diagnose, infer, or introduce facts not in the original
 - The result must be less specific than the original
 - Return a short noun phrase only (2–5 words), not a sentence
-- No trailing punctuation
-
-Reply with only the abstracted phrase."""
-
-_GROUP_ABSTRACTION_PROMPT = """\
-You are jointly generalizing multiple co-occurring spans before sending a payload to a cloud agent.
-
-Task frame: {g_t}
-Spans (all of type "{abstraction_type}"): {span_list}
-Abstraction type: {abstraction_type}
-Target abstraction level: {level_desc}
-
-Generate a single short noun phrase covering all these spans at the "{level_desc}" level.
-Rules:
-- The output must be {abstraction_type}-like (do not change the entity class)
-- Do not diagnose, name specific entities, or introduce facts not in the originals
-- Use natural phrasing appropriate to the abstraction type
-- Return a short noun phrase only (2–5 words)
 - No trailing punctuation
 
 Reply with only the abstracted phrase."""
@@ -638,6 +647,35 @@ def _validate(abs_type: str, abstracted_text: str) -> str:
     return "passed"
 
 
+# ── Batch LLM response parser ─────────────────────────────────────────────────
+
+_BATCH_LINE_RE = re.compile(r'^\s*(\d+)[.)]\s*(.+)')
+
+
+def _parse_batch_response(raw: str, n: int) -> Optional[List[Optional[str]]]:
+    """
+    Parse a numbered LLM batch response into a list of n abstracted strings.
+
+    Expects lines like:
+        1. a symptom category
+        2. a prior provider category
+
+    Returns a list of length n with matched phrases, or None if fewer than n
+    items were successfully parsed (triggering per-item fallback).
+    """
+    results: List[Optional[str]] = [None] * n
+    for line in raw.splitlines():
+        m = _BATCH_LINE_RE.match(line.strip())
+        if m:
+            idx    = int(m.group(1)) - 1
+            if 0 <= idx < n:
+                phrase = m.group(2).strip().rstrip(".,;")
+                if phrase:
+                    results[idx] = phrase
+    parsed_count = sum(1 for r in results if r is not None)
+    return results if parsed_count == n else None
+
+
 # ── Result types ───────────────────────────────────────────────────────────────
 
 @dataclass
@@ -691,9 +729,11 @@ class SpanAbstractor:
         spans_with_types = [(s, _infer_abstraction_type(s)) for s in css_spans]
         groups           = _group_spans(spans_with_types, payload_text)
 
-        decisions:       List[AbstractionDecision] = []
-        abstraction_map: Dict[str, str]            = {}
-
+        # ── Phase 1: resolve level and fast-path (verbatim / rule) ────────────
+        # Each entry: {"abs_type", "span_group", "level", "level_desc",
+        #              "resolved": str|None, "method": str}
+        # resolved=None means the item needs an LLM call.
+        pending = []
         for abs_type, span_group in groups:
             hier  = ABSTRACTION_HIERARCHIES.get(abs_type, ABSTRACTION_HIERARCHIES["generic_detail"])
             level = min(
@@ -701,15 +741,56 @@ class SpanAbstractor:
                 len(hier) - 1,
             )
             level_desc = hier[level]
+            item = dict(abs_type=abs_type, span_group=span_group,
+                        level=level, level_desc=level_desc,
+                        resolved=None, method="llm")
+
+            if len(span_group) == 1:
+                span = span_group[0]
+                if level == 3:
+                    item["resolved"] = span.text
+                    item["method"]   = "verbatim"
+                else:
+                    rule = _rule_abstract(span, abs_type, level)
+                    if rule is not None:
+                        item["resolved"] = rule
+                        item["method"]   = "rule"
+            # groups always go to LLM (no rule for multi-span joint abstraction)
+
+            pending.append(item)
+
+        # ── Phase 2: single batched LLM call for all unresolved items ─────────
+        llm_indices = [i for i, it in enumerate(pending) if it["resolved"] is None]
+        if local_llm is not None and llm_indices:
+            batch_results = self._batch_abstract(
+                [pending[i] for i in llm_indices], g_t, local_llm
+            )
+            for idx, result in zip(llm_indices, batch_results):
+                if result is not None:
+                    pending[idx]["resolved"] = result
+                    pending[idx]["method"]   = "llm"
+                # else: stays None → fallback applied below
+
+        # ── Phase 3: validate and assemble decisions ──────────────────────────
+        decisions:       List[AbstractionDecision] = []
+        abstraction_map: Dict[str, str]            = {}
+
+        for item in pending:
+            abs_type   = item["abs_type"]
+            span_group = item["span_group"]
+            level      = item["level"]
+            level_desc = item["level_desc"]
+            method     = item["method"]
+            abstracted = item["resolved"]
+
+            if abstracted is None:
+                abstracted = _fallback_abstract(abs_type, level)
+                method     = "rule"
 
             if len(span_group) > 1:
-                # ── Joint abstraction for grouped spans ───────────────────────
                 anchor = min(span_group, key=lambda s: s.start)
                 rest   = [s for s in span_group if s is not anchor]
 
-                abstracted, method = self._abstract_group(
-                    span_group, abs_type, level, level_desc, g_t, local_llm
-                )
                 validation = _validate(abs_type, abstracted)
                 if validation.startswith("failed"):
                     abstracted = _fallback_abstract(abs_type, level)
@@ -732,22 +813,13 @@ class SpanAbstractor:
                         level=level, level_desc=level_desc, method="grouped",
                         validation="n/a", note=f"grouped with '{anchor.text}'",
                     ))
-
             else:
-                # ── Individual abstraction ────────────────────────────────────
                 span = span_group[0]
-
-                if level == 3:
-                    abstracted, method, validation = span.text, "verbatim", "n/a"
-                else:
-                    abstracted, method = self._abstract_span(
-                        span, abs_type, level, level_desc, g_t, local_llm
-                    )
-                    validation = _validate(abs_type, abstracted)
-                    if validation.startswith("failed"):
-                        abstracted = _fallback_abstract(abs_type, level)
-                        method     = "rule"
-                        validation += " → fallback"
+                validation = "n/a" if method == "verbatim" else _validate(abs_type, abstracted)
+                if validation.startswith("failed"):
+                    abstracted = _fallback_abstract(abs_type, level)
+                    method     = "rule"
+                    validation += " → fallback"
 
                 abstraction_map[span.text.lower()] = abstracted
                 decisions.append(AbstractionDecision(
@@ -770,62 +842,74 @@ class SpanAbstractor:
 
     # ── Internal ──────────────────────────────────────────────────────────────
 
-    def _abstract_span(
+    def _batch_abstract(
         self,
-        span:       Span,
-        abs_type:   str,
-        level:      int,
-        level_desc: str,
-        g_t:        str,
+        items:     list,   # list of pending dicts with resolved=None
+        g_t:       str,
         local_llm,
-    ) -> Tuple[str, str]:
-        rule = _rule_abstract(span, abs_type, level)
-        if rule is not None:
-            return rule, "rule"
-
-        if local_llm is not None:
-            try:
-                prompt = _ABSTRACTION_PROMPT.format(
-                    g_t=g_t.strip(),
-                    span_text=span.text,
-                    extractor_type=span.span_type,
-                    abstraction_type=abs_type,
-                    level_desc=level_desc,
+    ) -> List[Optional[str]]:
+        """
+        Issue a single LLM call for all items that need abstraction.
+        Returns a list of abstracted strings aligned to `items`; None on failure.
+        Falls back to per-item calls only if the entire batch response is unparseable.
+        """
+        lines = []
+        for i, item in enumerate(items, 1):
+            abs_type   = item["abs_type"]
+            level_desc = item["level_desc"]
+            span_group = item["span_group"]
+            if len(span_group) > 1:
+                spans_str = ", ".join(f'"{s.text}"' for s in span_group)
+                lines.append(
+                    f'{i}. Group [{abs_type}] {spans_str} → target: "{level_desc}"'
                 )
-                raw    = local_llm.generate(prompt).strip()
-                result = raw.splitlines()[0].strip().rstrip(".,;")
-                if result:
-                    return result, "llm"
-            except Exception:
-                pass
-
-        return _fallback_abstract(abs_type, level), "rule"
-
-    def _abstract_group(
-        self,
-        spans:      List[Span],
-        abs_type:   str,
-        level:      int,
-        level_desc: str,
-        g_t:        str,
-        local_llm,
-    ) -> Tuple[str, str]:
-        if local_llm is not None:
-            try:
-                span_list = ", ".join(f'"{s.text}"' for s in spans)
-                prompt = _GROUP_ABSTRACTION_PROMPT.format(
-                    g_t=g_t.strip(),
-                    span_list=span_list,
-                    abstraction_type=abs_type,
-                    level_desc=level_desc,
+            else:
+                span = span_group[0]
+                lines.append(
+                    f'{i}. [{abs_type}] "{span.text}" → target: "{level_desc}"'
                 )
-                raw    = local_llm.generate(prompt).strip()
-                result = raw.splitlines()[0].strip().rstrip(".,;")
-                if result:
-                    return result, "llm"
-            except Exception:
-                pass
-        return _fallback_abstract(abs_type, level), "rule"
+
+        prompt = _BATCH_ABSTRACTION_PROMPT.format(
+            g_t=g_t.strip(),
+            items_text="\n".join(lines),
+        )
+
+        try:
+            raw     = local_llm.generate(prompt).strip()
+            parsed  = _parse_batch_response(raw, len(items))
+            if parsed is not None:
+                return parsed
+        except Exception:
+            pass
+
+        # Batch failed — fall back to individual calls
+        results = []
+        for item in items:
+            results.append(self._single_abstract_fallback(item, g_t, local_llm))
+        return results
+
+    def _single_abstract_fallback(self, item: dict, g_t: str, local_llm) -> Optional[str]:
+        """Single-item LLM call used only when batch parsing fails entirely."""
+        abs_type   = item["abs_type"]
+        level_desc = item["level_desc"]
+        span_group = item["span_group"]
+        try:
+            if len(span_group) > 1:
+                span_list = ", ".join(f'"{s.text}"' for s in span_group)
+                text      = span_list
+            else:
+                text = span_group[0].text
+            prompt = _ABSTRACTION_PROMPT.format(
+                g_t=g_t.strip(),
+                span_text=text,
+                abstraction_type=abs_type,
+                level_desc=level_desc,
+            )
+            raw    = local_llm.generate(prompt).strip()
+            result = raw.splitlines()[0].strip().rstrip(".,;")
+            return result if result else None
+        except Exception:
+            return None
 
 
 # ── Final payload assembly ─────────────────────────────────────────────────────
@@ -991,16 +1075,15 @@ def _debug_show(result: AbstractionResult) -> None:
         )
 
 
-# ── Standalone — runs Stage 1 → 2 → 3a → 3b ──────────────────────────────────
+# ── Standalone — runs Stage 1 → 2 → 3b  (PrivScope v2 pipeline) ──────────────
 
 if __name__ == "__main__":
     import sys
     sys.stdout.reconfigure(encoding="utf-8")
 
     from state.state_io import load_state
-    from privacy.span_extractor      import SpanExtractor,   _debug_show as _show_spans
-    from privacy.scope_control       import ScopeController, reconstruct_payload, _debug_show as _show_scope
-    from privacy.span_classification import SpanClassifier,  _debug_show as _show_class
+    from privacy.span_extractor    import SpanExtractor,        _debug_show as _show_spans
+    from privacy.carryover_control import CarryoverController,  reconstruct_kept_payload, _debug_show as _show_carryover
     from llm.local_llm import LocalLLM
 
     state   = load_state()
@@ -1012,7 +1095,7 @@ if __name__ == "__main__":
         print(f"\n  Local LLM: connected ({local_llm.model})")
     except Exception:
         local_llm = None
-        print(f"\n  Local LLM: unavailable — rule/fallback for g_t, TaskGain, classification, abstraction")
+        print(f"\n  Local LLM: unavailable — rule fallback for g_t, carryover, abstraction")
 
     r_t = (
         "I have tooth pain and bleeding gums, "
@@ -1050,52 +1133,33 @@ if __name__ == "__main__":
 
     # ── Stage 2 ───────────────────────────────────────────────────────────────
     print(f"\n{'═' * W}")
-    print(f"  STAGE 2 — SCOPE CONTROL  (g_t derived from r_t)")
+    print(f"  STAGE 2 — CARRYOVER CONTROL  (g_t derived from r_t)")
     print(f"{'═' * W}")
-    controller   = ScopeController()
-    scope_result = controller.filter(
-        u_med=extraction["U_med"],
-        task=r_t,
-        payload=extraction["working"],
-        local_llm=local_llm,
+    controller      = CarryoverController()
+    carryover_result = controller.filter(
+        u_med      = extraction["U_med"],
+        task       = r_t,
+        extraction = extraction,
+        local_llm  = local_llm,
     )
-    _show_scope(scope_result)
+    _show_carryover(carryover_result)
 
     print(f"\n{'═' * W}")
-    print(f"  STAGE 2 OUTPUT  — payload entering Stage 3a (retained spans verbatim; U_loc withheld)")
+    print(f"  STAGE 2 OUTPUT  — kept spans verbatim; U_loc withheld as [TYPE]")
     print(f"{'═' * W}")
-    stage2_out = reconstruct_payload(extraction, scope_result.retained, extraction["U_loc"])
+    stage2_out = reconstruct_kept_payload(extraction, carryover_result.kept, extraction["U_loc"])
     print(f"  {stage2_out}")
 
-    # ── Stage 3a ──────────────────────────────────────────────────────────────
-    print(f"\n{'═' * W}")
-    print(f"  STAGE 3a — SENSITIVITY CLASSIFICATION  (joint over retained spans)")
-    print(f"{'═' * W}")
-    classifier   = SpanClassifier()
-    class_result = classifier.classify(
-        retained_spans=scope_result.retained,
-        g_t=scope_result.task_frame,
-        local_llm=local_llm,
-    )
-    _show_class(class_result)
-
-    print(f"\n{'═' * W}")
-    print(f"  STAGE 3a OUTPUT  — PTH verbatim; [css:...] pending Stage 3b abstraction")
-    print(f"{'═' * W}")
-    stage3a_out = reconstruct_payload(extraction, scope_result.retained, extraction["U_loc"])
-    for span in class_result.context_sensitive:
-        stage3a_out = stage3a_out.replace(span.text, f"[css:{span.text}]", 1)
-    print(f"  {stage3a_out}")
-
     # ── Stage 3b ──────────────────────────────────────────────────────────────
+    # v2: all kept spans treated as CSS — no Stage 3a PTH/CSS split
     print(f"\n{'═' * W}")
-    print(f"  STAGE 3b — SPAN ABSTRACTION  (CSS spans → calibrated semantic level)")
+    print(f"  STAGE 3b — SPAN ABSTRACTION  (all kept spans → calibrated semantic level)")
     print(f"{'═' * W}")
     abstractor         = SpanAbstractor()
     abstraction_result = abstractor.abstract(
-        css_spans  = class_result.context_sensitive,
-        pth_spans  = class_result.passthrough,
-        g_t        = class_result.task_frame,
+        css_spans  = carryover_result.kept,
+        pth_spans  = [],
+        g_t        = carryover_result.task_frame,
         extraction = extraction,
         u_loc      = extraction["U_loc"],
         local_llm  = local_llm,

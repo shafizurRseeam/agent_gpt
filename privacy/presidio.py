@@ -96,8 +96,9 @@ def sanitize_with_trace(
         operators=operators,
     )
 
-    # Collapse whitespace artifacts left by removed spans
-    cleaned = re.sub(r' {2,}', ' ', anonymized.text).strip()
+    # Full fragment + sentence cleanup (same pass as PrivScope's prepare_cloud_payload)
+    from privacy.span_abstraction import prepare_cloud_payload
+    cleaned = prepare_cloud_payload(anonymized.text)
 
     # Build span trace: sort by start offset so trace reads left-to-right
     spans = [

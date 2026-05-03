@@ -1,0 +1,122 @@
+[
+  {
+    "seed_id": "seed_0000",
+    "variant_id": 0,
+    "domain": "medical_booking",
+    "prompt": "I need to book an urgent care visit this week because I've been experiencing abdominal pain and I'm concerned it might be related to an STD. I'm on a night shift schedule, so I can only make it during the weekdays. Ideally, I want to get the earliest appointment possible, and I live near RIT.",
+    "sensitive_info": [
+      "abdominal pain",
+      "STD concern",
+      "night shift",
+      "near RIT"
+    ],
+    "domain_sensitive": [
+      "abdominal pain",
+      "STD concern"
+    ],
+    "general_sensitive": [
+      "night shift",
+      "near RIT"
+    ]
+  },
+  {
+    "seed_id": "seed_0000",
+    "variant_id": 1,
+    "domain": "medical_booking",
+    "prompt": "Can you help me schedule an urgent care visit for this week? I've been having some abdominal pain, and I'm worried it might be linked to an STD. Since I work night shifts, I can only go during the weekdays, so I'm looking for the earliest available appointment near RIT.",
+    "sensitive_info": [
+      "abdominal pain",
+      "STD concern",
+      "night shift",
+      "near RIT"
+    ],
+    "domain_sensitive": [
+      "abdominal pain",
+      "STD concern"
+    ],
+    "general_sensitive": [
+      "night shift",
+      "near RIT"
+    ]
+  },
+  {
+    "seed_id": "seed_0001",
+    "variant_id": 0,
+    "domain": "restaurant_booking",
+    "prompt": "Hi, could you help me find a nice spot for a business dinner tonight? I need somewhere with outdoor seating since I follow a kosher diet. It's a bit of a secret meeting, so a casual and quiet place would be perfect. I recently moved here and I'm not sure where to go.",
+    "sensitive_info": [
+      "kosher diet",
+      "secret meeting",
+      "recently moved",
+      "night shift"
+    ],
+    "domain_sensitive": [
+      "kosher diet",
+      "secret meeting"
+    ],
+    "general_sensitive": [
+      "recently moved",
+      "night shift"
+    ]
+  },
+  {
+    "seed_id": "seed_0001",
+    "variant_id": 1,
+    "domain": "restaurant_booking",
+    "prompt": "Can you book a table for me at an outdoor restaurant for a business dinner this evening? I've been working the night shift lately and need a calm, casual atmosphere for a discreet meeting with a colleague. It's important that the restaurant can accommodate a kosher diet. I would really appreciate a recommendation since I'm still getting to know the area.",
+    "sensitive_info": [
+      "kosher diet",
+      "secret meeting",
+      "recently moved",
+      "night shift"
+    ],
+    "domain_sensitive": [
+      "kosher diet",
+      "secret meeting"
+    ],
+    "general_sensitive": [
+      "recently moved",
+      "night shift"
+    ]
+  },
+  {
+    "seed_id": "seed_0002",
+    "variant_id": 0,
+    "domain": "travel_booking",
+    "prompt": "I'm looking to book a one-way trip for medical purposes on March 20. I need a direct flight to a city with an airport close to my accommodation, as I have an early meeting the next day. Can you help me find some options that work for the weekend?",
+    "sensitive_info": [
+      "medical travel",
+      "one-way ticket",
+      "traveling March 20",
+      "weekends only"
+    ],
+    "domain_sensitive": [
+      "medical travel",
+      "one-way ticket"
+    ],
+    "general_sensitive": [
+      "traveling March 20",
+      "weekends only"
+    ]
+  },
+  {
+    "seed_id": "seed_0002",
+    "variant_id": 1,
+    "domain": "travel_booking",
+    "prompt": "I need to arrange a one-way flight on March 20 for a medical appointment, so it has to be a weekend trip. Ideally, I want a direct flight that lands near the airport since I have an early meeting scheduled shortly after I arrive. Can you help me find suitable flights for that weekend?",
+    "sensitive_info": [
+      "medical travel",
+      "one-way ticket",
+      "traveling March 20",
+      "weekends only"
+    ],
+    "domain_sensitive": [
+      "medical travel",
+      "one-way ticket"
+    ],
+    "general_sensitive": [
+      "traveling March 20",
+      "weekends only"
+    ]
+  }
+]

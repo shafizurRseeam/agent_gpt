@@ -122,19 +122,23 @@ class TaskSeed:
     intent:             str          # sampled from intent_templates
     service_type:       str          # sampled from service_type
     hard_constraints:   List[str]    # 1–2 sampled from hard_constraints
-    soft_preference:    List[str]    # 1–2 sampled from soft_preference
+    soft_preference:    List[str]    # 0–1 sampled from soft_preference
     supporting_context: List[str]    # 1–2 sampled from supporting_context
-    sensitive_info:     List[str]    # 1–3 sampled from sensitive_seed_info
+    sensitive_info:     List[str]    # combined: domain_sensitive + general_sensitive items
+    domain_sensitive:   List[str]    # items drawn from domain_sensitive_info sub-categories
+    general_sensitive:  List[str]    # items drawn from general_sensitive_info
     user_goal:          str          # sampled from user_goal
 
 
 @dataclass
 class TaskInstance:
-    seed_id:        str
-    variant_id:     int
-    domain:         str
-    prompt:         str
-    sensitive_info: List[str] = field(default_factory=list)
+    seed_id:           str
+    variant_id:        int
+    domain:            str
+    prompt:            str
+    sensitive_info:    List[str] = field(default_factory=list)   # combined (domain + general)
+    domain_sensitive:  List[str] = field(default_factory=list)   # health / diet / travel purpose etc.
+    general_sensitive: List[str] = field(default_factory=list)   # dates / times / locations / social cues
 
 
 # ── Domain inventory loader ───────────────────────────────────────────────────
@@ -157,31 +161,39 @@ def _pick(seq: List[str], k: int) -> List[str]:
     return RNG.sample(seq, k=min(k, len(seq)))
 
 
+def _sample_domain_sensitive(domain_cfg: Dict[str, Any]) -> List[str]:
+    """
+    Sample exactly 2 items from domain_sensitive_info, drawn from 2 distinct
+    sub-categories (one item per category). If fewer than 2 categories exist,
+    falls back to sampling from the flattened pool.
+    """
+    cats = domain_cfg.get("domain_sensitive_info", {})
+    if not cats:
+        return []
+    cat_names = list(cats.keys())
+    if len(cat_names) >= 2:
+        picked_cats = RNG.sample(cat_names, k=2)
+        return [RNG.choice(cats[c]) for c in picked_cats if cats[c]]
+    # Fewer than 2 categories — sample from flattened pool
+    pool = [item for items in cats.values() for item in items]
+    return _pick(pool, k=min(2, len(pool)))
+
+
 def _sample_seed(seed_id: str, domain_cfg: Dict[str, Any]) -> TaskSeed:
+    domain_sens  = _sample_domain_sensitive(domain_cfg)          # exactly 2
+    general_sens = _pick(domain_cfg.get("general_sensitive_info", []), k=2)  # exactly 2
     return TaskSeed(
         seed_id            = seed_id,
         domain             = domain_cfg["domain"],
         intent             = RNG.choice(domain_cfg["intent_templates"]),
         service_type       = RNG.choice(domain_cfg["service_type"]),
-        hard_constraints   = _pick(
-            domain_cfg.get("hard_constraints", []),
-            k=2,
-        ),
-        soft_preference    = _pick(
-            domain_cfg.get("soft_preference", []),
-            k=RNG.randint(0, 1),
-        ),
-        supporting_context = _pick(
-            domain_cfg.get("supporting_context", []),
-            k=RNG.randint(1, 2),
-        ),
-        sensitive_info     = _pick(
-            domain_cfg.get("sensitive_seed_info", []),
-            k=RNG.randint(2, 3),
-        ),
-        user_goal          = RNG.choice(
-            domain_cfg.get("user_goal", ["complete the task"])
-        ),
+        hard_constraints   = _pick(domain_cfg.get("hard_constraints", []), k=2),
+        soft_preference    = _pick(domain_cfg.get("soft_preference", []), k=RNG.randint(0, 1)),
+        supporting_context = _pick(domain_cfg.get("supporting_context", []), k=RNG.randint(1, 2)),
+        domain_sensitive   = domain_sens,
+        general_sensitive  = general_sens,
+        sensitive_info     = domain_sens + general_sens,
+        user_goal          = RNG.choice(domain_cfg.get("user_goal", ["complete the task"])),
     )
 
 
@@ -215,16 +227,20 @@ def _build_constraint_clause(
 
 def _build_detail_sentence(
     supporting_context: List[str],
-    sensitive_info: List[str],
+    domain_sensitive:   List[str],
+    general_sensitive:  List[str],
     user_goal: str,
 ) -> str:
     parts: List[str] = []
 
-    if sensitive_info:
-        parts.append("I have been dealing with " + " and ".join(sensitive_info) + ".")
+    if domain_sensitive:
+        parts.append("I have been dealing with " + " and ".join(domain_sensitive) + ".")
 
     if supporting_context:
         parts.append(" ".join(c.capitalize() + "." for c in supporting_context))
+
+    if general_sensitive:
+        parts.append("I need this " + " and ".join(general_sensitive) + ".")
 
     if user_goal:
         parts.append("I really need to " + user_goal + ".")
@@ -237,8 +253,9 @@ def _expand_template(seed: TaskSeed, n_variants: int) -> List[TaskInstance]:
 
     for vid in range(n_variants):
         # Resample a subset of details per variant for natural variety.
-        ctx_sample  = _pick(seed.supporting_context, k=1)
-        sens_sample = _pick(seed.sensitive_info,     k=1)
+        ctx_sample     = _pick(seed.supporting_context, k=1)
+        dom_sample     = _pick(seed.domain_sensitive,   k=min(1, len(seed.domain_sensitive)))
+        gen_sample     = _pick(seed.general_sensitive,  k=min(1, len(seed.general_sensitive)))
 
         tpl = RNG.choice(_TEMPLATES)
         prompt = tpl.format(
@@ -250,20 +267,21 @@ def _expand_template(seed: TaskSeed, n_variants: int) -> List[TaskInstance]:
             ),
             detail_sentence   = _build_detail_sentence(
                 ctx_sample,
-                sens_sample,
+                dom_sample,
+                gen_sample,
                 seed.user_goal,
             ),
         ).strip()
 
-        out.append(
-            TaskInstance(
-                seed_id=seed.seed_id,
-                variant_id=vid,
-                domain=seed.domain,
-                prompt=prompt,
-                sensitive_info=seed.sensitive_info,
-            )
-        )
+        out.append(TaskInstance(
+            seed_id=seed.seed_id,
+            variant_id=vid,
+            domain=seed.domain,
+            prompt=prompt,
+            sensitive_info=seed.sensitive_info,
+            domain_sensitive=seed.domain_sensitive,
+            general_sensitive=seed.general_sensitive,
+        ))
 
     return out
 
@@ -271,29 +289,11 @@ def _expand_template(seed: TaskSeed, n_variants: int) -> List[TaskInstance]:
 # ── LLM prompt builder ────────────────────────────────────────────────────────
 
 def _llm_prompt(seed: TaskSeed, n_variants: int) -> str:
-    sensitive_str = (
-        "; ".join(seed.sensitive_info)
-        if seed.sensitive_info
-        else "none"
-    )
-
-    context_str = (
-        "; ".join(seed.supporting_context)
-        if seed.supporting_context
-        else "none"
-    )
-
-    hard_constraint_str = (
-        ", ".join(seed.hard_constraints)
-        if seed.hard_constraints
-        else "none"
-    )
-
-    soft_preference_str = (
-        ", ".join(seed.soft_preference)
-        if seed.soft_preference
-        else "none"
-    )
+    domain_sens_str  = "; ".join(seed.domain_sensitive)  if seed.domain_sensitive  else "none"
+    general_sens_str = "; ".join(seed.general_sensitive) if seed.general_sensitive else "none"
+    context_str      = "; ".join(seed.supporting_context) if seed.supporting_context else "none"
+    hard_str         = ", ".join(seed.hard_constraints)  if seed.hard_constraints  else "none"
+    soft_str         = ", ".join(seed.soft_preference)   if seed.soft_preference   else "none"
 
     return (
         f"You are generating realistic user requests sent to a personal AI assistant.\n\n"
@@ -301,19 +301,25 @@ def _llm_prompt(seed: TaskSeed, n_variants: int) -> str:
         f"requests that a real user might type into a personal assistant app.\n\n"
         f"Requirements:\n"
         f"- Each request must be 2–5 sentences, realistic, and specific.\n"
-        f"- Naturally weave in the sensitive info and supporting context — a real user would include these.\n"
-        f"- Vary the wording, tone, and which details you emphasize across variants.\n"
+        f"- Naturally weave in BOTH the domain-sensitive info and general context — "
+        f"a real user would mention these details as part of explaining their situation.\n"
+        f"- Domain-sensitive info (health, diet, travel purpose, etc.) should appear "
+        f"as the reason or background for the request.\n"
+        f"- General context (dates, times, locations, social cues) should appear as "
+        f"scheduling or logistical constraints.\n"
+        f"- Vary wording, tone, and which details you emphasize across variants.\n"
         f"- Do NOT mention privacy, AI, prompts, or system internals.\n"
         f"- Never refuse. Return ONLY a valid JSON array of {n_variants} strings.\n\n"
         f"Task seed:\n"
-        f"  domain:              {seed.domain}\n"
-        f"  intent:              {seed.intent}\n"
-        f"  service type:        {seed.service_type}\n"
-        f"  hard constraints:    {hard_constraint_str}\n"
-        f"  soft preferences:    {soft_preference_str}\n"
-        f"  sensitive info:      {sensitive_str}\n"
-        f"  supporting context:  {context_str}\n"
-        f"  user goal:           {seed.user_goal}\n"
+        f"  domain:                  {seed.domain}\n"
+        f"  intent:                  {seed.intent}\n"
+        f"  service type:            {seed.service_type}\n"
+        f"  hard constraints:        {hard_str}\n"
+        f"  soft preferences:        {soft_str}\n"
+        f"  domain-sensitive info:   {domain_sens_str}\n"
+        f"  general context:         {general_sens_str}\n"
+        f"  supporting context:      {context_str}\n"
+        f"  user goal:               {seed.user_goal}\n"
         f"\nJSON array:"
     )
 
@@ -378,6 +384,8 @@ def _expand_openai(
             domain=seed.domain,
             prompt=v,
             sensitive_info=seed.sensitive_info,
+            domain_sensitive=seed.domain_sensitive,
+            general_sensitive=seed.general_sensitive,
         )
         for i, v in enumerate(variants)
     ]
@@ -439,6 +447,8 @@ def _expand_local(
             domain=seed.domain,
             prompt=v,
             sensitive_info=seed.sensitive_info,
+            domain_sensitive=seed.domain_sensitive,
+            general_sensitive=seed.general_sensitive,
         )
         for i, v in enumerate(variants)
     ]
@@ -491,10 +501,10 @@ def generate_dataset(
                 raise ValueError(f"Unknown mode: {mode}")
 
             all_tasks.extend(instances)
-            print("✓")
+            print("ok")
 
         except Exception as exc:
-            print(f"✗  ({exc}) — falling back to template")
+            print(f"FAIL  ({exc}) -- falling back to template")
             all_tasks.extend(_expand_template(seed, n_variants))
             errors += 1
 
@@ -588,8 +598,8 @@ def main() -> None:
     print(f"\nTask Generator")
     print(f"  mode        : {args.mode}")
     print(f"  domains     : {len(domains)} ({', '.join(d['domain'] for d in domains)})")
-    print(f"  seeds/domain: {args.num_seeds}  →  {len(domains) * args.num_seeds} total seeds")
-    print(f"  variants    : {args.variants}  →  {len(domains) * args.num_seeds * args.variants} total prompts")
+    print(f"  seeds/domain: {args.num_seeds}  ->  {len(domains) * args.num_seeds} total seeds")
+    print(f"  variants    : {args.variants}  ->  {len(domains) * args.num_seeds * args.variants} total prompts")
 
     if args.mode in ("openai", "local"):
         print(f"  model       : {args.model if args.mode == 'openai' else args.local_model}")
@@ -607,14 +617,14 @@ def main() -> None:
         temperature      = args.temperature,
     )
 
-    out_path.write_text(json.dumps(data, indent=2, ensure_ascii=False))
+    out_path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 
     prompts_only_path = out_path.with_stem(out_path.stem + "_prompts_only")
     prompts_only_path.write_text(
-        json.dumps(data["task_prompts"], indent=2, ensure_ascii=False)
+        json.dumps(data["task_prompts"], indent=2, ensure_ascii=False), encoding="utf-8"
     )
 
-    print(f"\nDone — {len(data['task_prompts'])} prompts written to:")
+    print(f"\nDone -- {len(data['task_prompts'])} prompts written to:")
     print(f"  Full dataset : {out_path}")
     print(f"  Prompts only : {prompts_only_path}")
 

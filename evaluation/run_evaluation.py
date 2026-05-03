@@ -57,10 +57,11 @@ import privacy.pep       as pep_baseline
 from llm.cloud_router    import CloudLLM
 
 # ── Canonical file paths ──────────────────────────────────────────────────────
-_TASKS_FILE         = _ROOT / "task_generated" / "task_prompts.json"
-_PROFILE_FILE       = _ROOT / "state" / "profile_state.json"
-_DEFAULT_TRACE_FILE = _ROOT / "state" / "working_trace.json"
-_RESULTS_FILE       = Path(__file__).resolve().parent / "run_evaluation.json"
+_TASKS_FILE            = _ROOT / "task_generated" / "task_prompts.json"
+_PROFILE_FILE          = _ROOT / "state" / "profile_state.json"
+_PRELOADED_TRACE_FILE  = _ROOT / "state" / "working_trace_preloaded.json"
+_DEFAULT_TRACE_FILE    = _ROOT / "state" / "working_trace.json"
+_RESULTS_FILE          = Path(__file__).resolve().parent / "run_evaluation.json"
 
 _METHODS          = ("naive", "privscope", "presidio", "pep")
 _CLOUD_PROVIDERS  = ("openai", "claude", "gemini")
@@ -74,15 +75,16 @@ _CLM_SYSTEM_PROMPT = (
 )
 
 
-def _cloud_call(clm: CloudLLM, payload: str) -> str:
-    """Send payload to a CLM and return the raw text response."""
+def _cloud_call(clm: CloudLLM, payload: str) -> Tuple[str, int]:
+    """Send payload to a CLM and return (response_text, output_token_count)."""
     try:
-        return clm.chat([
+        text, _, out_tok = clm.chat_with_usage([
             {"role": "system", "content": _CLM_SYSTEM_PROMPT},
             {"role": "user",   "content": payload},
         ])
+        return text, out_tok
     except Exception as e:
-        return f"[CLM error: {e}]"
+        return f"[CLM error: {e}]", 0
 
 
 # ════════════════════════════════════════════════════════════════════════════════
@@ -137,31 +139,35 @@ def load_profile_facts(path: Path) -> List[str]:
     return facts
 
 
-def load_trace_facts(path: Path) -> List[str]:
+def load_trace_facts(runtime_path: Path, preloaded_path: Path = None) -> List[str]:
     """
-    Extract data-field values from working_trace.json memory_traces.
-    Only the 'data' payload of each trace entry is extracted — metadata
-    fields (source, gathered_at, from_workflow, lc_reasoning,
-    naive_payload) are excluded to avoid circular contamination of the
-    history fact set.  These values represent prior-workflow residue that
-    the LC may inject into future naive payloads.
+    Extract data-field values from memory trace files.
+    Loads from preloaded_path first (permanent backstory), then runtime_path
+    (run-time accumulation). Only the 'data' payload of each trace entry is
+    extracted — metadata fields are excluded to avoid circular contamination.
     """
-    data = _load_json(path, required=False)
-    if data is None:
-        return []
-    entries = data.get("memory_traces", []) if isinstance(data, dict) else []
-    facts: List[str] = []
-    for entry in entries:
-        if isinstance(entry, dict):
-            facts.extend(_extract_strings(entry.get("data")))
+    def _facts_from_file(p: Path) -> List[str]:
+        data = _load_json(p, required=False)
+        if data is None:
+            return []
+        entries = data.get("memory_traces", []) if isinstance(data, dict) else []
+        out = []
+        for entry in entries:
+            if isinstance(entry, dict):
+                out.extend(_extract_strings(entry.get("data")))
+        return out
+
+    all_facts = _facts_from_file(preloaded_path) if preloaded_path else []
+    all_facts += _facts_from_file(runtime_path)
+
     # Deduplicate while preserving encounter order
     seen: set = set()
-    out: List[str] = []
-    for f in facts:
+    deduped: List[str] = []
+    for f in all_facts:
         if f not in seen:
             seen.add(f)
-            out.append(f)
-    return out
+            deduped.append(f)
+    return deduped
 
 
 def _extract_strings(obj, min_len: int = 3) -> List[str]:
@@ -197,22 +203,34 @@ def _append_trace(trace_path: Path, entry: dict) -> None:
 
 
 def _reload_agent_traces(agent: HybridAgent, trace_path: Path) -> None:
-    """Refresh agent.state['memory_traces'] from the specified trace file."""
-    data = _load_json(trace_path, required=False)
-    if data is not None:
-        agent.state["memory_traces"] = data.get("memory_traces", [])
+    """
+    Refresh agent.state['memory_traces'] from both the preloaded backstory
+    and the run-time trace file. Preloaded entries come first.
+    """
+    traces: list = []
+    pre = _load_json(_PRELOADED_TRACE_FILE, required=False)
+    if pre:
+        traces.extend(pre.get("memory_traces", []))
+    runtime = _load_json(trace_path, required=False)
+    if runtime:
+        traces.extend(runtime.get("memory_traces", []))
+    agent.state["memory_traces"] = traces
 
 
 # ════════════════════════════════════════════════════════════════════════════════
 # TOKEN COUNTING  (for PR = Payload Reduction)
 # ════════════════════════════════════════════════════════════════════════════════
 
-def count_tokens(text: str) -> int:
-    """
-    Approximate token count via whitespace-delimited word count.
-    Used consistently across all payloads for PR computation.
-    """
-    return len(text.split()) if text else 0
+try:
+    import tiktoken as _tiktoken
+    _enc = _tiktoken.get_encoding("cl100k_base")
+    def count_tokens(text: str) -> int:
+        return len(_enc.encode(text)) if text else 0
+    _TOK_SOURCE = "tiktoken cl100k_base"
+except ImportError:
+    def count_tokens(text: str) -> int:
+        return len(text.split()) if text else 0
+    _TOK_SOURCE = "word count (install tiktoken for accurate counts)"
 
 
 # ════════════════════════════════════════════════════════════════════════════════
@@ -243,12 +261,14 @@ def leaking_facts(facts: List[str], payload: str) -> List[str]:
 def parse_candidates(clm_response: str) -> List[str]:
     """
     Parse CLM numbered-list response into a list of candidate/provider names.
-    Handles: "1. Name", "1) **Name**", "2. Name — Address" variants.
+    Handles: "1. Name", "1) **Name**", "**1. Name**", "**1. **Name****" variants.
+    Some CLMs (e.g. Gemini) bold the entire list entry including the number,
+    so the leading \*{0,2} is required to match those lines.
     Returns lower-cased names for fuzzy comparison.
     """
     names: List[str] = []
     for line in clm_response.splitlines():
-        m = re.match(r"^\d+[.)]\s+\*{0,2}(.+?)\*{0,2}\s*$", line.strip())
+        m = re.match(r"^\*{0,2}\d+[.)]\s+\*{0,2}(.+?)\*{0,2}\s*$", line.strip())
         if m:
             name = m.group(1).strip(" -:").lower()
             if name:
@@ -391,6 +411,7 @@ def evaluate_task(
     trace_facts:     List[str],
     cloud_instances: Dict[str, CloudLLM],
     cloud_mode:      str,
+    n_clm_calls:     int  = 2,
 ) -> dict:
     """
     Full evaluation for one task across all methods.
@@ -440,36 +461,48 @@ def evaluate_task(
         if method == "privscope" and not g_t:
             g_t = (trace.get("stage2") or {}).get("task_frame", "") or ""
 
-        # Call every active cloud provider with the same payload
-        clm_responses: Dict[str, str] = {
-            prov: _cloud_call(clm, payload)
-            for prov, clm in cloud_instances.items()
-        }
-        clm_candidates: Dict[str, List[str]] = {
-            prov: parse_candidates(resp)
-            for prov, resp in clm_responses.items()
-        }
-        # Primary provider response (first key — openai in default mode)
-        primary = next(iter(cloud_instances))
-        primary_resp = clm_responses[primary]
+        # Make n_clm_calls independent CLM calls per payload for URR/TSR averaging.
+        # Each call is paired with the corresponding naive call of the same index
+        # so trial-level hallucination variance cancels in the average.
+        call_responses_list: List[Dict[str, str]]       = []
+        call_candidates_list: List[Dict[str, List[str]]] = []
+        call_tokens_list: List[Dict[str, int]]           = []
+        for _ in range(n_clm_calls):
+            _results = {prov: _cloud_call(clm, payload) for prov, clm in cloud_instances.items()}
+            cr = {prov: v[0] for prov, v in _results.items()}
+            ct = {prov: v[1] for prov, v in _results.items()}
+            cc = {prov: parse_candidates(r) for prov, r in cr.items()}
+            call_responses_list.append(cr)
+            call_candidates_list.append(cc)
+            call_tokens_list.append(ct)
+
+        primary      = next(iter(cloud_instances)) if cloud_instances else ""
+        primary_resp = call_responses_list[0][primary] if call_responses_list else ""
+        clm_responses  = call_responses_list[0]  if call_responses_list else {}
+        clm_candidates = call_candidates_list[0] if call_candidates_list else {}
+        clm_tokens     = call_tokens_list[0]     if call_tokens_list     else {}
 
         raw[method] = {
-            "payload":       payload,
-            "latency":       latency,
-            "trace":         trace,
-            "clm_response":  primary_resp,    # primary provider, backward compat
-            "clm_responses": clm_responses,   # all providers
-            "candidates":    clm_candidates[primary],
-            "clm_candidates": clm_candidates,
+            "payload":              payload,
+            "latency":              latency,
+            "trace":                trace,
+            "clm_response":         primary_resp,
+            "clm_responses":        clm_responses,
+            "clm_response_tokens":  clm_tokens,
+            "candidates":           clm_candidates.get(primary, []),
+            "clm_candidates":       clm_candidates,
+            "call_responses_list":  call_responses_list,
+            "call_candidates_list": call_candidates_list,
+            "call_tokens_list":     call_tokens_list,
         }
-        print("." * len(cloud_instances), end="", flush=True)
+        print("." * (len(cloud_instances) * n_clm_calls), end="", flush=True)
 
     # Fall back to task_prompt if PrivScope did not produce a task frame
     if not g_t:
         g_t = task_prompt
 
-    # naive candidates per CLM — URR is always relative to same-CLM naive response
-    naive_clm_candidates = raw["naive"]["clm_candidates"]
+    # naive call-candidate lists — URR is paired: naive call i vs method call i
+    naive_call_candidates = raw["naive"]["call_candidates_list"]
 
     # ── Pass 2: compute all metrics ───────────────────────────────────────────
     method_results: Dict[str, dict] = {}
@@ -511,23 +544,40 @@ def evaluate_task(
         tok_method = count_tokens(payload)
         PR = round((naive_tokens - tok_method) / naive_tokens, 4) if naive_tokens > 0 else 0.0
 
-        # URR and TSR — computed per CLM provider, stored as dict when all-mode
+        # URR and TSR — averaged over n_clm_calls paired (naive_i, method_i) calls.
+        # URR_i = Match(naive_cands_i, method_cands_i) / |naive_cands_i|
+        # TSR_i = J_local(r_t, g_t, clm_response_i)   (binary 0/1 per call)
+        # Final URR/TSR = mean over valid calls.
         URR_per: Dict[str, Optional[float]] = {}
-        TSR_per: Dict[str, int]             = {}
+        TSR_per: Dict[str, Optional[float]] = {}
         for prov in cloud_instances:
-            naive_cands  = naive_clm_candidates.get(prov, [])
-            method_cands = r["clm_candidates"].get(prov, [])
-            prov_resp    = r["clm_responses"].get(prov, "")
+            urr_vals: List[float] = []
+            tsr_vals: List[float] = []
+            for ci in range(n_clm_calls):
+                naive_cands_ci = (
+                    naive_call_candidates[ci].get(prov, [])
+                    if ci < len(naive_call_candidates) else []
+                )
+                if method == "naive":
+                    urr_vals.append(1.0)
+                elif naive_cands_ci:
+                    method_cands_ci = (
+                        r["call_candidates_list"][ci].get(prov, [])
+                        if ci < len(r["call_candidates_list"]) else []
+                    )
+                    matched = match_candidates(naive_cands_ci, method_cands_ci)
+                    urr_vals.append(round(matched / len(naive_cands_ci), 4))
+                # else: naive call ci produced no parseable candidates — skip this trial
 
-            if method == "naive":
-                URR_per[prov] = 1.0
-            elif not naive_cands:
-                URR_per[prov] = None
-            else:
-                matched = match_candidates(naive_cands, method_cands)
-                URR_per[prov] = round(matched / len(naive_cands), 4)
+                prov_resp_ci = (
+                    r["call_responses_list"][ci].get(prov, "")
+                    if ci < len(r["call_responses_list"]) else ""
+                )
+                if prov_resp_ci:
+                    tsr_vals.append(judge_tsr(agent.local, task_prompt, g_t, prov_resp_ci))
 
-            TSR_per[prov] = judge_tsr(agent.local, task_prompt, g_t, prov_resp)
+            URR_per[prov] = round(sum(urr_vals) / len(urr_vals), 4) if urr_vals else None
+            TSR_per[prov] = round(sum(tsr_vals) / len(tsr_vals), 4) if tsr_vals else None
 
         # Expose as scalar when single-provider, dict when multi-provider
         if cloud_mode == "all":
@@ -542,6 +592,8 @@ def evaluate_task(
             "method":                  method,
             "payload":                 payload,
             "clm_response":            clm_response,
+            "clm_responses":           r.get("clm_responses", {}),
+            "clm_response_tokens":     r.get("clm_response_tokens", {}),
             "sanitization_latency_s":  round(r["latency"], 6),
             "token_count":             tok_method,
             # leaked fact lists (for inspection)
@@ -607,6 +659,8 @@ def compute_aggregates(results: List[dict]) -> dict:
     _sample_method = results[0]["methods"].get("naive", {}) if results else {}
     _multi_clm = isinstance(_sample_method.get("URR"), dict)
     _active_provs = list(_sample_method["URR"].keys()) if _multi_clm else []
+    # Detect CLM providers from clm_response_tokens (works for both modes)
+    _token_provs = list(_sample_method.get("clm_response_tokens", {}).keys())
 
     agg: Dict[str, dict] = {}
 
@@ -624,6 +678,9 @@ def compute_aggregates(results: List[dict]) -> dict:
         else:
             acc["URR"] = []
             acc["TSR"] = []
+        # CLM response token accumulators — per provider
+        for prov in _token_provs:
+            acc[f"clm_tokens_{prov}"] = []
 
         for r in results:
             m = r["methods"].get(method)
@@ -650,6 +707,12 @@ def compute_aggregates(results: List[dict]) -> dict:
                 if m.get("TSR") is not None:
                     acc["TSR"].append(m["TSR"])
 
+            clm_tok_dict = m.get("clm_response_tokens", {})
+            for prov in _token_provs:
+                tok_v = clm_tok_dict.get(prov)
+                if tok_v is not None:
+                    acc[f"clm_tokens_{prov}"].append(tok_v)
+
         entry: dict = {
             "LR":              _mean(acc["LR"]),
             "LRatio":          _mean(acc["LRatio"]),
@@ -661,6 +724,7 @@ def compute_aggregates(results: List[dict]) -> dict:
             "PR":              _mean(acc["PR"]),
             "avg_latency_s":   _mean(acc["latency_s"]),
             "avg_token_count": _mean(acc["token_count"]),
+            "avg_clm_tokens":  {p: _mean(acc[f"clm_tokens_{p}"]) for p in _token_provs},
             "n_tasks":         len(acc["LR"]),
         }
         if _multi_clm:
@@ -697,52 +761,57 @@ def print_summary(agg: dict, n_tasks: int) -> None:
     _multi_clm = isinstance(_sample.get("URR"), dict)
     _active_provs = list(_sample["URR"].keys()) if _multi_clm else []
 
+    # Short labels for column headers
+    _prov_short = {"openai": "gpt", "claude": "claude", "gemini": "gemini"}
+
     print(f"\n{'═' * W}")
     print(f"  EVALUATION RESULTS  —  {n_tasks} tasks  —  {len(_METHODS)} methods")
     print(f"{'═' * W}")
 
-    # Main table — URR/TSR show mean across CLMs when multi-CLM
-    urr_hdr = "URR" if not _multi_clm else "URR(avg)"
-    tsr_hdr = "TSR" if not _multi_clm else "TSR(avg)"
+    def tok_(v):
+        return f"{int(round(v)):>6}" if v is not None else "     —"
+
     print(
         f"\n  {'Method':<12}  {'LR':>6}  {'LRatio':>7}  "
-        f"{'RLR':>6}  {'RLRatio':>8}  {urr_hdr:>8}  {tsr_hdr:>8}  {'PR':>6}  {'Lat ms':>7}"
+        f"{'RLR':>6}  {'RLRatio':>8}  {'URR':>6}  {'TSR':>6}  "
+        f"{'PR':>6}  {'Lat ms':>7}  {'Tokens':>6}"
     )
     print(
         f"  {'─'*12}  {'─'*6}  {'─'*7}  "
-        f"{'─'*6}  {'─'*8}  {'─'*8}  {'─'*8}  {'─'*6}  {'─'*7}"
+        f"{'─'*6}  {'─'*8}  {'─'*6}  {'─'*6}  "
+        f"{'─'*6}  {'─'*7}  {'─'*6}"
     )
     for method in _METHODS:
         a = agg.get(method, {})
         if a.get("n_tasks", 0) == 0:
             continue
+        urr = a.get("URR_mean") if _multi_clm else a.get("URR")
+        tsr = a.get("TSR_mean") if _multi_clm else a.get("TSR")
         print(
             f"  {method:<12}  "
             f"{pct(a.get('LR')):>6}  "
             f"{pct(a.get('LRatio')):>7}  "
             f"{pct(a.get('RLR')):>6}  "
             f"{pct(a.get('RLRatio')):>8}  "
-            f"{pct(a.get('URR_mean')):>8}  "
-            f"{pct(a.get('TSR_mean')):>8}  "
+            f"{pct(urr):>6}  "
+            f"{pct(tsr):>6}  "
             f"{pct(a.get('PR')):>6}  "
-            f"{ms_(a.get('avg_latency_s')):>7}"
+            f"{ms_(a.get('avg_latency_s')):>7}  "
+            f"{tok_(a.get('avg_token_count')):>6}"
         )
 
     # Per-CLM URR/TSR breakdown (only shown in all-mode)
     if _multi_clm:
-        prov_labels = {
-            "openai": "GPT-4o-mini",
-            "claude": "Claude Haiku",
-            "gemini": "Gemini Flash",
-        }
+        col_w = 7  # fits "100.0%" exactly
         print(f"\n  Per-CLM URR and TSR:")
-        col_w = 12
         hdr = f"  {'Method':<12}  "
         for prov in _active_provs:
-            label = prov_labels.get(prov, prov)
-            hdr += f"  {'URR('+label+')':>{col_w}}  {'TSR('+label+')':>{col_w}}"
+            label = _prov_short.get(prov, prov)
+            hdr += f"  {'URR('+label+')':>{col_w+4}}  {'TSR('+label+')':>{col_w+4}}"
         print(hdr)
-        sep = f"  {'─'*12}  " + "  ".join(f"{'─'*col_w}  {'─'*col_w}" for _ in _active_provs)
+        sep = f"  {'─'*12}  " + "  ".join(
+            f"{'─'*(col_w+4)}  {'─'*(col_w+4)}" for _ in _active_provs
+        )
         print(sep)
         for method in _METHODS:
             a = agg.get(method, {})
@@ -752,8 +821,32 @@ def print_summary(agg: dict, n_tasks: int) -> None:
             for prov in _active_provs:
                 urr_v = a["URR"].get(prov) if isinstance(a.get("URR"), dict) else None
                 tsr_v = a["TSR"].get(prov) if isinstance(a.get("TSR"), dict) else None
-                row += f"  {pct(urr_v):>{col_w}}  {pct(tsr_v):>{col_w}}"
+                row += f"  {pct(urr_v):>{col_w+4}}  {pct(tsr_v):>{col_w+4}}"
             print(row)
+
+    # CLM response token counts
+    _sample_clm_toks = next(iter(agg.values()), {}).get("avg_clm_tokens", {})
+    _clm_tok_provs = list(_sample_clm_toks.keys())
+    if _clm_tok_provs:
+        print(f"\n  Avg CLM response tokens (output tokens per CLM per method):")
+        tok_col_w = 9
+        hdr2 = f"  {'Method':<12}  {'Payload':>{tok_col_w}}"
+        for prov in _clm_tok_provs:
+            label = _prov_short.get(prov, prov)
+            hdr2 += f"  {label+' resp':>{tok_col_w}}"
+        print(hdr2)
+        sep2 = f"  {'─'*12}  {'─'*tok_col_w}" + "  " + "  ".join(f"{'─'*tok_col_w}" for _ in _clm_tok_provs)
+        print(sep2)
+        for method in _METHODS:
+            a = agg.get(method, {})
+            if a.get("n_tasks", 0) == 0:
+                continue
+            payload_tok = a.get("avg_token_count")
+            row2 = f"  {method:<12}  {tok_(payload_tok):>{tok_col_w}}"
+            for prov in _clm_tok_provs:
+                resp_tok = a.get("avg_clm_tokens", {}).get(prov)
+                row2 += f"  {tok_(resp_tok):>{tok_col_w}}"
+            print(row2)
 
     # Source-specific LRatio
     print(f"\n  Source-specific LRatio (fraction of each fact type leaked):")
@@ -774,9 +867,9 @@ def print_summary(agg: dict, n_tasks: int) -> None:
     print(f"  LRatio   = mean fraction of S^cur leaked  per task")
     print(f"  RLR      = fraction of tasks leaking ≥1 residual (S^prof ∪ S^hist) fact")
     print(f"  RLRatio  = mean fraction of S^res leaked  per task")
-    print(f"  URR      = mean fraction of naive candidates retained by method's CLM response")
-    print(f"  TSR      = fraction of CLM responses judged actionable by local judge")
-    print(f"  PR       = mean fractional token reduction vs naive payload")
+    print(f"  URR      = mean fraction of naive candidates retained (averaged over N paired CLM calls)")
+    print(f"  TSR      = fraction of CLM responses judged actionable (averaged over N calls per payload)")
+    print(f"  PR       = mean fractional token reduction vs naive payload  ({_TOK_SOURCE})")
     print(f"  Lat ms   = mean sanitization latency in ms  (0 for naive — no transform)")
     print(f"{'═' * W}\n")
 
@@ -821,6 +914,15 @@ def main() -> None:
         ),
     )
     ap.add_argument(
+        "--n-clm-calls", type=int, default=1,
+        metavar="N",
+        help=(
+            "Number of independent CLM calls per payload for URR/TSR averaging. "
+            "Default: 1. Each call is paired with the same-index naive call so "
+            "hallucination variance cancels in the mean URR."
+        ),
+    )
+    ap.add_argument(
         "--trace-file", default=str(_DEFAULT_TRACE_FILE),
         help=(
             "Path to the working trace JSON to use as S^hist baseline and to grow during eval. "
@@ -841,7 +943,10 @@ def main() -> None:
     print("\nLoading evaluation data …")
     all_tasks     = load_tasks(Path(args.tasks_file))
     profile_facts = load_profile_facts(_PROFILE_FILE)
-    trace_facts   = load_trace_facts(trace_path)
+
+    preloaded_facts = load_trace_facts(_PRELOADED_TRACE_FILE)
+    runtime_facts   = load_trace_facts(trace_path)
+    trace_facts     = load_trace_facts(trace_path, _PRELOADED_TRACE_FILE)  # merged S^hist
 
     n_total = len(all_tasks)
     n_eval  = min(args.n_tasks, n_total) if args.n_tasks else n_total
@@ -849,7 +954,9 @@ def main() -> None:
 
     print(f"  Tasks            : {n_total} in file  →  evaluating {n_eval}")
     print(f"  Profile facts    : {len(profile_facts)} values  (S^prof, constant)")
-    print(f"  Trace file       : {trace_path.name}  ({len(trace_facts)} facts at start; grows each task)")
+    print(f"  Preloaded history: {_PRELOADED_TRACE_FILE.name}  ({len(preloaded_facts)} facts, permanent)")
+    print(f"  Run-time trace   : {trace_path.name}  ({len(runtime_facts)} facts at start; grows each task)")
+    print(f"  S^hist at start  : {len(trace_facts)} total facts  (preloaded + run-time)")
     print(f"  Methods          : {', '.join(_METHODS)}")
     print(f"  CLM calls/task   : {len(_METHODS)}  ({n_eval * len(_METHODS)} total)")
     print(f"  Output           : {out_path}")
@@ -875,7 +982,8 @@ def main() -> None:
     print(f"  PrivScope  : Stages 1–3b active")
 
     # ── Evaluate ──────────────────────────────────────────────────────────────
-    print(f"\nEvaluating {n_eval} tasks  (dots = method payloads sent) …\n")
+    print(f"  CLM calls/payload: {args.n_clm_calls}  (URR and TSR averaged over {args.n_clm_calls} paired calls per provider)")
+    print(f"\nEvaluating {n_eval} tasks  (dots = CLM calls per task) …\n")
 
     results:       List[dict] = []
     history_facts: List[str]  = []  # S^hist_t — grows as tasks are processed
@@ -891,6 +999,7 @@ def main() -> None:
             trace_facts     = trace_facts,
             cloud_instances = cloud_instances,
             cloud_mode      = cloud_mode,
+            n_clm_calls     = args.n_clm_calls,
         )
         results.append(result)
 

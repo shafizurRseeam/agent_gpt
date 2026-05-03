@@ -1,60 +1,61 @@
 """
-privacy/privscope.py
+privacy/privscope.py  —  PrivScope v2
 
-PrivScope — on-device payload governor for hybrid agent execution.
+On-device payload governor for hybrid agent execution.
 
 Core principle: task-scoped disclosure. The cloud receives only
 information justified by the current delegated task, in the least
 revealing form that preserves task utility.
 
-Pipeline (stages added incrementally):
+Pipeline (v2):
 
-  Stage 1 — Span Extraction      (privacy/span_extractor.py)       ← ACTIVE
-  Stage 2 — Scope Control        (privacy/scope_control.py)        ← ACTIVE
-  Stage 3a — Sensitivity Classification (privacy/span_classification.py) ← ACTIVE
-  Stage 3b — Abstraction / Transformation (privacy/span_abstraction.py)  ← ACTIVE
-  Stage 4  — Local Restoration                                      [TODO]
+  Stage 1 — Span Extraction      (privacy/span_extractor.py)
+  Stage 2 — Carryover Control    (privacy/carryover_control.py)
+             Single LLM call that jointly decides which extracted
+             spans are genuinely required for cloud-side task
+             completion. Replaces the v1 two-step scope_control
+             (per-span Rel + TaskGain) + span_classification (PTH/CSS).
+  Stage 3b — Span Abstraction    (privacy/span_abstraction.py)
+             All kept spans treated as context-sensitive (CSS) and
+             abstracted to their calibrated policy level.
+  Stage 4  — Local Restoration   [TODO]
 
-Public API (mirrors privacyscope.py for drop-in replacement):
+Public API (same as v1 for drop-in replacement):
     sanitize(payload, user_profile, task, memory_traces) -> str
-    sanitize_with_trace(...)
-        -> (sanitized_str, trace_dict)
+    sanitize_with_trace(...)  -> (sanitized_str, trace_dict)
+
+v1 archived at: privacy/legacy/privscope_v1.py
+
+Run standalone:
+    uv run python privacy/privscope.py
 """
 
 from __future__ import annotations
 
+import time
 from typing import Dict, List, Tuple
 
-from privacy.span_extractor      import SpanExtractor, Span, spans_to_records
-from privacy.scope_control       import ScopeController
-from privacy.span_classification import SpanClassifier
-from privacy.span_abstraction    import SpanAbstractor
+from privacy.span_extractor    import SpanExtractor, Span, spans_to_records
+from privacy.carryover_control import CarryoverController
+from privacy.span_abstraction  import SpanAbstractor
 
 
 class PrivScope:
     """
-    Main PrivScope governor. Instantiate once and call sanitize_with_trace()
+    PrivScope v2 governor. Instantiate once and call sanitize_with_trace()
     per payload.
 
     Parameters
     ----------
-    local_llm : optional LocalLLM instance used by Stage 2 for TaskGain scoring.
-                If None, scope control falls back to rule table.
-    rho_low   : Rel threshold for r_t spans (Stage 2)
-    gamma     : TaskGain threshold for LC-injected spans (Stage 2)
+    local_llm : optional LocalLLM instance used by Stage 2 (carryover control)
+                for joint span-necessity scoring. Falls back to rule table if None.
     """
 
-    def __init__(
-        self,
-        local_llm = None,
-        rho_low:  float = 0.10,
-        gamma:    float = 0.50,
-    ):
-        self._extractor   = SpanExtractor()
-        self._scope       = ScopeController(rho_low=rho_low, gamma=gamma)
-        self._classifier  = SpanClassifier()
-        self._abstractor  = SpanAbstractor()
-        self._local_llm   = local_llm
+    def __init__(self, local_llm=None):
+        self._extractor  = SpanExtractor()
+        self._carryover  = CarryoverController()
+        self._abstractor = SpanAbstractor()
+        self._local_llm  = local_llm
 
     # ── Public API ────────────────────────────────────────────────────────────
 
@@ -78,54 +79,53 @@ class PrivScope:
         memory_traces: list = None,
     ) -> Tuple[str, dict]:
         """
-        Run payload through all active PrivScope stages.
+        Run payload through all active PrivScope v2 stages.
 
         Returns (sanitized_payload, trace_dict).
 
         trace_dict keys:
             stage1        — span extraction output
-            stage2        — scope control output
-            stage3a       — PTH/CSS classification output
+            stage2        — carryover control output (kept / dropped + g_t)
             stage3b       — abstraction decisions
             binding_table — {span_text: span_type} for U_loc (never sent to cloud)
-            method        — "privscope"
+            sanitized_internal_payload — P̂_t with [TYPE] placeholders (debug only)
+            final_cloud_payload        — U_loc stripped, ready for CLM
+            method        — "privscope_v2"
         """
         profile = user_profile or {}
-        traces  = memory_traces or []
 
         # ── Stage 1: Span Extraction ──────────────────────────────────────────
+        t0_s1 = time.perf_counter()
         extraction = self._extractor.extract(payload, profile)
-
+        t_s1 = time.perf_counter() - t0_s1
         u_loc: List[Span] = extraction["U_loc"]
         u_med: List[Span] = extraction["U_med"]
 
-        # Private binding table — U_loc identifiers withheld from cloud
         binding_table: Dict[str, str] = {s.text: s.span_type for s in u_loc}
 
-        # ── Stage 2: Scope Control ────────────────────────────────────────────
-        scope_result = self._scope.filter(
+        # ── Stage 2: Carryover Control ────────────────────────────────────────
+        t0_s2 = time.perf_counter()
+        carryover_result = self._carryover.filter(
             u_med=u_med,
             task=task,
-            payload=extraction["working"],
+            extraction=extraction,
             local_llm=self._local_llm,
         )
-
-        # ── Stage 3a: Sensitivity Classification ─────────────────────────────
-        class_result = self._classifier.classify(
-            retained_spans=scope_result.retained,
-            g_t=scope_result.task_frame,
-            local_llm=self._local_llm,
-        )
+        t_s2 = time.perf_counter() - t0_s2
 
         # ── Stage 3b: Span Abstraction ────────────────────────────────────────
+        # All kept spans treated as CSS — no PTH/CSS split in v2.
+        # Abstraction policy handles verbatim release for level-3 types internally.
+        t0_s3b = time.perf_counter()
         abstraction_result = self._abstractor.abstract(
-            css_spans  = class_result.context_sensitive,
-            pth_spans  = class_result.passthrough,
-            g_t        = class_result.task_frame,
+            css_spans  = carryover_result.kept,
+            pth_spans  = [],
+            g_t        = carryover_result.task_frame,
             extraction = extraction,
             u_loc      = u_loc,
             local_llm  = self._local_llm,
         )
+        t_s3b = time.perf_counter() - t0_s3b
 
         # ── Stage 4 placeholder ───────────────────────────────────────────────
         # Local restoration of U_loc spans will be wired here.
@@ -136,21 +136,13 @@ class PrivScope:
                 "u_med": spans_to_records(u_med),
             },
             "stage2": {
-                "task_frame": scope_result.task_frame,
-                "rho_low":    scope_result.rho_low,
-                "gamma":      scope_result.gamma,
-                "retained":   [s.text for s in scope_result.retained],
+                "task_frame": carryover_result.task_frame,
+                "method":     carryover_result.method,
+                "kept":       [s.text for s in carryover_result.kept],
                 "dropped": [
-                    {"text": d.span.text, "reason": d.reason,
-                     "rel": round(d.rel, 3) if d.rel is not None else None,
-                     "kappa": d.kappa}
-                    for d in scope_result.decisions if not d.kept
+                    {"text": d.span.text, "reason": d.reason}
+                    for d in carryover_result.decisions if not d.kept
                 ],
-            },
-            "stage3a": {
-                "method":            class_result.method,
-                "passthrough":       [s.text for s in class_result.passthrough],
-                "context_sensitive": [s.text for s in class_result.context_sensitive],
             },
             "stage3b": {
                 "method": abstraction_result.method,
@@ -168,20 +160,26 @@ class PrivScope:
             "sanitized_internal_payload": abstraction_result.final_payload,
             "final_cloud_payload":        abstraction_result.final_cloud_payload,
             "binding_table": binding_table,
-            "method":        "privscope",
+            "method":        "privscope_v2",
+            "stage_timings": {
+                "stage1_s":  round(t_s1,  4),
+                "stage2_s":  round(t_s2,  4),
+                "stage3b_s": round(t_s3b, 4),
+                "total_s":   round(t_s1 + t_s2 + t_s3b, 4),
+            },
         }
 
         return abstraction_result.final_cloud_payload, trace
 
 
-# ── Standalone — runs the full PrivScope governor on the dentist example ───────
+# ── Standalone ─────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     import sys
     sys.stdout.reconfigure(encoding="utf-8")
 
     from state.state_io import load_state
-    from llm.local_llm import LocalLLM
+    from llm.local_llm  import LocalLLM
 
     state   = load_state()
     profile = state.get("user_profile", {})
@@ -192,7 +190,7 @@ if __name__ == "__main__":
         print(f"\n  Local LLM: connected ({local_llm.model})")
     except Exception:
         local_llm = None
-        print(f"\n  Local LLM: unavailable — rule/fallback for g_t, TaskGain, classification, abstraction")
+        print(f"\n  Local LLM: unavailable — rule-based fallback")
 
     r_t = (
         "I have tooth pain and bleeding gums, "
@@ -210,14 +208,14 @@ if __name__ == "__main__":
 
     W = 70
 
-    print(f"\n{'═' * W}")
+    print(f"\n{'=' * W}")
     print(f"  ORIGINAL USER REQUEST  (r_t)")
-    print(f"{'═' * W}")
+    print(f"{'=' * W}")
     print(f"  {r_t}")
 
-    print(f"\n{'═' * W}")
-    print(f"  LC-ENRICHED PAYLOAD  (p_t)  — input to sanitization pipeline")
-    print(f"{'═' * W}")
+    print(f"\n{'=' * W}")
+    print(f"  LC-ENRICHED PAYLOAD  (p_t)  -- input to sanitization pipeline")
+    print(f"{'=' * W}")
     print(f"  {p_t}")
 
     privscope            = PrivScope(local_llm=local_llm)
@@ -226,59 +224,49 @@ if __name__ == "__main__":
     )
 
     # ── Stage 1 ───────────────────────────────────────────────────────────────
-    print(f"\n{'═' * W}")
-    print(f"  STAGE 1 — SPAN EXTRACTION")
-    print(f"{'═' * W}")
+    print(f"\n{'=' * W}")
+    print(f"  STAGE 1 -- SPAN EXTRACTION")
+    print(f"{'=' * W}")
     s1 = trace["stage1"]
     print(f"  U_loc withheld  ({len(s1['u_loc'])} spans):")
     for s in s1["u_loc"]:
         print(f"    [{s['span_type']:<20}] {s['text']!r}")
-    print(f"  U_med mediation ({len(s1['u_med'])} spans):")
+    print(f"  U_med candidates ({len(s1['u_med'])} spans):")
     for s in s1["u_med"]:
         print(f"    [{s['span_type']:<20}] {s['text']!r}")
 
     # ── Stage 2 ───────────────────────────────────────────────────────────────
-    print(f"\n{'═' * W}")
-    print(f"  STAGE 2 — SCOPE CONTROL")
-    print(f"{'═' * W}")
+    print(f"\n{'=' * W}")
+    print(f"  STAGE 2 -- CARRYOVER CONTROL  [{trace['stage2']['method']}]")
+    print(f"{'=' * W}")
     s2 = trace["stage2"]
     print(f"  Task frame g_t : {s2['task_frame']}")
-    print(f"  Thresholds     : ρ_low={s2['rho_low']}  γ={s2['gamma']}")
-    print(f"  Retained ({len(s2['retained'])}):")
-    for t in s2["retained"]:
+    print(f"  Kept    ({len(s2['kept'])}):")
+    for t in s2["kept"]:
         print(f"    [KEEP]  {t!r}")
-    print(f"  Dropped  ({len(s2['dropped'])}):")
+    print(f"  Dropped ({len(s2['dropped'])}):")
     for d in s2["dropped"]:
         print(f"    [DROP]  {d['text']!r}  ({d['reason']})")
 
-    # ── Stage 3a ──────────────────────────────────────────────────────────────
-    print(f"\n{'═' * W}")
-    print(f"  STAGE 3a — SENSITIVITY CLASSIFICATION  [{trace['stage3a']['method']}]")
-    print(f"{'═' * W}")
-    s3a = trace["stage3a"]
-    print(f"  PTH (passthrough)      : {s3a['passthrough']}")
-    print(f"  CSS (context-sensitive): {s3a['context_sensitive']}")
-
     # ── Stage 3b ──────────────────────────────────────────────────────────────
-    print(f"\n{'═' * W}")
-    print(f"  STAGE 3b — SPAN ABSTRACTION  [{trace['stage3b']['method']}]")
-    print(f"{'═' * W}")
+    print(f"\n{'=' * W}")
+    print(f"  STAGE 3b -- SPAN ABSTRACTION  [{trace['stage3b']['method']}]")
+    print(f"{'=' * W}")
     for d in trace["stage3b"]["decisions"]:
         if d["method"] == "grouped":
             continue
         print(
-            f"    {d['original']!r:<35} → "
-            f"l{d['level']} ({d['level_desc']}) → "
-            f"{d['abstracted']!r}  [{d['method']}]"
+            f"    {d['original']!r:<35}  l{d['level']} ({d['level_desc']})  "
+            f"->  {d['abstracted']!r}  [{d['method']}]"
         )
 
     # ── Payloads ──────────────────────────────────────────────────────────────
-    print(f"\n{'═' * W}")
-    print(f"  INTERNAL SANITIZED PAYLOAD  — U_loc as [TYPE] placeholders (debug/trace only)")
-    print(f"{'═' * W}")
+    print(f"\n{'=' * W}")
+    print(f"  INTERNAL SANITIZED PAYLOAD  -- U_loc as [TYPE] placeholders (debug/trace only)")
+    print(f"{'=' * W}")
     print(f"  {trace['sanitized_internal_payload']}")
 
-    print(f"\n{'═' * W}")
-    print(f"  FINAL CLOUD PAYLOAD  P̂_t  — U_loc stripped and cleaned, sent to CLM")
-    print(f"{'═' * W}")
+    print(f"\n{'=' * W}")
+    print(f"  FINAL CLOUD PAYLOAD  P_t_hat  -- U_loc stripped, sent to CLM")
+    print(f"{'=' * W}")
     print(f"  {cloud_payload}")

@@ -1,0 +1,399 @@
+{
+  "domains": [
+    {
+      "domain": "medical_booking",
+
+      "intent_templates": [
+        "book",
+        "schedule",
+        "find",
+        "arrange",
+        "get"
+      ],
+
+      "service_type": [
+        "primary care visit",
+        "urgent care visit",
+        "dental visit",
+        "dermatology visit",
+        "physical therapy visit",
+        "eye exam",
+        "follow-up visit",
+        "diagnostic visit"
+      ],
+
+      "hard_constraints": [
+        "this week",
+        "tomorrow morning",
+        "before noon",
+        "after work",
+        "earliest slot",
+        "same-day if possible",
+        "weekday only",
+        "no evenings"
+      ],
+
+      "soft_preference": [
+        "takes insurance",
+        "in network",
+        "near home",
+        "female provider",
+        "highly rated",
+        "short wait",
+        "easy parking",
+        "experienced provider"
+      ],
+
+      "supporting_context": [
+        "pain worsening",
+        "trouble sleeping",
+        "medicine failed",
+        "tried rest",
+        "needs follow-up",
+        "was advised",
+        "comes and goes",
+        "checked soon"
+      ],
+
+      "domain_sensitive_info": {
+        "symptom_or_issue": [
+          "chest pain",
+          "short breath",
+          "severe headache",
+          "dizziness",
+          "abdominal pain",
+          "back pain",
+          "knee pain",
+          "skin rash"
+        ],
+        "condition_or_history": [
+          "migraine history",
+          "asthma",
+          "eczema",
+          "anxiety",
+          "recent ER",
+          "pregnancy"
+        ],
+        "medication_or_treatment": [
+          "antidepressants",
+          "blood thinners",
+          "insulin"
+        ],
+        "sensitive_concern": [
+          "STD concern"
+        ]
+      },
+
+      "general_sensitive_info": [
+        "March 12",
+        "April 3",
+        "10 AM",
+        "after 6 PM",
+        "Friday morning",
+        "Tuesday morning",
+        "weekends only",
+        "near home",
+        "near RIT",
+        "near downtown",
+        "near school",
+        "near work",
+        "walking distance",
+        "after pickup",
+        "night shift",
+        "lunch break",
+        "after therapy",
+        "court appointment",
+        "spouse away",
+        "roommate away",
+        "leave at 5",
+        "gym at 7",
+        "bus after 6",
+        "avoid calls",
+        "traveling March 20",
+        "out of town",
+        "recently moved",
+        "changed jobs",
+        "private visit",
+        "no home mail",
+        "cash only",
+        "shared car",
+        "needs parking"
+      ],
+
+      "user_goal": [
+        "get checked",
+        "earliest visit",
+        "right provider",
+        "get treatment",
+        "rule out concern",
+        "avoid urgent care"
+      ]
+    },
+
+    {
+      "domain": "restaurant_booking",
+
+      "intent_templates": [
+        "book",
+        "reserve",
+        "find",
+        "arrange",
+        "get"
+      ],
+
+      "service_type": [
+        "dinner reservation",
+        "lunch reservation",
+        "brunch reservation",
+        "birthday dinner",
+        "business dinner",
+        "date night",
+        "family dinner",
+        "group dinner"
+      ],
+
+      "hard_constraints": [
+        "tonight",
+        "this weekend",
+        "before 7 PM",
+        "after 8 PM",
+        "table for two",
+        "table for four",
+        "outdoor seating",
+        "same-day booking"
+      ],
+
+      "soft_preference": [
+        "quiet place",
+        "highly rated",
+        "near downtown",
+        "vegetarian options",
+        "halal options",
+        "private table",
+        "easy parking",
+        "not expensive"
+      ],
+
+      "supporting_context": [
+        "small group",
+        "special occasion",
+        "quiet talk",
+        "quick dinner",
+        "nearby preferred",
+        "casual place",
+        "not loud",
+        "good reviews"
+      ],
+
+      "domain_sensitive_info": {
+        "dietary_or_religious": [
+          "halal diet",
+          "kosher diet",
+          "vegan diet",
+          "no alcohol",
+          "religious diet"
+        ],
+        "health_or_allergy": [
+          "gluten allergy",
+          "nut allergy",
+          "shellfish allergy",
+          "diabetes diet",
+          "low sodium",
+          "pregnancy diet"
+        ],
+        "relational_context": [
+          "date night",
+          "anniversary dinner",
+          "family conflict",
+          "breakup dinner",
+          "private dinner",
+          "secret meeting"
+        ],
+        "work_or_financial": [
+          "business meeting",
+          "budget limit",
+          "cash payment",
+          "company card"
+        ]
+      },
+
+      "general_sensitive_info": [
+        "March 12",
+        "April 3",
+        "7 PM",
+        "after 9 PM",
+        "Friday night",
+        "Saturday evening",
+        "weekends only",
+        "near home",
+        "near RIT",
+        "near downtown",
+        "near school",
+        "near work",
+        "walking distance",
+        "after pickup",
+        "night shift",
+        "lunch break",
+        "after therapy",
+        "court appointment",
+        "spouse away",
+        "roommate away",
+        "leave at 5",
+        "gym at 7",
+        "bus after 6",
+        "avoid calls",
+        "traveling March 20",
+        "out of town",
+        "recently moved",
+        "changed jobs",
+        "private meeting",
+        "no home mail",
+        "cash only",
+        "shared car",
+        "needs parking"
+      ],
+
+      "user_goal": [
+        "reserve table",
+        "find good place",
+        "book quickly",
+        "avoid waiting",
+        "fit schedule",
+        "keep private"
+      ]
+    },
+
+    {
+      "domain": "travel_booking",
+
+      "intent_templates": [
+        "book",
+        "plan",
+        "find",
+        "arrange",
+        "get"
+      ],
+
+      "service_type": [
+        "flight booking",
+        "hotel booking",
+        "rental car",
+        "airport ride",
+        "train ticket",
+        "weekend trip",
+        "business trip",
+        "family trip"
+      ],
+
+      "hard_constraints": [
+        "next week",
+        "this weekend",
+        "morning departure",
+        "evening arrival",
+        "direct flight",
+        "lowest fare",
+        "near airport",
+        "free cancellation"
+      ],
+
+      "soft_preference": [
+        "aisle seat",
+        "window seat",
+        "budget hotel",
+        "quiet hotel",
+        "safe area",
+        "near downtown",
+        "short layover",
+        "good reviews"
+      ],
+
+      "supporting_context": [
+        "short trip",
+        "work travel",
+        "family visit",
+        "early meeting",
+        "late arrival",
+        "tight budget",
+        "light luggage",
+        "flexible dates"
+      ],
+
+      "domain_sensitive_info": {
+        "identity_or_immigration": [
+          "passport issue",
+          "visa problem",
+          "immigration check",
+          "expired passport",
+          "green card issue"
+        ],
+        "legal_or_medical": [
+          "medical travel",
+          "legal appointment",
+          "therapy retreat",
+          "court hearing",
+          "hospital visit"
+        ],
+        "purpose_of_travel": [
+          "family emergency",
+          "funeral trip",
+          "job interview",
+          "private trip",
+          "religious trip",
+          "custody visit"
+        ],
+        "mobility_or_financial": [
+          "one-way ticket",
+          "solo travel",
+          "cash payment",
+          "budget limit",
+          "no credit card",
+          "shared room"
+        ]
+      },
+
+      "general_sensitive_info": [
+        "March 12",
+        "April 3",
+        "6 AM",
+        "after 10 PM",
+        "Friday morning",
+        "Sunday night",
+        "weekends only",
+        "near home",
+        "near RIT",
+        "near downtown",
+        "near school",
+        "near work",
+        "walking distance",
+        "after pickup",
+        "night shift",
+        "lunch break",
+        "after therapy",
+        "court appointment",
+        "spouse away",
+        "roommate away",
+        "leave at 5",
+        "gym at 7",
+        "bus after 6",
+        "avoid calls",
+        "traveling March 20",
+        "out of town",
+        "recently moved",
+        "changed jobs",
+        "no home mail",
+        "cash only",
+        "shared car",
+        "needs parking"
+      ],
+
+      "user_goal": [
+        "book trip",
+        "find cheapest",
+        "arrive on time",
+        "avoid delays",
+        "fit schedule",
+        "keep private"
+      ]
+    }
+  ]
+}

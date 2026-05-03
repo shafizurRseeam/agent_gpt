@@ -1,0 +1,129 @@
+{
+  "metadata": {
+    "n_tasks": 1,
+    "models": [
+      "llama3.2",
+      "phi3",
+      "mistral",
+      "qwen2.5:7b",
+      "llama3.1:8b"
+    ],
+    "methods": [
+      "pep",
+      "privscope"
+    ],
+    "timestamp": "2026-05-03T02:46:27.879576"
+  },
+  "results": {
+    "llama3.2": {
+      "pep": {
+        "LR": 1.0,
+        "LRatio": 0.75,
+        "RLR": 1.0,
+        "RLRatio": 0.1053,
+        "PR": 0.2364,
+        "Lat": 4.539,
+        "InTok": 168.0,
+        "n": 1
+      },
+      "privscope": {
+        "LR": 1.0,
+        "LRatio": 0.25,
+        "RLR": 0.0,
+        "RLRatio": 0.0,
+        "PR": 0.2318,
+        "Lat": 10.1565,
+        "InTok": 169.0,
+        "n": 1
+      }
+    },
+    "phi3": {
+      "pep": {
+        "LR": 1.0,
+        "LRatio": 0.5,
+        "RLR": 0.0,
+        "RLRatio": 0.0,
+        "PR": 0.3478,
+        "Lat": 2.9904,
+        "InTok": 45.0,
+        "n": 1
+      },
+      "privscope": {
+        "LR": 0.0,
+        "LRatio": 0.0,
+        "RLR": 0.0,
+        "RLRatio": 0.0,
+        "PR": -0.0435,
+        "Lat": 16.2046,
+        "InTok": 72.0,
+        "n": 1
+      }
+    },
+    "mistral": {
+      "pep": {
+        "LR": 1.0,
+        "LRatio": 1.0,
+        "RLR": 0.0,
+        "RLRatio": 0.0,
+        "PR": -0.4118,
+        "Lat": 3.5026,
+        "InTok": 48.0,
+        "n": 1
+      },
+      "privscope": {
+        "LR": 0.0,
+        "LRatio": 0.0,
+        "RLR": 0.0,
+        "RLRatio": 0.0,
+        "PR": 0.4118,
+        "Lat": 9.0703,
+        "InTok": 20.0,
+        "n": 1
+      }
+    },
+    "qwen2.5:7b": {
+      "pep": {
+        "LR": 1.0,
+        "LRatio": 0.75,
+        "RLR": 0.0,
+        "RLRatio": 0.0,
+        "PR": -1.1071,
+        "Lat": 3.8648,
+        "InTok": 59.0,
+        "n": 1
+      },
+      "privscope": {
+        "LR": 0.0,
+        "LRatio": 0.0,
+        "RLR": 0.0,
+        "RLRatio": 0.0,
+        "PR": 0.5714,
+        "Lat": 6.0831,
+        "InTok": 12.0,
+        "n": 1
+      }
+    },
+    "llama3.1:8b": {
+      "pep": {
+        "LR": 1.0,
+        "LRatio": 0.75,
+        "RLR": 0.0,
+        "RLRatio": 0.0,
+        "PR": -71.0,
+        "Lat": 4.168,
+        "InTok": 72.0,
+        "n": 1
+      },
+      "privscope": {
+        "LR": 0.0,
+        "LRatio": 0.0,
+        "RLR": 0.0,
+        "RLRatio": 0.0,
+        "PR": 1.0,
+        "Lat": 3.472,
+        "InTok": 0.0,
+        "n": 1
+      }
+    }
+  }
+}

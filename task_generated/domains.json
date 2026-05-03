@@ -2,208 +2,131 @@
   "domains": [
     {
       "domain": "medical_booking",
+
       "intent_templates": [
         "book",
         "schedule",
         "find",
-        "help me arrange",
-        "help me get"
+        "arrange",
+        "get"
       ],
+
       "service_type": [
         "primary care visit",
         "urgent care visit",
-        "specialist consultation",
-        "follow-up appointment",
-        "diagnostic evaluation",
-        "clinic visit"
+        "dental visit",
+        "dermatology visit",
+        "physical therapy visit",
+        "eye exam",
+        "follow-up visit",
+        "diagnostic visit"
       ],
+
       "hard_constraints": [
         "this week",
         "tomorrow morning",
         "before noon",
         "after work",
-        "earliest available slot",
-        "same-day appointment if possible",
+        "earliest slot",
+        "same-day if possible",
         "weekday only",
-        "no evening appointments"
+        "no evenings"
       ],
+
       "soft_preference": [
-        "accepts my insurance",
+        "takes insurance",
         "in network",
-        "female provider preferred",
-        "highly rated provider",
-        "someone experienced with this issue"
-      ],
-      "supporting_context": [
-        "the pain gets worse when I move",
-        "it has been interfering with sleep",
-        "over-the-counter medicine has not helped",
-        "I already tried rest and ice",
-        "I need follow-up care after urgent care",
-        "I was advised to see a specialist",
-        "the problem has been getting worse",
-        "it comes and goes during the day",
-        "I do not want to wait too long",
-        "I want to get this checked before it worsens"
-      ],
-      "sensitive_seed_info": [
-        "chest tightness",
-        "shortness of breath",
-        "severe headaches",
-        "dizziness",
-        "abdominal pain",
-        "back pain",
-        "knee pain",
-        "rash",
-        "migraine history",
-        "asthma",
-        "eczema",
-        "recent ER visit",
-        "pregnancy",
-        "anxiety history",
-        "antidepressant use",
-        "blood thinner use",
-        "insulin use"
-      ],
-      "user_goal": [
-        "get evaluated soon",
-        "find the earliest suitable appointment",
-        "see the right kind of provider",
-        "get timely treatment",
-        "rule out something serious"
-      ]
-    },
-    {
-      "domain": "restaurant_booking",
-      "intent_templates": [
-        "book",
-        "reserve",
-        "find",
-        "help me book",
-        "help me reserve"
-      ],
-      "service_type": [
-        "dinner reservation",
-        "lunch reservation",
-        "brunch reservation",
-        "table for two",
-        "table for four",
-        "family dinner reservation"
-      ],
-      "hard_constraints": [
-        "tonight",
-        "tomorrow evening",
-        "this weekend",
-        "within 15 minutes",
-        "near my home",
-        "near downtown",
-        "outdoor seating",
-        "quiet place"
-      ],
-      "soft_preference": [
+        "near home",
+        "female provider",
         "highly rated",
-        "vegetarian-friendly",
-        "vegan-friendly",
-        "gluten-free options",
-        "halal options",
-        "shorter wait time"
+        "short wait",
+        "easy parking",
+        "experienced provider"
       ],
+
       "supporting_context": [
-        "I want the evening to go well",
-        "I would rather avoid crowded places",
-        "we want a place where conversation is easy",
-        "I need something reliable",
-        "I want to keep things simple",
-        "I do not want to spend too much time waiting",
-        "it is a special occasion",
-        "I want something convenient"
+        "pain worsening",
+        "trouble sleeping",
+        "medicine failed",
+        "tried rest",
+        "needs follow-up",
+        "was advised",
+        "comes and goes",
+        "checked soon"
       ],
-      "sensitive_seed_info": [
-        "anniversary",
-        "birthday dinner",
-        "family dinner",
-        "coworker dinner",
-        "seafood allergy",
-        "nut allergy",
-        "gluten-free diet",
-        "halal preference",
-        "vegetarian diet",
-        "vegan diet",
-        "budget concerns"
+
+      "domain_sensitive_info": {
+        "symptom_or_issue": [
+          "chest pain",
+          "short breath",
+          "severe headache",
+          "dizziness",
+          "abdominal pain",
+          "back pain",
+          "knee pain",
+          "skin rash"
+        ],
+        "condition_or_history": [
+          "migraine history",
+          "asthma",
+          "eczema",
+          "anxiety",
+          "recent ER",
+          "pregnancy"
+        ],
+        "medication_or_treatment": [
+          "antidepressants",
+          "blood thinners",
+          "insulin"
+        ],
+        "sensitive_concern": [
+          "STD concern"
+        ]
+      },
+
+      "general_sensitive_info": [
+        "March 12",
+        "April 3",
+        "10 AM",
+        "after 6 PM",
+        "Friday morning",
+        "Tuesday morning",
+        "weekends only",
+        "near home",
+        "near RIT",
+        "near downtown",
+        "near school",
+        "near work",
+        "walking distance",
+        "after pickup",
+        "night shift",
+        "lunch break",
+        "after therapy",
+        "court appointment",
+        "spouse away",
+        "roommate away",
+        "leave at 5",
+        "gym at 7",
+        "bus after 6",
+        "avoid calls",
+        "traveling March 20",
+        "out of town",
+        "recently moved",
+        "changed jobs",
+        "private visit",
+        "no home mail",
+        "cash only",
+        "shared car",
+        "needs parking"
       ],
+
       "user_goal": [
-        "make the evening go smoothly",
-        "find a suitable place quickly",
-        "avoid awkward surprises",
-        "make sure everyone can eat safely",
-        "get a reservation that fits the occasion"
-      ]
-    },
-    {
-      "domain": "travel_booking",
-      "intent_templates": [
-        "book",
-        "find",
-        "arrange",
-        "help me book",
-        "help me find"
-      ],
-      "service_type": [
-        "one-way flight",
-        "round-trip flight",
-        "flight and hotel booking",
-        "hotel stay",
-        "refundable flight",
-        "nonstop flight"
-      ],
-      "hard_constraints": [
-        "this week",
-        "next week",
-        "refundable option",
-        "nonstop preferred",
-        "carry-on only",
-        "earliest arrival",
-        "lowest fare",
-        "morning departure"
-      ],
-      "soft_preference": [
-        "closest airport",
-        "short layover",
-        "reliable airline",
-        "budget-friendly option",
-        "flexible dates",
-        "hotel near destination"
-      ],
-      "supporting_context": [
-        "I need to return quickly",
-        "I do not want to travel late at night",
-        "I am flexible by a day",
-        "I want to keep this affordable",
-        "I need something easy to manage",
-        "I do not want a long layover",
-        "I want to minimize hassle",
-        "timing matters more than comfort"
-      ],
-      "sensitive_seed_info": [
-        "medical trip",
-        "family emergency",
-        "funeral travel",
-        "job interview",
-        "pregnancy",
-        "anxiety",
-        "visa issue",
-        "wheelchair assistance",
-        "dietary restriction",
-        "child travel",
-        "long-distance relationship",
-        "budget concerns"
-      ],
-      "user_goal": [
-        "get there quickly",
-        "keep the trip manageable",
-        "avoid unnecessary hassle",
-        "stay within budget",
-        "make the travel plan reliable"
+        "get checked",
+        "earliest visit",
+        "right provider",
+        "get treatment",
+        "rule out concern",
+        "avoid urgent care"
       ]
     }
   ]

@@ -37,13 +37,13 @@ ABSTRACTION_HIERARCHIES: Dict[str, List[str]] = {
     "address": [
         "region",
         "city",
-        "neighborhood or area",
+        "neighborhood",
         "exact address",
     ],
     "location": [
         "region",
         "city",
-        "neighborhood or area",
+        "neighborhood",
         "exact location",
     ],
     "zip": [
@@ -55,13 +55,13 @@ ABSTRACTION_HIERARCHIES: Dict[str, List[str]] = {
     "date": [
         "month",
         "week",
-        "day",
+        "day range",
         "exact date",
     ],
     "time": [
-        "part of day",
-        "multi-hour window",
+        "day part",
         "hour block",
+        "time window",
         "exact time",
     ],
     "distance_proximity": [
@@ -265,23 +265,23 @@ ABSTRACTION_HIERARCHIES: Dict[str, List[str]] = {
 #   3 = finest   (verbatim — use only when exact value is task-required)
 #
 # Rationale by group:
-#   date / time       → 3  exact values required for calendar-grounded booking
-#   address / location → 1  city/area sufficient for provider or venue discovery
+#   date              → 2  day range sufficient for availability search (H_date: month ≺ week ≺ day range ≺ exact)
+#   time              → 2  time window sufficient for scheduling (H_time: day part ≺ hour block ≺ time window ≺ exact)
+#   address / location → 1  city sufficient for provider or venue discovery (H_loca: region ≺ city ≺ neighborhood ≺ exact)
 #   budget_cost       → 2  approximate limit sufficient; exact amount over-specified
 #   medical (all)     → 1  condition / medication / pregnancy category sufficient
 #   accessibility     → 2  functional type (wheelchair) must be retained for service match
 #   dietary / allergy → 2  specific type usually needed for menu filtering
 #   occasion          → 1  occasion category sufficient; relationship detail unnecessary
 #   prior providers   → 0  named provider history dropped to category
-#   dates / times     → 3  exact values required for calendar-grounded booking
 
 CALIBRATED_ABSTRACTION_POLICY: Dict[str, int] = {
     # Structured constraints
     "address":               1,
     "location":              1,
     "zip":                   1,
-    "date":                  3,
-    "time":                  3,
+    "date":                  2,
+    "time":                  2,
     "distance_proximity":    2,
     "budget_cost":           2,
     "party_size":            2,

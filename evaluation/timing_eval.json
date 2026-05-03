@@ -1,0 +1,120 @@
+{
+  "metadata": {
+    "n_tasks": 1,
+    "models": [
+      "llama3.2",
+      "phi3",
+      "mistral",
+      "qwen2.5:7b",
+      "llama3.1:8b"
+    ],
+    "timestamp": "2026-05-03T02:36:00.515756"
+  },
+  "results": {
+    "llama3.2": {
+      "averages": {
+        "stage1_s": 0.6137,
+        "stage2_s": 6.5623,
+        "stage3b_s": 25.6202,
+        "total_s": 32.7962,
+        "avg_spans_kept": 10.0,
+        "avg_tokens": 101.0
+      },
+      "per_task": [
+        {
+          "task_idx": 0,
+          "stage1_s": 0.6137,
+          "stage2_s": 6.5623,
+          "stage3b_s": 25.6202,
+          "total_s": 32.7962,
+          "spans_kept": 10,
+          "tokens": 101
+        }
+      ]
+    },
+    "phi3": {
+      "averages": {
+        "stage1_s": 0.0384,
+        "stage2_s": 6.1179,
+        "stage3b_s": 5.4636,
+        "total_s": 11.6199,
+        "avg_spans_kept": 32.0,
+        "avg_tokens": 175.0
+      },
+      "per_task": [
+        {
+          "task_idx": 0,
+          "stage1_s": 0.0384,
+          "stage2_s": 6.1179,
+          "stage3b_s": 5.4636,
+          "total_s": 11.6199,
+          "spans_kept": 32,
+          "tokens": 175
+        }
+      ]
+    },
+    "mistral": {
+      "averages": {
+        "stage1_s": 0.0518,
+        "stage2_s": 7.8944,
+        "stage3b_s": 3.5508,
+        "total_s": 11.497,
+        "avg_spans_kept": 10.0,
+        "avg_tokens": 102.0
+      },
+      "per_task": [
+        {
+          "task_idx": 0,
+          "stage1_s": 0.0518,
+          "stage2_s": 7.8944,
+          "stage3b_s": 3.5508,
+          "total_s": 11.497,
+          "spans_kept": 10,
+          "tokens": 102
+        }
+      ]
+    },
+    "qwen2.5:7b": {
+      "averages": {
+        "stage1_s": 0.0284,
+        "stage2_s": 6.3607,
+        "stage3b_s": 3.0778,
+        "total_s": 9.4669,
+        "avg_spans_kept": 5.0,
+        "avg_tokens": 48.0
+      },
+      "per_task": [
+        {
+          "task_idx": 0,
+          "stage1_s": 0.0284,
+          "stage2_s": 6.3607,
+          "stage3b_s": 3.0778,
+          "total_s": 9.4669,
+          "spans_kept": 5,
+          "tokens": 48
+        }
+      ]
+    },
+    "llama3.1:8b": {
+      "averages": {
+        "stage1_s": 0.0615,
+        "stage2_s": 7.7609,
+        "stage3b_s": 3.3881,
+        "total_s": 11.2105,
+        "avg_spans_kept": 10.0,
+        "avg_tokens": 115.0
+      },
+      "per_task": [
+        {
+          "task_idx": 0,
+          "stage1_s": 0.0615,
+          "stage2_s": 7.7609,
+          "stage3b_s": 3.3881,
+          "total_s": 11.2105,
+          "spans_kept": 10,
+          "tokens": 115
+        }
+      ]
+    }
+  }
+}

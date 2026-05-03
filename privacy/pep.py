@@ -46,6 +46,7 @@ Guidelines:
 - Keep details that may help find relevant options.
 - Keep the request natural, specific, and actionable.
 - Phrase it as finding suitable options, not completing the final booking.
+- Preserve the full length and detail of the original message — do not summarise or shorten it.
 - Return only the rewritten request. No explanation.
 """
 
