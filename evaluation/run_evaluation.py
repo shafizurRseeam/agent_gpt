@@ -13,7 +13,7 @@ Implements every metric from the paper's metrics section:
   LRatio^prof  — Source-specific leakage ratio  profile facts
   LRatio^hist  — Source-specific leakage ratio  history facts
   URR          — Utility Retention Rate         (candidate overlap vs naive)
-  TSR          — Task Success Rate              (local judge binary)
+  TSR          — Task Success Rate              (GPT-4o-mini judge, domain match binary)
   PR           — Payload Reduction              (fractional token reduction)
   Latency      — Sanitization latency (s)       (transform time only, 0 for naive)
 
@@ -294,53 +294,77 @@ def match_candidates(naive: List[str], method: List[str]) -> int:
 
 
 # ════════════════════════════════════════════════════════════════════════════════
-# TSR JUDGE  (local LLM binary evaluator)
+# TSR JUDGE  (majority-vote ensemble: GPT-4o-mini + Claude + Gemini)
 # ════════════════════════════════════════════════════════════════════════════════
 
-_TSR_SYSTEM = (
-    "You are evaluating a cloud assistant's response to a delegated task. "
-    "Respond with exactly the digit 1 or 0 — nothing else."
-)
+_TSR_SYSTEM = """\
+You are a task success evaluator for an AI agent system.
+
+You will receive:
+  1. The original user request.
+  2. A cloud assistant's response containing a list of candidates (e.g. providers,
+     venues, services, products, or options).
+
+Your job: determine whether the returned candidates are in the correct domain and
+are actionable for completing the original user request.
+
+Domain match is strict — every returned candidate must belong to the same category
+the user asked for. Examples:
+  - User asks for flower shops → candidates must be flower shops, NOT chocolate shops.
+  - User asks for a water park → candidates must be water parks, NOT amusement parks.
+  - User asks for a cardiologist → candidates must be cardiologists, NOT general practitioners.
+
+Output exactly the digit 1 or 0 — nothing else, no explanation."""
 
 _TSR_PROMPT = """\
-Original user request: {r_t}
-Delegated task frame:  {g_t}
+Original user request:
+{r_t}
 
 Cloud assistant response:
 {response}
 
-Does the response provide at least one specific, usable candidate \
-(provider, option, or actionable result) relevant to the delegated request?
+Are the candidates returned by the cloud assistant in the correct domain and \
+actionable for the original user request?
 
-  1 = yes: response contains relevant candidates or actionable options
-  0 = no:  response is empty, malformed, off-topic, or too generic to use
+  1 = yes: all candidates are in the correct domain and can be used to complete the task
+  0 = no:  candidates are off-domain, wrong category, empty, or too generic to be useful
 
 Answer with 1 or 0:"""
 
 
-def judge_tsr(local_llm, r_t: str, g_t: str, clm_response: str) -> int:
-    """
-    J_local(r_t, g_t, Y_t^m) → {0, 1}.
-    Evaluates whether the CLM response is relevant and actionable for
-    the delegated request.  Falls back to 1 (optimistic) on LLM failure
-    to avoid penalising CLM quality due to judge unavailability.
-    """
-    if local_llm is None:
-        return 1
+def _single_judge_call(clm, messages: list) -> int:
+    """Query one judge LLM and return 0 or 1. Returns 1 on any failure."""
     try:
-        messages = [
-            {"role": "system", "content": _TSR_SYSTEM},
-            {"role": "user",   "content": _TSR_PROMPT.format(
-                r_t      = r_t.strip(),
-                g_t      = (g_t.strip() if g_t else r_t.strip()),
-                response = clm_response.strip()[:1500],
-            )},
-        ]
-        raw = local_llm.chat(messages).strip()
-        m = re.search(r"[01]", raw)
+        raw, _, _ = clm.chat_with_usage(messages)
+        m = re.search(r"[01]", raw.strip())
         return int(m.group()) if m else 1
     except Exception:
-        return 1  # optimistic fallback
+        return 1
+
+
+def judge_tsr(judge_instances: dict, r_t: str, clm_response: str) -> int:
+    """
+    J_judge(r_t, Y_t^m) → {0, 1}.
+
+    Queries all available judge LLMs independently (GPT-4o-mini, Claude, Gemini)
+    and returns 1 if a strict majority (≥2 of 3) vote 1, else 0.
+    This eliminates self-judging bias — GPT's response is judged by Claude and
+    Gemini as well as GPT itself.
+    Falls back to 1 (optimistic) if no judges are available.
+    """
+    if not judge_instances:
+        return 1
+
+    messages = [
+        {"role": "system", "content": _TSR_SYSTEM},
+        {"role": "user",   "content": _TSR_PROMPT.format(
+            r_t      = r_t.strip(),
+            response = clm_response.strip()[:2000],
+        )},
+    ]
+
+    votes = [_single_judge_call(clm, messages) for clm in judge_instances.values()]
+    return 1 if sum(votes) >= 2 else 0
 
 
 # ════════════════════════════════════════════════════════════════════════════════
@@ -411,6 +435,7 @@ def evaluate_task(
     trace_facts:     List[str],
     cloud_instances: Dict[str, CloudLLM],
     cloud_mode:      str,
+    judge_instances: Dict[str, "CloudLLM"],
     n_clm_calls:     int  = 2,
 ) -> dict:
     """
@@ -574,7 +599,7 @@ def evaluate_task(
                     if ci < len(r["call_responses_list"]) else ""
                 )
                 if prov_resp_ci:
-                    tsr_vals.append(judge_tsr(agent.local, task_prompt, g_t, prov_resp_ci))
+                    tsr_vals.append(judge_tsr(judge_instances, task_prompt, prov_resp_ci))
 
             URR_per[prov] = round(sum(urr_vals) / len(urr_vals), 4) if urr_vals else None
             TSR_per[prov] = round(sum(tsr_vals) / len(tsr_vals), 4) if tsr_vals else None
@@ -868,7 +893,7 @@ def print_summary(agg: dict, n_tasks: int) -> None:
     print(f"  RLR      = fraction of tasks leaking ≥1 residual (S^prof ∪ S^hist) fact")
     print(f"  RLRatio  = mean fraction of S^res leaked  per task")
     print(f"  URR      = mean fraction of naive candidates retained (averaged over N paired CLM calls)")
-    print(f"  TSR      = fraction of CLM responses judged actionable (averaged over N calls per payload)")
+    print(f"  TSR      = fraction of CLM responses judged domain-correct and actionable by GPT-4o-mini (averaged over N calls)")
     print(f"  PR       = mean fractional token reduction vs naive payload  ({_TOK_SOURCE})")
     print(f"  Lat ms   = mean sanitization latency in ms  (0 for naive — no transform)")
     print(f"{'═' * W}\n")
@@ -899,7 +924,7 @@ def main() -> None:
         "--local-model", default=None,
         help=(
             "Ollama local model to use for the entire run "
-            "(LC reasoning, PrivScope, PEP, TSR judge). "
+            "(LC reasoning, PrivScope, PEP). "
             "Default: LOCAL_MODEL from config.py (currently llama3.2). "
             "Options: llama3.2, phi3, mistral, qwen2.5:7b, llama3.1:8b"
         ),
@@ -976,9 +1001,24 @@ def main() -> None:
     if not cloud_instances:
         sys.exit("[ERROR] No cloud models could be initialised.")
 
+    # TSR judges — always all three providers for majority-vote, independent of --cloud-mode
+    _all_judge_provs = ["openai", "claude", "gemini"]
+    judge_instances: Dict[str, CloudLLM] = {}
+    for prov in _all_judge_provs:
+        if prov in cloud_instances:
+            judge_instances[prov] = cloud_instances[prov]
+        else:
+            try:
+                judge_instances[prov] = CloudLLM(provider=prov)
+            except Exception as e:
+                print(f"  WARNING: Could not initialise TSR judge '{prov}': {e}")
+    if not judge_instances:
+        print("  WARNING: No TSR judges available — TSR will default to 1 (optimistic).")
+
     cloud_mode = args.cloud_mode
     print(f"  Local LLM  : {agent.local.model}")
     print(f"  Cloud LLM  : {', '.join(cloud_instances.keys())}")
+    print(f"  TSR judges : {', '.join(judge_instances.keys())} (majority vote ≥2/3)")
     print(f"  PrivScope  : Stages 1–3b active")
 
     # ── Evaluate ──────────────────────────────────────────────────────────────
@@ -999,6 +1039,7 @@ def main() -> None:
             trace_facts     = trace_facts,
             cloud_instances = cloud_instances,
             cloud_mode      = cloud_mode,
+            judge_instances = judge_instances,
             n_clm_calls     = args.n_clm_calls,
         )
         results.append(result)

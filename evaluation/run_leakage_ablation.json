@@ -1,0 +1,512 @@
+{
+  "metadata": {
+    "n_tasks": 1,
+    "history_sizes": [
+      0,
+      5,
+      10,
+      20,
+      30,
+      40,
+      50
+    ],
+    "methods": [
+      "naive",
+      "privscope",
+      "presidio",
+      "pep"
+    ],
+    "local_model": "llama3.2",
+    "timestamp": "2026-05-04T16:31:12.495553"
+  },
+  "ablation_results": {
+    "0": {
+      "preloaded_trace": "working_trace_preloaded_0.json",
+      "n_trace_facts": 0,
+      "n_tasks": 1,
+      "aggregates": {
+        "naive": {
+          "n_tasks": 1,
+          "HistLS": 0.0
+        },
+        "privscope": {
+          "n_tasks": 1,
+          "HistLS": 0.0
+        },
+        "presidio": {
+          "n_tasks": 1,
+          "HistLS": 0.0
+        },
+        "pep": {
+          "n_tasks": 1,
+          "HistLS": 0.0
+        }
+      },
+      "tasks": [
+        {
+          "task_idx": 0,
+          "seed_id": "seed_0000",
+          "variant_id": 0,
+          "domain": "medical_booking",
+          "prompt": "I need to book an urgent care visit for this week because I've been experiencing some abdominal pain and I'm concerned it might be an STD. I work night shifts, so I can only do this during the day, preferably near RIT. I tried resting, but the pain hasn't improved, so I’d like to get in as soon as possible.",
+          "naive_payload": "Hi, I'm Bob Smith, a 32-year-old man born on July 14, 1993, residing at 12 ABC St, Rochester, NY. I've been experiencing abdominal pain for some time now and I'm concerned it might be an STD, as I've also noticed [exact symptoms: 'unexplained abdominal pain'] and [additional symptom: 'discomfort during urination']. I work night shifts, which is why I can only book this appointment on weekdays, preferably between Monday and Friday. Given my irregular schedule, I'd like to find a spot that's open in the daytime.",
+          "n_hist_facts": 0,
+          "methods": {
+            "naive": {
+              "payload": "Hi, I'm Bob Smith, a 32-year-old man born on July 14, 1993, residing at 12 ABC St, Rochester, NY. I've been experiencing abdominal pain for some time now and I'm concerned it might be an STD, as I've also noticed [exact symptoms: 'unexplained abdominal pain'] and [additional symptom: 'discomfort during urination']. I work night shifts, which is why I can only book this appointment on weekdays, preferably between Monday and Friday. Given my irregular schedule, I'd like to find a spot that's open in the daytime.",
+              "HistLS": 0.0,
+              "leaked_hist": [],
+              "latency_s": 0.0
+            },
+            "privscope": {
+              "payload": "I've been experiencing Pain symptom for now and I'm concerned it might be an, as I've also noticed [Type category: ''] and [: 'discomfort during urination']. I work, which is why I can only book on Day weekdays, preferably Weekday range. Given my irregular schedule, I'd like to find a spot that's open in the daytime.",
+              "HistLS": 0.0,
+              "leaked_hist": [],
+              "latency_s": 9.307851
+            },
+            "presidio": {
+              "payload": "I've been experiencing abdominal pain for some time now and I'm concerned it might be an, as I've also noticed [exact symptoms: 'unexplained abdominal pain'] and [additional symptom: 'discomfort during urination']. I work shifts, which is why I can only book this appointment, preferably. Given my irregular schedule, I'd like to find a spot that's open in the daytime.",
+              "HistLS": 0.0,
+              "leaked_hist": [],
+              "latency_s": 0.655822
+            },
+            "pep": {
+              "payload": "I'm a 32-year-old man concerned about abdominal pain that may be an STD. I work night shifts and need to book an urgent care visit this week due to persistent pain, which hasn't improved with rest. I'd like to find a location that's open during weekdays (Monday to Friday), preferably near RIT, as my schedule allows only daytime appointments.",
+              "HistLS": 0.0,
+              "leaked_hist": [],
+              "latency_s": 3.220464
+            }
+          }
+        }
+      ]
+    },
+    "5": {
+      "preloaded_trace": "working_trace_preloaded_5.json",
+      "n_trace_facts": 27,
+      "n_tasks": 1,
+      "aggregates": {
+        "naive": {
+          "n_tasks": 1,
+          "HistLS": 0.0
+        },
+        "privscope": {
+          "n_tasks": 1,
+          "HistLS": 0.0
+        },
+        "presidio": {
+          "n_tasks": 1,
+          "HistLS": 0.0
+        },
+        "pep": {
+          "n_tasks": 1,
+          "HistLS": 0.037
+        }
+      },
+      "tasks": [
+        {
+          "task_idx": 0,
+          "seed_id": "seed_0000",
+          "variant_id": 0,
+          "domain": "medical_booking",
+          "prompt": "I need to book an urgent care visit for this week because I've been experiencing some abdominal pain and I'm concerned it might be an STD. I work night shifts, so I can only do this during the day, preferably near RIT. I tried resting, but the pain hasn't improved, so I’d like to get in as soon as possible.",
+          "naive_payload": "I'm Bob Smith, 32 years old, born on July 14, 1993, living at 12 ABC St, Rochester, NY, and can be reached at 585-555-1212 or bob@example.com. I have BlueCross Dental Plus insurance with ID BC-123456-A9.",
+          "n_hist_facts": 27,
+          "methods": {
+            "naive": {
+              "payload": "I'm Bob Smith, 32 years old, born on July 14, 1993, living at 12 ABC St, Rochester, NY, and can be reached at 585-555-1212 or bob@example.com. I have BlueCross Dental Plus insurance with ID BC-123456-A9.",
+              "HistLS": 0.0,
+              "leaked_hist": [],
+              "latency_s": 0.0
+            },
+            "privscope": {
+              "payload": "I'm, adult age, born, living at Rochester, NY, and can be reached. I have insurance type insurance with ID.",
+              "HistLS": 0.0,
+              "leaked_hist": [],
+              "latency_s": 8.500245
+            },
+            "presidio": {
+              "payload": "I'm, born, living at 12, and can be reached.",
+              "HistLS": 0.0,
+              "leaked_hist": [],
+              "latency_s": 0.070106
+            },
+            "pep": {
+              "payload": "I'm seeking urgent care services for abdominal pain concerns this week. I work night shifts and can only visit during the day, with preference for locations near Rochester Institute of Technology. Despite rest, the pain hasn't improved, so I'd like to schedule an appointment as soon as possible.\n\nI have BlueCross Dental Plus insurance; details are available upon request.",
+              "HistLS": 0.037,
+              "leaked_hist": [
+                "night shift"
+              ],
+              "latency_s": 3.216624
+            }
+          }
+        }
+      ]
+    },
+    "10": {
+      "preloaded_trace": "working_trace_preloaded_10.json",
+      "n_trace_facts": 48,
+      "n_tasks": 1,
+      "aggregates": {
+        "naive": {
+          "n_tasks": 1,
+          "HistLS": 0.0
+        },
+        "privscope": {
+          "n_tasks": 1,
+          "HistLS": 0.0
+        },
+        "presidio": {
+          "n_tasks": 1,
+          "HistLS": 0.0
+        },
+        "pep": {
+          "n_tasks": 1,
+          "HistLS": 0.0417
+        }
+      },
+      "tasks": [
+        {
+          "task_idx": 0,
+          "seed_id": "seed_0000",
+          "variant_id": 0,
+          "domain": "medical_booking",
+          "prompt": "I need to book an urgent care visit for this week because I've been experiencing some abdominal pain and I'm concerned it might be an STD. I work night shifts, so I can only do this during the day, preferably near RIT. I tried resting, but the pain hasn't improved, so I’d like to get in as soon as possible.",
+          "naive_payload": "Hi, my name is Bob Smith, I'm 32 years old, born on July 14, 1993, living at 12 ABC St, Rochester, NY, with phone number 585-555-1212 and email bob@example.com. My insurance details are BlueCross Dental Plus, ID BC-123456-A9.",
+          "n_hist_facts": 48,
+          "methods": {
+            "naive": {
+              "payload": "Hi, my name is Bob Smith, I'm 32 years old, born on July 14, 1993, living at 12 ABC St, Rochester, NY, with phone number 585-555-1212 and email bob@example.com. My insurance details are BlueCross Dental Plus, ID BC-123456-A9.",
+              "HistLS": 0.0,
+              "leaked_hist": [],
+              "latency_s": 0.0
+            },
+            "privscope": {
+              "payload": "My insurance details are coverage option, ID.",
+              "HistLS": 0.0,
+              "leaked_hist": [],
+              "latency_s": 8.605536
+            },
+            "presidio": {
+              "payload": "My insurance details, ID BC-123456-A9.",
+              "HistLS": 0.0,
+              "leaked_hist": [],
+              "latency_s": 0.034715
+            },
+            "pep": {
+              "payload": "I'm experiencing abdominal pain that may be related to an STD, and I need to book an urgent care visit this week. As a night shift worker, I can only schedule during the day. Ideally, I'd like to find options near Rochester Institute of Technology (RIT). Despite resting, the pain hasn't improved, so I'm looking for same-day or next-day appointments.",
+              "HistLS": 0.0417,
+              "leaked_hist": [
+                "night shift",
+                "abdominal pain"
+              ],
+              "latency_s": 3.258788
+            }
+          }
+        }
+      ]
+    },
+    "20": {
+      "preloaded_trace": "working_trace_preloaded_20.json",
+      "n_trace_facts": 82,
+      "n_tasks": 1,
+      "aggregates": {
+        "naive": {
+          "n_tasks": 1,
+          "HistLS": 0.0366
+        },
+        "privscope": {
+          "n_tasks": 1,
+          "HistLS": 0.0244
+        },
+        "presidio": {
+          "n_tasks": 1,
+          "HistLS": 0.0122
+        },
+        "pep": {
+          "n_tasks": 1,
+          "HistLS": 0.0488
+        }
+      },
+      "tasks": [
+        {
+          "task_idx": 0,
+          "seed_id": "seed_0000",
+          "variant_id": 0,
+          "domain": "medical_booking",
+          "prompt": "I need to book an urgent care visit for this week because I've been experiencing some abdominal pain and I'm concerned it might be an STD. I work night shifts, so I can only do this during the day, preferably near RIT. I tried resting, but the pain hasn't improved, so I’d like to get in as soon as possible.",
+          "naive_payload": "Hi, I'm Bob Smith, 32 years old, born July 14, 1993, residing at 12 ABC St, Rochester, NY. My phone number is 585-555-1212, and my email address is bob@example.com. I have BlueCross Dental Plus insurance with ID BC-123456-A9.\n\nI'm experiencing abdominal pain and am concerned it might be an STD. Despite trying to rest, the pain hasn't improved. As someone who works night shifts, I can only schedule this during the day, ideally near Rochester Institute of Technology (RIT).\n\nI've previously visited the Strong Memorial Walk-In Clinic on March 12 for a similar issue.\n\nConsidering my limited availability due to work schedules, could you please assist me in booking an urgent care visit as soon as possible this week?",
+          "n_hist_facts": 82,
+          "methods": {
+            "naive": {
+              "payload": "Hi, I'm Bob Smith, 32 years old, born July 14, 1993, residing at 12 ABC St, Rochester, NY. My phone number is 585-555-1212, and my email address is bob@example.com. I have BlueCross Dental Plus insurance with ID BC-123456-A9.\n\nI'm experiencing abdominal pain and am concerned it might be an STD. Despite trying to rest, the pain hasn't improved. As someone who works night shifts, I can only schedule this during the day, ideally near Rochester Institute of Technology (RIT).\n\nI've previously visited the Strong Memorial Walk-In Clinic on March 12 for a similar issue.\n\nConsidering my limited availability due to work schedules, could you please assist me in booking an urgent care visit as soon as possible this week?",
+              "HistLS": 0.0366,
+              "leaked_hist": [
+                "March 12",
+                "night shift",
+                "abdominal pain"
+              ],
+              "latency_s": 0.0
+            },
+            "privscope": {
+              "payload": "I'm experiencing abdominal pain and am concerned it might be an. Despite trying to rest, the pain hasn't improved. As someone who works, I can only schedule this during, ideally near (). I've previously visited on around March 12 for a similar issue. Considering my limited availability due to, could you please assist me in booking an urgent care visit as soon as possible time frame?",
+              "HistLS": 0.0244,
+              "leaked_hist": [
+                "March 12",
+                "abdominal pain"
+              ],
+              "latency_s": 9.173138
+            },
+            "presidio": {
+              "payload": "I'm experiencing abdominal pain and am concerned it might be an. Despite trying to rest, the pain hasn't improved. As someone who works shifts, I can only schedule this during, ideally near (). I've previously visited on for a similar issue. Considering my limited availability due to work schedules, could you please assist me in booking an urgent care visit as soon as possible ?",
+              "HistLS": 0.0122,
+              "leaked_hist": [
+                "abdominal pain"
+              ],
+              "latency_s": 0.049116
+            },
+            "pep": {
+              "payload": "I'm a 32-year-old experiencing abdominal pain and concerned it might be an STD. I work night shifts, so I can only schedule this during the day, preferably near RIT. Despite trying to rest, the pain hasn't improved. As someone who works non-traditional hours, I have limited availability.\n\nI've previously visited a walk-in clinic on March 12 for a similar issue. Considering my limited schedule due to work, could you please assist me in finding an urgent care option near RIT that can accommodate daytime appointments this week?",
+              "HistLS": 0.0488,
+              "leaked_hist": [
+                "March 12",
+                "near RIT",
+                "night shift",
+                "abdominal pain"
+              ],
+              "latency_s": 3.613403
+            }
+          }
+        }
+      ]
+    },
+    "30": {
+      "preloaded_trace": "working_trace_preloaded_30.json",
+      "n_trace_facts": 128,
+      "n_tasks": 1,
+      "aggregates": {
+        "naive": {
+          "n_tasks": 1,
+          "HistLS": 0.0391
+        },
+        "privscope": {
+          "n_tasks": 1,
+          "HistLS": 0.0078
+        },
+        "presidio": {
+          "n_tasks": 1,
+          "HistLS": 0.0078
+        },
+        "pep": {
+          "n_tasks": 1,
+          "HistLS": 0.0312
+        }
+      },
+      "tasks": [
+        {
+          "task_idx": 0,
+          "seed_id": "seed_0000",
+          "variant_id": 0,
+          "domain": "medical_booking",
+          "prompt": "I need to book an urgent care visit for this week because I've been experiencing some abdominal pain and I'm concerned it might be an STD. I work night shifts, so I can only do this during the day, preferably near RIT. I tried resting, but the pain hasn't improved, so I’d like to get in as soon as possible.",
+          "naive_payload": "Hi cloud assistant, it's Bob Smith. I'm experiencing abdominal pain and am concerned it might be an STD. I've been working night shifts and can only do this during the day. Ideally, I'd like to get in near RIT. I tried resting, but the pain hasn't improved, so I'd like to book an urgent care visit ASAP. Here's some additional context: my name is Bob Smith, I'm 32 years old, born on July 14, 1993, and live at 12 ABC St, Rochester, NY. My phone number is 585-555-1212 and email address is bob@example.com. I have BlueCross Dental Plus insurance with ID BC-123456-A9. In the past, I visited Strong Memorial Walk-In Clinic on March 12 for some blood thinner issues and a migraine episode that might be relevant to my current symptoms.",
+          "n_hist_facts": 128,
+          "methods": {
+            "naive": {
+              "payload": "Hi cloud assistant, it's Bob Smith. I'm experiencing abdominal pain and am concerned it might be an STD. I've been working night shifts and can only do this during the day. Ideally, I'd like to get in near RIT. I tried resting, but the pain hasn't improved, so I'd like to book an urgent care visit ASAP. Here's some additional context: my name is Bob Smith, I'm 32 years old, born on July 14, 1993, and live at 12 ABC St, Rochester, NY. My phone number is 585-555-1212 and email address is bob@example.com. I have BlueCross Dental Plus insurance with ID BC-123456-A9. In the past, I visited Strong Memorial Walk-In Clinic on March 12 for some blood thinner issues and a migraine episode that might be relevant to my current symptoms.",
+              "HistLS": 0.0391,
+              "leaked_hist": [
+                "March 12",
+                "near RIT",
+                "night shift",
+                "abdominal pain",
+                "insurance"
+              ],
+              "latency_s": 0.0
+            },
+            "privscope": {
+              "payload": "Hi cloud assistant, it's. I'm experiencing abdominal pain symptoms and am concerned it might be an. I've been working can only do this during. Ideally, I'd like to get in near a prior provider. I tried resting, but the pain hasn't improved, so I'd like to book an urgent care visit. Here's : I'm, born, and live at Rochester, NY. In the past, I visited on for a migraine episode that might be relevant to my current symptoms.",
+              "HistLS": 0.0078,
+              "leaked_hist": [
+                "abdominal pain"
+              ],
+              "latency_s": 8.962396
+            },
+            "presidio": {
+              "payload": "Hi cloud assistant, it's. I'm experiencing abdominal pain and am concerned it might be an. I've been working shifts and can only do this during. Ideally, I'd like to get. I tried resting, but the pain hasn't improved, so I'd like to book an urgent care visit. Here's some additional context: I'm, born, and live at 12. My phone number is email address. In the past, I visited Strong Memorial Walk-In Clinic on for some blood thinner issues and a migraine episode that might be relevant to my current symptoms.",
+              "HistLS": 0.0078,
+              "leaked_hist": [
+                "abdominal pain"
+              ],
+              "latency_s": 0.051144
+            },
+            "pep": {
+              "payload": "Hi cloud assistant, I'm experiencing abdominal pain and am concerned it might be an STD. Working night shifts limits my availability, so I'd prefer to visit during the day. Ideally, I'd like to find urgent care options near RIT. Tried resting, but pain persists; looking for ASAP visits. Additional context: previously visited Strong Memorial Walk-In Clinic on March 12 for blood thinner issues and a migraine episode that might be relevant.",
+              "HistLS": 0.0312,
+              "leaked_hist": [
+                "March 12",
+                "near RIT",
+                "night shift",
+                "abdominal pain"
+              ],
+              "latency_s": 3.271615
+            }
+          }
+        }
+      ]
+    },
+    "40": {
+      "preloaded_trace": "working_trace_preloaded_40.json",
+      "n_trace_facts": 166,
+      "n_tasks": 1,
+      "aggregates": {
+        "naive": {
+          "n_tasks": 1,
+          "HistLS": 0.0361
+        },
+        "privscope": {
+          "n_tasks": 1,
+          "HistLS": 0.0181
+        },
+        "presidio": {
+          "n_tasks": 1,
+          "HistLS": 0.0241
+        },
+        "pep": {
+          "n_tasks": 1,
+          "HistLS": 0.0301
+        }
+      },
+      "tasks": [
+        {
+          "task_idx": 0,
+          "seed_id": "seed_0000",
+          "variant_id": 0,
+          "domain": "medical_booking",
+          "prompt": "I need to book an urgent care visit for this week because I've been experiencing some abdominal pain and I'm concerned it might be an STD. I work night shifts, so I can only do this during the day, preferably near RIT. I tried resting, but the pain hasn't improved, so I’d like to get in as soon as possible.",
+          "naive_payload": "Hi, I'm Bob Smith, 32 years old born on July 14, 1993. My address is 12 ABC St, Rochester, NY, and my phone number is 585-555-1212. My insurance ID for dental care is BC-123456-A9.\n\nI'm experiencing abdominal pain that hasn't improved with rest, and I suspect it might be an STD. Given my night shift work schedule, I need to find a solution during the day near RIT. \n\nI previously visited Strong Memorial Walk-In Clinic on March 12. In addition to this visit, I booked a dermatology appointment at a clinic nearby that is within walking distance of my apartment, but I don't have the specific date or location information for this appointment.\n\nFor my next available daytime appointment, preferably near RIT, I am seeking urgent care due to abdominal pain and potential STD symptoms. \n\nPlease let me know if there are any appointments or locations in the area that meet these conditions.",
+          "n_hist_facts": 166,
+          "methods": {
+            "naive": {
+              "payload": "Hi, I'm Bob Smith, 32 years old born on July 14, 1993. My address is 12 ABC St, Rochester, NY, and my phone number is 585-555-1212. My insurance ID for dental care is BC-123456-A9.\n\nI'm experiencing abdominal pain that hasn't improved with rest, and I suspect it might be an STD. Given my night shift work schedule, I need to find a solution during the day near RIT. \n\nI previously visited Strong Memorial Walk-In Clinic on March 12. In addition to this visit, I booked a dermatology appointment at a clinic nearby that is within walking distance of my apartment, but I don't have the specific date or location information for this appointment.\n\nFor my next available daytime appointment, preferably near RIT, I am seeking urgent care due to abdominal pain and potential STD symptoms. \n\nPlease let me know if there are any appointments or locations in the area that meet these conditions.",
+              "HistLS": 0.0361,
+              "leaked_hist": [
+                "March 12",
+                "walking distance",
+                "near RIT",
+                "night shift",
+                "abdominal pain",
+                "insurance"
+              ],
+              "latency_s": 0.0
+            },
+            "privscope": {
+              "payload": "My, and My insurance ID for care type. I'm experiencing symptom that hasn't improved with rest, and I suspect it might be an provider. Given my night shift work schedule, I need to find a solution during near provider. I previously visited walk-in place. In addition to, I booked a dermatology appointment at a clinic nearby that is within walking distance of my apartment, but I don't have the specific date or for appointment. For my next available appointment, preferably near provider, I am seeking urgent center due to symptom. Please let me know if there are or locations in the area that meet.",
+              "HistLS": 0.0181,
+              "leaked_hist": [
+                "walking distance",
+                "night shift",
+                "insurance"
+              ],
+              "latency_s": 9.398685
+            },
+            "presidio": {
+              "payload": "My address is 12, and My insurance ID for dental care. I'm experiencing abdominal pain that hasn't improved with rest, and I suspect it might be an. Given my night shift work schedule, I need to find a solution during. In addition to this visit, I booked a dermatology appointment at a clinic nearby that is within walking distance of my apartment, but I don't have the specific date or location information for this appointment. For my next available appointment, preferably, I am seeking urgent care due to abdominal pain and potential symptoms. Please let me know if there are any appointments or locations in the area that meet these conditions.",
+              "HistLS": 0.0241,
+              "leaked_hist": [
+                "walking distance",
+                "night shift",
+                "abdominal pain",
+                "insurance"
+              ],
+              "latency_s": 0.051229
+            },
+            "pep": {
+              "payload": "I'm experiencing abdominal pain that hasn't improved with rest, and I suspect it might be an STD. Given my night shift work schedule, I need to find a solution during the day near RIT. \n\nPreviously, I visited Strong Memorial Walk-In Clinic on March 12. In addition to this visit, I booked a dermatology appointment at a clinic nearby that is within walking distance of my apartment. However, I don't have the specific date or location information for this appointment.\n\nFor my next available daytime appointment, preferably near RIT, I am seeking urgent care due to abdominal pain and potential STD symptoms. \n\nPlease let me know if there are any appointments or locations in the area that meet these conditions.",
+              "HistLS": 0.0301,
+              "leaked_hist": [
+                "March 12",
+                "walking distance",
+                "near RIT",
+                "night shift",
+                "abdominal pain"
+              ],
+              "latency_s": 3.933747
+            }
+          }
+        }
+      ]
+    },
+    "50": {
+      "preloaded_trace": "working_trace_preloaded_50.json",
+      "n_trace_facts": 207,
+      "n_tasks": 1,
+      "aggregates": {
+        "naive": {
+          "n_tasks": 1,
+          "HistLS": 0.0145
+        },
+        "privscope": {
+          "n_tasks": 1,
+          "HistLS": 0.0048
+        },
+        "presidio": {
+          "n_tasks": 1,
+          "HistLS": 0.0048
+        },
+        "pep": {
+          "n_tasks": 1,
+          "HistLS": 0.0145
+        }
+      },
+      "tasks": [
+        {
+          "task_idx": 0,
+          "seed_id": "seed_0000",
+          "variant_id": 0,
+          "domain": "medical_booking",
+          "prompt": "I need to book an urgent care visit for this week because I've been experiencing some abdominal pain and I'm concerned it might be an STD. I work night shifts, so I can only do this during the day, preferably near RIT. I tried resting, but the pain hasn't improved, so I’d like to get in as soon as possible.",
+          "naive_payload": "Hello, I need to schedule an urgent care visit as soon as possible because I've been experiencing some abdominal pain and I'm concerned it might be an STD. I work night shifts, so I can only do this during the day, preferably near RIT. I tried resting, but the pain hasn't improved, so I’d like to get in as soon as possible.",
+          "n_hist_facts": 207,
+          "methods": {
+            "naive": {
+              "payload": "Hello, I need to schedule an urgent care visit as soon as possible because I've been experiencing some abdominal pain and I'm concerned it might be an STD. I work night shifts, so I can only do this during the day, preferably near RIT. I tried resting, but the pain hasn't improved, so I’d like to get in as soon as possible.",
+              "HistLS": 0.0145,
+              "leaked_hist": [
+                "near RIT",
+                "night shift",
+                "abdominal pain"
+              ],
+              "latency_s": 0.0
+            },
+            "privscope": {
+              "payload": "Hello, I need to schedule an urgent care visit as soon as possible because I've been experiencing abdominal pain and I'm concerned it might be an a prior provider. I work, so I can only do this during, preferably near health center. I tried resting, but the pain hasn't improved, so I’d like to get in as soon as possible.",
+              "HistLS": 0.0048,
+              "leaked_hist": [
+                "abdominal pain"
+              ],
+              "latency_s": 8.493273
+            },
+            "presidio": {
+              "payload": "Hello, I need to schedule an urgent care visit as soon as possible because I've been experiencing some abdominal pain and I'm concerned it might be an. I work shifts, so I can only do this during, preferably. I tried resting, but the pain hasn't improved, so I’d like to get in as soon as possible.",
+              "HistLS": 0.0048,
+              "leaked_hist": [
+                "abdominal pain"
+              ],
+              "latency_s": 0.033021
+            },
+            "pep": {
+              "payload": "I'm experiencing abdominal pain that hasn't improved with rest, and I'm concerned it might be an STD. Given my night shift schedule, I need to visit during the day. Can you suggest urgent care options near RIT?",
+              "HistLS": 0.0145,
+              "leaked_hist": [
+                "near RIT",
+                "night shift",
+                "abdominal pain"
+              ],
+              "latency_s": 2.890362
+            }
+          }
+        }
+      ]
+    }
+  }
+}

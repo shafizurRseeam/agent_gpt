@@ -1,14 +1,14 @@
 {
   "metadata": {
     "n_tasks_evaluated": 1,
-    "n_tasks_total": 60,
+    "n_tasks_total": 1,
     "tasks_file": "task_prompts.json",
     "trace_file": "working_trace.json",
     "local_model": "llama3.2",
     "cloud_mode": "all",
     "cloud_models": {
       "openai": "gpt-4o-mini-2024-07-18",
-      "claude": "claude-sonnet-4-6",
+      "claude": "claude-haiku-4-5-20251001",
       "gemini": "gemini-2.5-flash"
     },
     "methods": [
@@ -23,19 +23,19 @@
   "aggregates": {
     "naive": {
       "LR": 1.0,
-      "LRatio": 0.25,
-      "RLR": 0.0,
-      "RLRatio": 0.0,
-      "LRatio_cur": 0.25,
-      "LRatio_prof": 0.0,
+      "LRatio": 0.75,
+      "RLR": 1.0,
+      "RLRatio": 0.3684,
+      "LRatio_cur": 0.75,
+      "LRatio_prof": 0.3684,
       "LRatio_hist": null,
       "PR": 0.0,
       "avg_latency_s": 0.0,
-      "avg_token_count": 42.0,
+      "avg_token_count": 134.0,
       "avg_clm_tokens": {
-        "openai": 190.0,
-        "claude": 299.0,
-        "gemini": 206.0
+        "openai": 200.0,
+        "claude": 251.0,
+        "gemini": 242.0
       },
       "n_tasks": 1,
       "URR": {
@@ -45,32 +45,32 @@
       },
       "TSR": {
         "openai": 1.0,
-        "claude": 0.0,
-        "gemini": 0.0
+        "claude": 1.0,
+        "gemini": 1.0
       },
       "URR_mean": 1.0,
-      "TSR_mean": 0.3333
+      "TSR_mean": 1.0
     },
     "privscope": {
-      "LR": 0.0,
-      "LRatio": 0.0,
+      "LR": 1.0,
+      "LRatio": 0.5,
       "RLR": 0.0,
       "RLRatio": 0.0,
-      "LRatio_cur": 0.0,
+      "LRatio_cur": 0.5,
       "LRatio_prof": 0.0,
       "LRatio_hist": null,
-      "PR": 0.0476,
-      "avg_latency_s": 9.3467,
-      "avg_token_count": 40.0,
+      "PR": 0.306,
+      "avg_latency_s": 9.6217,
+      "avg_token_count": 93.0,
       "avg_clm_tokens": {
-        "openai": 186.0,
-        "claude": 274.0,
-        "gemini": 255.0
+        "openai": 196.0,
+        "claude": 195.0,
+        "gemini": 233.0
       },
       "n_tasks": 1,
       "URR": {
         "openai": 0.8,
-        "claude": 0.5,
+        "claude": 0.0,
         "gemini": 0.0
       },
       "TSR": {
@@ -78,67 +78,67 @@
         "claude": 0.0,
         "gemini": 1.0
       },
-      "URR_mean": 0.4333,
+      "URR_mean": 0.2667,
       "TSR_mean": 0.6667
     },
     "presidio": {
       "LR": 1.0,
-      "LRatio": 0.25,
+      "LRatio": 0.5,
       "RLR": 0.0,
       "RLRatio": 0.0,
-      "LRatio_cur": 0.25,
+      "LRatio_cur": 0.5,
       "LRatio_prof": 0.0,
       "LRatio_hist": null,
-      "PR": 0.0238,
-      "avg_latency_s": 0.5773,
-      "avg_token_count": 41.0,
+      "PR": 0.3806,
+      "avg_latency_s": 0.9623,
+      "avg_token_count": 83.0,
       "avg_clm_tokens": {
-        "openai": 189.0,
-        "claude": 303.0,
-        "gemini": 30.0
+        "openai": 179.0,
+        "claude": 245.0,
+        "gemini": 263.0
       },
       "n_tasks": 1,
       "URR": {
-        "openai": 0.8,
-        "claude": 0.0,
+        "openai": 0.0,
+        "claude": 0.2,
         "gemini": 0.0
       },
       "TSR": {
         "openai": 1.0,
-        "claude": 1.0,
-        "gemini": 0.0
+        "claude": 0.0,
+        "gemini": 1.0
       },
-      "URR_mean": 0.2667,
+      "URR_mean": 0.0667,
       "TSR_mean": 0.6667
     },
     "pep": {
-      "LR": 0.0,
-      "LRatio": 0.0,
-      "RLR": 0.0,
-      "RLRatio": 0.0,
-      "LRatio_cur": 0.0,
-      "LRatio_prof": 0.0,
+      "LR": 1.0,
+      "LRatio": 0.75,
+      "RLR": 1.0,
+      "RLRatio": 0.1053,
+      "LRatio_cur": 0.75,
+      "LRatio_prof": 0.1053,
       "LRatio_hist": null,
-      "PR": -0.5952,
-      "avg_latency_s": 3.0954,
-      "avg_token_count": 67.0,
+      "PR": 0.3657,
+      "avg_latency_s": 3.5587,
+      "avg_token_count": 85.0,
       "avg_clm_tokens": {
-        "openai": 215.0,
-        "claude": 334.0,
-        "gemini": 248.0
+        "openai": 226.0,
+        "claude": 291.0,
+        "gemini": 222.0
       },
       "n_tasks": 1,
       "URR": {
-        "openai": 0.8,
-        "claude": 0.0,
-        "gemini": 0.0
+        "openai": 0.4,
+        "claude": 0.2,
+        "gemini": 1.0
       },
       "TSR": {
         "openai": 1.0,
-        "claude": 1.0,
-        "gemini": 0.0
+        "claude": 0.0,
+        "gemini": 1.0
       },
-      "URR_mean": 0.2667,
+      "URR_mean": 0.5333,
       "TSR_mean": 0.6667
     }
   },
@@ -148,12 +148,12 @@
       "seed_id": "seed_0000",
       "variant_id": 0,
       "domain": "medical_booking",
-      "prompt": "Help me get a urgent care visit — tomorrow morning, earliest slot. I have been dealing with migraine history. Medicine failed. I need this no home mail. I really need to get checked.",
+      "prompt": "I need to book an urgent care visit for this week because I've been experiencing some abdominal pain and I'm concerned it might be an STD. I work night shifts, so I can only do this during the day, preferably near RIT. I tried resting, but the pain hasn't improved, so I’d like to get in as soon as possible.",
       "cur_facts": [
-        "blood thinners",
-        "migraine history",
-        "March 12",
-        "no home mail"
+        "abdominal pain",
+        "STD concern",
+        "night shift",
+        "near RIT"
       ],
       "profile_facts": [
         "Bob Smith",
@@ -181,39 +181,57 @@
       "n_prof": 19,
       "n_hist": 0,
       "n_res": 19,
-      "naive_payload": "Hello Cloud Assistant, I urgently need an urgent care visit for my migraine symptoms which have not been relieved by medicine. I've been experiencing [migraine history], and my previous attempts with medication were unsuccessful.",
-      "naive_token_count": 42,
-      "lc_reasoning": "Based on the available local data, I will assemble a rich cloud-bound message that maximizes task utility by over-including relevant information. Here is the",
-      "task_frame_g_t": "urgent care visit search; constraints: date (tomorrow), time preference (earliest slot), medical history (migraine), no home mail required; requirements: medical professional with experience in migraine treatment, venue availability; personal constraints: low priority for waiting time",
+      "naive_payload": "I'm Bob Smith, a 32-year-old male born on July 14, 1993, residing at 12 ABC St, Rochester, NY. I've been experiencing abdominal pain and am concerned it might be an STD due to my work schedule as a night shift worker. Despite resting, the pain hasn't improved. I'd like to book an urgent care visit for this week, preferably during the day near RIT (River Campus), to address this concern. My contact information is phone: 585-555-1212 and email: bob@example.com. I have insurance coverage through BlueCross Dental Plus with policy ID BC-123456-A9.",
+      "naive_token_count": 134,
+      "lc_reasoning": "Based on the available local data, I will pack the following information into the",
+      "task_frame_g_t": "urgent care visit search; constraints: provider availability near RIT, date within this week, scheduling flexibility; requirements: near workplace, night shift constraint; personal constraint: STD concern, rest unsuccessful relief.",
       "methods": {
         "naive": {
           "method": "naive",
-          "payload": "Hello Cloud Assistant, I urgently need an urgent care visit for my migraine symptoms which have not been relieved by medicine. I've been experiencing [migraine history], and my previous attempts with medication were unsuccessful.",
-          "clm_response": "Here are some urgent care providers that can assist you with your migraine symptoms:\n\n1. CityMD Urgent Care\n   Address: 123 Main St, Anytown, USA\n   Phone: (555) 123-4567\n\n2. MedExpress Urgent Care\n   Address: 456 Elm St, Anytown, USA\n   Phone: (555) 234-5678\n\n3. AFC Urgent Care\n   Address: 789 Oak St, Anytown, USA\n   Phone: (555) 345-6789\n\n4. Urgent Care Center\n   Address: 321 Pine St, Anytown, USA\n   Phone: (555) 456-7890\n\n5. Physicians Immediate Care\n   Address: 654 Maple St, Anytown, USA\n   Phone: (555) 567-8901\n\nPlease contact them to confirm services and availability.",
+          "payload": "I'm Bob Smith, a 32-year-old male born on July 14, 1993, residing at 12 ABC St, Rochester, NY. I've been experiencing abdominal pain and am concerned it might be an STD due to my work schedule as a night shift worker. Despite resting, the pain hasn't improved. I'd like to book an urgent care visit for this week, preferably during the day near RIT (River Campus), to address this concern. My contact information is phone: 585-555-1212 and email: bob@example.com. I have insurance coverage through BlueCross Dental Plus with policy ID BC-123456-A9.",
+          "clm_response": "Here are some urgent care providers near RIT (River Campus) in Rochester, NY:\n\n1. **Rochester Regional Health Immediate Care**\n   Address: 1180 South Ave, Rochester, NY 14620  \n   Phone: 585-268-3500\n\n2. **Unity Urgent Care**\n   Address: 300 Crittenden Blvd, Rochester, NY 14620  \n   Phone: 585-368-3000\n\n3. **UR Medicine Urgent Care**\n   Address: 300 East River Rd, Rochester, NY 14623  \n   Phone: 585-275-7500\n\n4. **WellNow Urgent Care**\n   Address: 10 Calkins Rd, Rochester, NY 14623  \n   Phone: 585-275-7500\n\n5. **Fast Track Urgent Care**\n   Address: 1515 East Ave, Rochester, NY 14610  \n   Phone: 585-266-8000",
           "clm_responses": {
-            "openai": "Here are some urgent care providers that can assist you with your migraine symptoms:\n\n1. CityMD Urgent Care\n   Address: 123 Main St, Anytown, USA\n   Phone: (555) 123-4567\n\n2. MedExpress Urgent Care\n   Address: 456 Elm St, Anytown, USA\n   Phone: (555) 234-5678\n\n3. AFC Urgent Care\n   Address: 789 Oak St, Anytown, USA\n   Phone: (555) 345-6789\n\n4. Urgent Care Center\n   Address: 321 Pine St, Anytown, USA\n   Phone: (555) 456-7890\n\n5. Physicians Immediate Care\n   Address: 654 Maple St, Anytown, USA\n   Phone: (555) 567-8901\n\nPlease contact them to confirm services and availability.",
-            "claude": "I understand you're in pain and need help quickly. However, I need to be straightforward with you:\n\n**I cannot provide real local provider listings** because:\n- I don't know your location\n- I could fabricate addresses/phone numbers, which would be dangerous in a medical situation\n\n---\n\n**For immediate help RIGHT NOW:**\n\n- **Call 911** if symptoms are severe\n- **Call 988** (crisis/health line)\n- **Text your ZIP code to**: Search \"[your city] urgent care\" on Google Maps for **verified, real-time results**\n\n---\n\n**To find real urgent care near you:**\n\n1. **Google Maps** → search \"urgent care near me\"\n2. **Zocdoc.com** → same-day appointments\n3. **Solv.com** → urgent care finder\n4. **Your insurance app** → in-network providers\n\n---\n\n⚠️ **Important**: If your migraine includes:\n- Sudden severe \"thunderclap\" headache\n- Vision changes\n- Confusion or weakness\n- Stiff neck\n\n**Go to an Emergency Room immediately or call 911** — these can be signs of something serious.\n\nPlease share your location/ZIP code if you'd like help directing you to a **reliable search resource** specific to your area. Feel free well soon! 💙",
-            "gemini": "1. Carbon Health Urgent Care Los Angeles\n   Address: 730 S Flower St, Los Angeles, CA 90017\n   Phone: (213) 259-2500\n2. Exer Urgent Care - Downtown LA\n   Address: 620 W 8th St, Los Angeles, CA 90017\n   Phone: (213) 226-1000\n3. Dignity Health-GoHealth Urgent Care - Silver Lake\n   Address: 4611 W Sunset Blvd, Los Angeles, CA 90027\n   Phone: (323) 538-2300\n4. CityMD Urgent Care - Downtown Los Angeles\n   Address: 757 S Olive St, Los Angeles, CA 90014\n   Phone: (213) 622-2489"
+            "openai": "Here are some urgent care providers near RIT (River Campus) in Rochester, NY:\n\n1. **Rochester Regional Health Immediate Care**\n   Address: 1180 South Ave, Rochester, NY 14620  \n   Phone: 585-268-3500\n\n2. **Unity Urgent Care**\n   Address: 300 Crittenden Blvd, Rochester, NY 14620  \n   Phone: 585-368-3000\n\n3. **UR Medicine Urgent Care**\n   Address: 300 East River Rd, Rochester, NY 14623  \n   Phone: 585-275-7500\n\n4. **WellNow Urgent Care**\n   Address: 10 Calkins Rd, Rochester, NY 14623  \n   Phone: 585-275-7500\n\n5. **Fast Track Urgent Care**\n   Address: 1515 East Ave, Rochester, NY 14610  \n   Phone: 585-266-8000",
+            "claude": "# Urgent Care Providers Near RIT, Rochester, NY\n\n1. Urgent Care of Rochester\n   Address: 1150 University Avenue, Rochester, NY 14607\n   Phone: 585-273-4600\n\n2. Fast Pace Urgent Care - East Avenue\n   Address: 260 East Avenue, Rochester, NY 14604\n   Phone: 585-454-8000\n\n3. CareNow Urgent Care - Rochester\n   Address: 1635 Hayward Avenue, Rochester, NY 14620\n   Phone: 585-271-3900\n\n4. Rochester Regional Health Urgent Care\n   Address: 1425 Portland Avenue, Rochester, NY 14621\n   Phone: 585-922-4000\n\n5. Lumerence Urgent Care\n   Address: 1000 East Ridge Road, Rochester, NY 14621\n   Phone: 585-641-2340\n\n**Note:** Most urgent care facilities offer daytime hours and can address abdominal pain concerns. Contact your preferred provider directly to schedule an appointment this week. Bring your insurance card and photo ID.",
+            "gemini": "Here are up to 5 local urgent care providers near RIT (River Campus) in Rochester, NY:\n\n1.  **UR Medicine Urgent Care at College Town**\n    Address: 1337 Mt Hope Ave, Rochester, NY 14620\n    Phone: (585) 275-8282\n2.  **WellNow Urgent Care - Rochester (Mt. Hope Ave)**\n    Address: 1500 Mt Hope Ave, Rochester, NY 14620\n    Phone: (585) 270-2000\n3.  **Rochester Regional Health | Unity Immediate Care - Brighton**\n    Address: 920 Winton Rd, Rochester, NY 14618\n    Phone: (585) 784-2550\n4.  **UR Medicine Urgent Care at St. Mary's Campus**\n    Address: 89 Genesee St, Rochester, NY 14611\n    Phone: (585) 368-6000"
           },
           "clm_response_tokens": {
-            "openai": 190,
-            "claude": 299,
-            "gemini": 206
+            "openai": 200,
+            "claude": 251,
+            "gemini": 242
           },
           "sanitization_latency_s": 0.0,
-          "token_count": 42,
+          "token_count": 134,
           "leaked_cur": [
-            "migraine history"
+            "abdominal pain",
+            "night shift",
+            "near RIT"
           ],
-          "leaked_prof": [],
+          "leaked_prof": [
+            "Bob Smith",
+            "July 14, 1993",
+            "12 ABC St, Rochester, NY",
+            "585-555-1212",
+            "bob@example.com",
+            "BC-123456-A9",
+            "BlueCross Dental Plus"
+          ],
           "leaked_hist": [],
-          "leaked_res": [],
+          "leaked_res": [
+            "Bob Smith",
+            "July 14, 1993",
+            "12 ABC St, Rochester, NY",
+            "585-555-1212",
+            "bob@example.com",
+            "BC-123456-A9",
+            "BlueCross Dental Plus"
+          ],
           "LR": 1,
-          "LRatio": 0.25,
-          "RLR": 0,
-          "RLRatio": 0.0,
-          "LRatio_cur": 0.25,
-          "LRatio_prof": 0.0,
+          "LRatio": 0.75,
+          "RLR": 1,
+          "RLRatio": 0.3684,
+          "LRatio_cur": 0.75,
+          "LRatio_prof": 0.3684,
           "LRatio_hist": null,
           "URR": {
             "openai": 1.0,
@@ -222,41 +240,44 @@
           },
           "TSR": {
             "openai": 1.0,
-            "claude": 0.0,
-            "gemini": 0.0
+            "claude": 1.0,
+            "gemini": 1.0
           },
           "PR": 0.0
         },
         "privscope": {
           "method": "privscope",
-          "payload": "Hello Assistant, I urgently need an urgent care visit for my migraine symptoms which have not been relieved by medicine. I've been experiencing [care-history category], and my previous attempts with medication were unsuccessful.",
-          "clm_response": "Here are some urgent care providers you can visit for your migraine symptoms:\n\n1. MedExpress Urgent Care  \n   Address: 1234 Main St, Anytown, USA  \n   Phone: (555) 123-4567  \n\n2. Urgent Care Center  \n   Address: 5678 Elm St, Anytown, USA  \n   Phone: (555) 234-5678  \n\n3. CityHealth Urgent Care  \n   Address: 9101 Maple Ave, Anytown, USA  \n   Phone: (555) 345-6789  \n\n4. FastCare Urgent Medical  \n   Address: 1122 Oak St, Anytown, USA  \n   Phone: (555) 456-7890  \n\n5. PromptCare Clinic  \n   Address: 1314 Pine St, Anytown, USA  \n   Phone: (555) 567-8901  ",
+          "payload": "I'm, a Day range 32-37 male born, residing. I've been experiencing Abdominal pain and am concerned it might be an due to my work schedule as a night shift worker. Despite resting, the pain hasn't improved. I'd like to book an urgent care visit for Day range this week, preferably during near Prior provider (), to address This concern. My contact information is phone: email:. I have through Coverage category with policy ID.",
+          "clm_response": "Here are some urgent care providers near you:\n\n1. MedExpress Urgent Care\n   Address: 123 Main St, Your City, State, ZIP\n   Phone: (555) 123-4567\n\n2. Concentra Urgent Care\n   Address: 456 Elm St, Your City, State, ZIP\n   Phone: (555) 234-5678\n\n3. Urgent Care Center\n   Address: 789 Oak St, Your City, State, ZIP\n   Phone: (555) 345-6789\n\n4. FastMed Urgent Care\n   Address: 321 Pine St, Your City, State, ZIP\n   Phone: (555) 456-7890\n\n5. American Family Care\n   Address: 654 Maple St, Your City, State, ZIP\n   Phone: (555) 567-8901\n\nPlease contact them directly to confirm their availability and to book an appointment.",
           "clm_responses": {
-            "openai": "Here are some urgent care providers you can visit for your migraine symptoms:\n\n1. MedExpress Urgent Care  \n   Address: 1234 Main St, Anytown, USA  \n   Phone: (555) 123-4567  \n\n2. Urgent Care Center  \n   Address: 5678 Elm St, Anytown, USA  \n   Phone: (555) 234-5678  \n\n3. CityHealth Urgent Care  \n   Address: 9101 Maple Ave, Anytown, USA  \n   Phone: (555) 345-6789  \n\n4. FastCare Urgent Medical  \n   Address: 1122 Oak St, Anytown, USA  \n   Phone: (555) 456-7890  \n\n5. PromptCare Clinic  \n   Address: 1314 Pine St, Anytown, USA  \n   Phone: (555) 567-8901  ",
-            "claude": "I understand you're in pain and need help quickly. However, I want to be straightforward with you:\n\n**I cannot provide real local provider listings** because:\n- I don't have access to your location\n- I could generate fabricated names, addresses, and phone numbers that aren't real, which could delay your care\n\n---\n\n## Here's How to Find Urgent Care Fast Right Now:\n\n**1. Google/Apple Maps**\n- Search: *\"urgent care near me\"* or *\"migraine urgent care\"*\n\n**2. Call 211**\n- Connects you to local health services\n\n**3. Insurance Provider App/Website**\n- Search in-network urgent care locations\n\n**4. Zocdoc.com or Solv.com**\n- Real-time urgent care availability near you\n\n---\n\n## ⚠️ Important:\nIf your migraine is accompanied by:\n- Sudden severe (\"thunderclap\") headache\n- Vision changes\n- Weakness/numbness\n- Confusion or fever\n\n**→ Go to an Emergency Room or call 911 immediately.** These can indicate a serious condition.\n\n---\n\nI hope you feel better soon. Please seek care right away! 🏥",
-            "gemini": "Here are some urgent care providers that can help with migraine symptoms (please note: these are examples in a major city; search for providers in your specific location):\n\n1.  **CityMD Union Square**\n    Address: 144 2nd Ave, New York, NY 10003\n    Phone: (212) 358-1440\n2.  **NYU Langone Health - Urgent Care Center**\n    Address: 222 E 14th St, New York, NY 10003\n    Phone: (646) 929-7900\n3.  **Northwell Health-GoHealth Urgent Care - East 14th Street**\n    Address: 240 E 14th St, New York, NY 10003\n    Phone: (646) 880-6999\n4.  **Mount Sinai-Union Square**\n    Address: 10 Union Sq E, New York, NY 10003\n    Phone: (212) 844-6000"
+            "openai": "Here are some urgent care providers near you:\n\n1. MedExpress Urgent Care\n   Address: 123 Main St, Your City, State, ZIP\n   Phone: (555) 123-4567\n\n2. Concentra Urgent Care\n   Address: 456 Elm St, Your City, State, ZIP\n   Phone: (555) 234-5678\n\n3. Urgent Care Center\n   Address: 789 Oak St, Your City, State, ZIP\n   Phone: (555) 345-6789\n\n4. FastMed Urgent Care\n   Address: 321 Pine St, Your City, State, ZIP\n   Phone: (555) 456-7890\n\n5. American Family Care\n   Address: 654 Maple St, Your City, State, ZIP\n   Phone: (555) 567-8901\n\nPlease contact them directly to confirm their availability and to book an appointment.",
+            "claude": "I appreciate you reaching out, but I notice your request is missing some key information I need to help you find urgent care providers:\n\n**Please provide:**\n- Your city and state/location\n- Your preferred day(s) and time(s) this week\n- Your insurance provider name (you mentioned \"Coverage category\" but didn't specify which)\n\n**Once you provide these details, I can give you:**\n- Up to 5 local urgent care providers\n- Their addresses and phone numbers\n- Information to help you schedule an appointment\n\n**In the meantime:**\n- Call your insurance's nurse hotline (number on your insurance card) for urgent guidance\n- Search your insurance provider's website for \"in-network urgent care near me\"\n- If pain is severe, consider emergency services (call 911)\n\nPlease reply with your location and preferred appointment times, and I'll provide specific providers right away.",
+            "gemini": "1. City Urgent Care Center\n   Address: 123 Main St, Anytown, CA 90210\n   Phone: (555) 100-2000\n2. SwiftCare Clinic\n   Address: 456 Oak Ave, Anytown, CA 90210\n   Phone: (555) 100-2001\n3. Neighborhood Walk-in Clinic\n   Address: 789 Pine Ln, Anytown, CA 90210\n   Phone: (555) 100-2002\n4. ExpressCare Medical Center\n   Address: 101 Elm Blvd, Anytown, CA 90210\n   Phone: (555) 100-2003\n5. Premier Urgent Care\n   Address: 222 Maple Dr, Anytown, CA 90210\n   Phone: (555) 100-2004"
           },
           "clm_response_tokens": {
-            "openai": 186,
-            "claude": 274,
-            "gemini": 255
+            "openai": 196,
+            "claude": 195,
+            "gemini": 233
           },
-          "sanitization_latency_s": 9.346655,
-          "token_count": 40,
-          "leaked_cur": [],
+          "sanitization_latency_s": 9.621655,
+          "token_count": 93,
+          "leaked_cur": [
+            "abdominal pain",
+            "night shift"
+          ],
           "leaked_prof": [],
           "leaked_hist": [],
           "leaked_res": [],
-          "LR": 0,
-          "LRatio": 0.0,
+          "LR": 1,
+          "LRatio": 0.5,
           "RLR": 0,
           "RLRatio": 0.0,
-          "LRatio_cur": 0.0,
+          "LRatio_cur": 0.5,
           "LRatio_prof": 0.0,
           "LRatio_hist": null,
           "URR": {
             "openai": 0.8,
-            "claude": 0.5,
+            "claude": 0.0,
             "gemini": 0.0
           },
           "TSR": {
@@ -264,87 +285,98 @@
             "claude": 0.0,
             "gemini": 1.0
           },
-          "PR": 0.0476
+          "PR": 0.306
         },
         "presidio": {
           "method": "presidio",
-          "payload": "Hello Assistant, I urgently need an urgent care visit for my migraine symptoms which have not been relieved by medicine. I've been experiencing [migraine history], and my previous attempts with medication were unsuccessful.",
-          "clm_response": "Here are some urgent care providers that can assist you with your migraine symptoms:\n\n1. MedExpress Urgent Care  \n   Address: 1234 Main St, Anytown, USA  \n   Phone: (555) 123-4567  \n\n2. AFC Urgent Care  \n   Address: 5678 Elm St, Anytown, USA  \n   Phone: (555) 234-5678  \n\n3. NextCare Urgent Care  \n   Address: 9101 Oak St, Anytown, USA  \n   Phone: (555) 345-6789  \n\n4. Patient First Urgent Care  \n   Address: 1122 Maple Ave, Anytown, USA  \n   Phone: (555) 456-7890  \n\n5. URGENT CARE Center  \n   Address: 1314 Pine St, Anytown, USA  \n   Phone: (555) 567-8901  ",
+          "payload": "I'm, a male born, residing at 12. I've been experiencing abdominal pain and am concerned it might be an due to my work schedule as a night shift worker. Despite resting, the pain hasn't improved. I'd like to book an urgent care visit, preferably during near (), to address this concern. My contact information is phone: email:. I have insurance coverage through with policy ID BC--.",
+          "clm_response": "Here are some urgent care providers you can consider for your abdominal pain:\n\n1. MedExpress Urgent Care\n   Address: 123 Main St, Anytown, USA\n   Phone: (555) 123-4567\n\n2. AFC Urgent Care\n   Address: 456 Oak St, Anytown, USA\n   Phone: (555) 234-5678\n\n3. Patient First\n   Address: 789 Pine St, Anytown, USA\n   Phone: (555) 345-6789\n\n4. NextCare Urgent Care\n   Address: 321 Maple St, Anytown, USA\n   Phone: (555) 456-7890\n\n5. CareNow Urgent Care\n   Address: 654 Cedar St, Anytown, USA\n   Phone: (555) 567-8901",
           "clm_responses": {
-            "openai": "Here are some urgent care providers that can assist you with your migraine symptoms:\n\n1. MedExpress Urgent Care  \n   Address: 1234 Main St, Anytown, USA  \n   Phone: (555) 123-4567  \n\n2. AFC Urgent Care  \n   Address: 5678 Elm St, Anytown, USA  \n   Phone: (555) 234-5678  \n\n3. NextCare Urgent Care  \n   Address: 9101 Oak St, Anytown, USA  \n   Phone: (555) 345-6789  \n\n4. Patient First Urgent Care  \n   Address: 1122 Maple Ave, Anytown, USA  \n   Phone: (555) 456-7890  \n\n5. URGENT CARE Center  \n   Address: 1314 Pine St, Anytown, USA  \n   Phone: (555) 567-8901  ",
-            "claude": "I understand you're in pain and need help quickly. However, I must be transparent with you:\n\n**I cannot provide real local provider listings** because:\n- I don't know your location\n- I could generate fictitious business names, addresses, and phone numbers, which could be dangerous in a medical situation\n\n## Please use these reliable options RIGHT NOW:\n\n**Find Real Urgent Care Near You:**\n- 🔍 **Google:** Search *\"urgent care near me\"*\n- 📱 **Zocdoc.com** - real-time availability\n- 🏥 **Solv.com** - urgent care finder\n- ☎️ **Call 211** - health services referral line\n\n## ⚠️ Important Migraine Warning:\nIf you experience any of these, call **911 or go to the ER immediately:**\n- Sudden, **worst headache of your life**\n- Confusion or vision changes\n- Weakness or numbness\n- Stiff neck with fever\n\n**Severe migraines unrelieved by medication can warrant an ER visit**, where IV medications like DHE or antiemetics can provide stronger relief.\n\nPlease share your **city or zip code** if you'd like guidance on what *types* of facilities to look for, and I'll help you think through your best options safely.",
-            "gemini": "To provide you with the most accurate local urgent care clinics for your migraine symptoms, please share your current location (city, state, or zip code)."
+            "openai": "Here are some urgent care providers you can consider for your abdominal pain:\n\n1. MedExpress Urgent Care\n   Address: 123 Main St, Anytown, USA\n   Phone: (555) 123-4567\n\n2. AFC Urgent Care\n   Address: 456 Oak St, Anytown, USA\n   Phone: (555) 234-5678\n\n3. Patient First\n   Address: 789 Pine St, Anytown, USA\n   Phone: (555) 345-6789\n\n4. NextCare Urgent Care\n   Address: 321 Maple St, Anytown, USA\n   Phone: (555) 456-7890\n\n5. CareNow Urgent Care\n   Address: 654 Cedar St, Anytown, USA\n   Phone: (555) 567-8901",
+            "claude": "I appreciate you reaching out, but I need to let you know that I don't have access to:\n\n1. Your current location (the address appears incomplete)\n2. Real-time availability of urgent care facilities\n3. Your insurance provider's in-network facilities\n4. Current business hours and appointment availability\n\n**To find urgent care services, I recommend:**\n\n1. **Call your insurance provider** - Use the number on your insurance card to find in-network urgent care centers near you\n2. **Search online** - Use Google Maps or Urgent Care finder apps and search \"urgent care near me\"\n3. **Call your primary care doctor** - They can refer you to appropriate urgent care facilities\n4. **Visit an urgent care website** - Most allow online appointment booking\n\n**For abdominal pain concerns, consider:**\n- Going directly to an ER if you experience severe pain, fever, vomiting, or other serious symptoms\n- Urgent care is suitable for moderate pain that hasn't improved with rest\n\nIf you can provide your city/town, I'd be happy to help you with general information about finding urgent care in that area.",
+            "gemini": "Here are some urgent care providers that might be able to help:\n\n1.  **UrgentCare Express**\n    Address: 123 Main Street, Anytown, USA 12345\n    Phone: (555) 123-4567\n2.  **SwiftCare Clinic**\n    Address: 456 Oak Avenue, Anytown, USA 12345\n    Phone: (555) 234-5678\n3.  **MediQuick Walk-In**\n    Address: 789 Pine Lane, Anytown, USA 12345\n    Phone: (555) 345-6789\n4.  **City Health Urgent Care**\n    Address: 101 Elm Street, Anytown, USA 12345\n    Phone: (555) 456-7890\n5.  **Community Urgent Care Center**\n    Address: 202 Maple Drive, Anytown, USA 12345\n    Phone: (555) 567-8901"
           },
           "clm_response_tokens": {
-            "openai": 189,
-            "claude": 303,
-            "gemini": 30
+            "openai": 179,
+            "claude": 245,
+            "gemini": 263
           },
-          "sanitization_latency_s": 0.577288,
-          "token_count": 41,
+          "sanitization_latency_s": 0.962253,
+          "token_count": 83,
           "leaked_cur": [
-            "migraine history"
+            "abdominal pain",
+            "night shift"
           ],
           "leaked_prof": [],
           "leaked_hist": [],
           "leaked_res": [],
           "LR": 1,
-          "LRatio": 0.25,
+          "LRatio": 0.5,
           "RLR": 0,
           "RLRatio": 0.0,
-          "LRatio_cur": 0.25,
+          "LRatio_cur": 0.5,
           "LRatio_prof": 0.0,
           "LRatio_hist": null,
           "URR": {
-            "openai": 0.8,
-            "claude": 0.0,
+            "openai": 0.0,
+            "claude": 0.2,
             "gemini": 0.0
           },
           "TSR": {
             "openai": 1.0,
-            "claude": 1.0,
-            "gemini": 0.0
+            "claude": 0.0,
+            "gemini": 1.0
           },
-          "PR": 0.0238
+          "PR": 0.3806
         },
         "pep": {
           "method": "pep",
-          "payload": "I urgently need an urgent care visit for migraine symptoms which have not been relieved by medicine. I've been experiencing a history of recurring migraines, and my previous attempts with medication were unsuccessful, including a recent failed attempt to alleviate my symptoms. Can you please provide me with information on available options for same-day appointments at urgent care centers?",
-          "clm_response": "Sure! Here are some urgent care providers where you can seek immediate help for your migraine symptoms:\n\n1. CityMD Urgent Care\n   Address: 123 Main St, Cityville, ST 12345\n   Phone: (123) 456-7890\n\n2. MedExpress Urgent Care\n   Address: 456 Elm St, Cityville, ST 12345\n   Phone: (123) 654-3210\n\n3. AFC Urgent Care\n   Address: 789 Pine St, Cityville, ST 12345\n   Phone: (123) 987-6543\n\n4. NextCare Urgent Care\n   Address: 321 Oak St, Cityville, ST 12345\n   Phone: (123) 321-9876\n\n5. Urgent Care Center\n   Address: 159 Maple St, Cityville, ST 12345\n   Phone: (123) 159-7534\n\nMake sure to call ahead for availability and to confirm if they can accommodate your urgent visit.",
+          "payload": "I'm seeking urgent care visits for abdominal pain this week due to concerns about a possible STD. As a night shift worker, I'm available during the day and prefer locations near RIT (River Campus). Despite resting, the pain persists. I'd like to explore options for an appointment soon. I work at [current employer] and have insurance coverage through BlueCross Dental Plus with policy ID BC-123456-A9.",
+          "clm_response": "Here are some urgent care providers near the River Campus of RIT that can help you with your abdominal pain:\n\n1. UR Medicine Urgent Care\n   Address: 200 East River Road, Rochester, NY 14623\n   Phone: (585) 275-2100\n\n2. Rochester Regional Health Urgent Care\n   Address: 4599 W Henrietta Rd, Rochester, NY 14623\n   Phone: (585) 272-1500\n\n3. AFC Urgent Care Rochester\n   Address: 2660 W Henrietta Rd, Rochester, NY 14623\n   Phone: (585) 321-0750\n\n4. MedAmerica Urgent Care\n   Address: 1450 Portland Ave, Rochester, NY 14621\n   Phone: (585) 288-0390\n\n5. Immediate Care West\n   Address: 2100 W Henrietta Rd, Rochester, NY 14623\n   Phone: (585) 272-1150\n\nMake sure to call ahead to confirm they accept your insurance and to check for availability for appointments.",
           "clm_responses": {
-            "openai": "Sure! Here are some urgent care providers where you can seek immediate help for your migraine symptoms:\n\n1. CityMD Urgent Care\n   Address: 123 Main St, Cityville, ST 12345\n   Phone: (123) 456-7890\n\n2. MedExpress Urgent Care\n   Address: 456 Elm St, Cityville, ST 12345\n   Phone: (123) 654-3210\n\n3. AFC Urgent Care\n   Address: 789 Pine St, Cityville, ST 12345\n   Phone: (123) 987-6543\n\n4. NextCare Urgent Care\n   Address: 321 Oak St, Cityville, ST 12345\n   Phone: (123) 321-9876\n\n5. Urgent Care Center\n   Address: 159 Maple St, Cityville, ST 12345\n   Phone: (123) 159-7534\n\nMake sure to call ahead for availability and to confirm if they can accommodate your urgent visit.",
-            "claude": "I understand you're in significant pain. Here are some urgent care options to consider, but please note I cannot verify real-time availability:\n\n**⚠️ Important First:** If your migraine is the **\"worst headache of your life,\"** accompanied by fever, stiff neck, vision changes, or weakness, **call 911 or go to an ER immediately.**\n\n---\n\nSince I don't know your location, here are **general provider types** to search right now:\n\n1. **CityMD Urgent Care**\n   Address: Search [citymd.com] for nearest location\n   Phone: (800) 692-4893\n\n2. **AFC Urgent Care**\n   Address: Search [afcurgentcare.com] for nearest location\n   Phone: (866) 923-4968\n\n3. **MedExpress Urgent Care**\n   Address: Search [medexpress.com] for nearest location\n   Phone: (888) 633-9737\n\n4. **NextCare Urgent Care**\n   Address: Search [nextcare.com] for nearest location\n   Phone: (888) 381-4858\n\n5. **Concentra Urgent Care**\n   Address: Search [concentra.com] for nearest location\n   Phone: (800) 266-3873\n\n---\n\n**Quick Tips:**\n- Call ahead to confirm migraine treatment availability\n- Many offer **telehealth** for faster access\n- Share your location for more specific results",
-            "gemini": "1.  **Concentra Urgent Care**\n    Address: 123 Main St, Anytown, USA 12345\n    Phone: (555) 123-4567\n2.  **AFC Urgent Care**\n    Address: 456 Oak Ave, Anytown, USA 12345\n    Phone: (555) 234-5678\n3.  **MedExpress Urgent Care**\n    Address: 789 Pine Ln, Anytown, USA 12345\n    Phone: (555) 345-6789\n4.  **Physicians Immediate Care**\n    Address: 101 Elm Blvd, Anytown, USA 12345\n    Phone: (555) 456-7890\n5.  **CVS MinuteClinic**\n    Address: 222 Maple Dr, Anytown, USA 12345\n    Phone: (555) 567-8901"
+            "openai": "Here are some urgent care providers near the River Campus of RIT that can help you with your abdominal pain:\n\n1. UR Medicine Urgent Care\n   Address: 200 East River Road, Rochester, NY 14623\n   Phone: (585) 275-2100\n\n2. Rochester Regional Health Urgent Care\n   Address: 4599 W Henrietta Rd, Rochester, NY 14623\n   Phone: (585) 272-1500\n\n3. AFC Urgent Care Rochester\n   Address: 2660 W Henrietta Rd, Rochester, NY 14623\n   Phone: (585) 321-0750\n\n4. MedAmerica Urgent Care\n   Address: 1450 Portland Ave, Rochester, NY 14621\n   Phone: (585) 288-0390\n\n5. Immediate Care West\n   Address: 2100 W Henrietta Rd, Rochester, NY 14623\n   Phone: (585) 272-1150\n\nMake sure to call ahead to confirm they accept your insurance and to check for availability for appointments.",
+            "claude": "I appreciate you sharing those details, but I should clarify what I can help with:\n\n**I cannot provide actual local service provider listings** because I don't have access to current, real-time databases of urgent care facilities, their hours, locations, or availability near RIT's River Campus (Rochester, NY area).\n\n**For your situation, I recommend:**\n\n1. **Call your insurance directly** - BlueCross can provide an in-network urgent care locator and verify coverage\n2. **Use these resources:**\n   - Your insurance member portal/app\n   - Urgent care finder tools (UrgentCare.com, ZocDoc)\n   - Google Maps for \"urgent care near RIT Rochester\"\n   - Call RIT's health services for referrals\n\n3. **Call ahead** to confirm:\n   - Same-week appointments available\n   - Daytime/evening hours\n   - In-network status\n   - What to bring (insurance card, ID, etc.)\n\n**Important:** If symptoms worsen (severe pain, fever, vomiting), consider an ER visit instead.\n\nYour insurance policy number and employer details are sensitive—I'd recommend not sharing those in online requests. Keep that information only for direct calls with providers and your insurance company.\n\nIs there other guidance I can provide about preparing for your visit?",
+            "gemini": "Here are a few urgent care options near RIT River Campus:\n\n1.  **UR Medicine Urgent Care - Brighton**\n    Address: 900 Clinton Ave S, Rochester, NY 14620\n    Phone: (585) 275-5020\n2.  **Rochester Regional Health | Immediate Care - Henrietta**\n    Address: 1255 Jefferson Rd, Rochester, NY 14623\n    Phone: (585) 922-1900\n3.  **UR Medicine Urgent Care - College Town**\n    Address: 1333 South Ave, Rochester, NY 14620\n    Phone: (585) 275-5555\n4.  **WellNow Urgent Care - Henrietta**\n    Address: 2815 W Henrietta Rd, Rochester, NY 14623\n    Phone: (585) 292-1200"
           },
           "clm_response_tokens": {
-            "openai": 215,
-            "claude": 334,
-            "gemini": 248
+            "openai": 226,
+            "claude": 291,
+            "gemini": 222
           },
-          "sanitization_latency_s": 3.095392,
-          "token_count": 67,
-          "leaked_cur": [],
-          "leaked_prof": [],
+          "sanitization_latency_s": 3.558681,
+          "token_count": 85,
+          "leaked_cur": [
+            "abdominal pain",
+            "night shift",
+            "near RIT"
+          ],
+          "leaked_prof": [
+            "BC-123456-A9",
+            "BlueCross Dental Plus"
+          ],
           "leaked_hist": [],
-          "leaked_res": [],
-          "LR": 0,
-          "LRatio": 0.0,
-          "RLR": 0,
-          "RLRatio": 0.0,
-          "LRatio_cur": 0.0,
-          "LRatio_prof": 0.0,
+          "leaked_res": [
+            "BC-123456-A9",
+            "BlueCross Dental Plus"
+          ],
+          "LR": 1,
+          "LRatio": 0.75,
+          "RLR": 1,
+          "RLRatio": 0.1053,
+          "LRatio_cur": 0.75,
+          "LRatio_prof": 0.1053,
           "LRatio_hist": null,
           "URR": {
-            "openai": 0.8,
-            "claude": 0.0,
-            "gemini": 0.0
+            "openai": 0.4,
+            "claude": 0.2,
+            "gemini": 1.0
           },
           "TSR": {
             "openai": 1.0,
-            "claude": 1.0,
-            "gemini": 0.0
+            "claude": 0.0,
+            "gemini": 1.0
           },
-          "PR": -0.5952
+          "PR": 0.3657
         }
       }
     }
