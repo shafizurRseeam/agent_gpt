@@ -66,7 +66,7 @@ class HybridAgent:
 
     def _first_free_date(self):
         for t in self.state.get("memory_traces", []):
-            if t["source"] == "tool:get_calendar":
+            if t.get("source") == "tool:get_calendar":
                 free = t["data"].get("free_slots", [])
                 if free:
                     return free[0].split()[0]
@@ -224,7 +224,7 @@ INFERRED CONTEXT:"""
         # Pull availability from memory traces if present
         availability = ""
         for t in traces:
-            if t["source"] == "tool:get_calendar":
+            if t.get("source") == "tool:get_calendar":
                 free = t["data"].get("free_slots", [])
                 availability = f"User is free on: {', '.join(free)}" if free else ""
 
