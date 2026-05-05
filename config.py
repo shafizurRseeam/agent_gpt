@@ -2,7 +2,7 @@ PROVIDER = "openai"
 
 MODEL_CONFIG = {
     "openai": "gpt-4o-mini-2024-07-18",
-    "claude": "claude-sonnet-4-6",
+    "claude": "claude-haiku-4-5-20251001",
     "gemini": "gemini-2.5-flash",
 }
 

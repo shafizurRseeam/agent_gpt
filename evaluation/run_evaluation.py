@@ -122,21 +122,36 @@ def load_tasks(path: Path) -> List[dict]:
     return tasks
 
 
-def load_profile_facts(path: Path) -> List[str]:
+_TIER1_FIELDS = {
+    "name", "dob", "phone", "email", "ssn", "passport_number",
+    "driver_license", "insurance_id", "patient_id", "credit_card",
+    "membership_id", "frequent_flyer_number", "hotel_loyalty_id", "vehicle_plate",
+}
+_TIER2_FIELDS = {"address", "insurance"}
+
+
+def load_profile_facts(path: Path):
     """
     Extract all non-trivial string values from user_profile.
-    These form S^prof — the persistent profile sensitive fact set.
-    Integer/float values are converted to strings (e.g. age 32 → "32").
-    Values shorter than 3 characters are skipped.
+    Returns (facts: List[str], weight_map: Dict[str, float]).
+    Tier 1 direct identifiers → w=1.0, Tier 2 quasi-identifiers → w=0.6,
+    Tier 3 contextual attributes → w=0.3.
     """
-    data = _load_json(path)
+    data    = _load_json(path)
     profile = data.get("user_profile", {}) if isinstance(data, dict) else {}
-    facts = []
-    for v in profile.values():
+    facts, weight_map = [], {}
+    for k, v in profile.items():
         s = str(v).strip() if v is not None else ""
         if len(s) >= 3:
             facts.append(s)
-    return facts
+            k_lower = k.lower()
+            if k_lower in _TIER1_FIELDS:
+                weight_map[s] = 1.0
+            elif k_lower in _TIER2_FIELDS:
+                weight_map[s] = 0.6
+            else:
+                weight_map[s] = 0.3
+    return facts, weight_map
 
 
 def load_trace_facts(runtime_path: Path, preloaded_path: Path = None) -> List[str]:
@@ -252,6 +267,39 @@ def leaking_facts(facts: List[str], payload: str) -> List[str]:
         return []
     pl = payload.lower()
     return [f for f in facts if len(f) >= 3 and f.lower() in pl]
+
+
+# ════════════════════════════════════════════════════════════════════════════════
+# ILS AND WLS
+# ════════════════════════════════════════════════════════════════════════════════
+
+def injection_leakage_severity(
+    state_facts: List[str],
+    payload:     str,
+    request:     str,
+) -> Optional[float]:
+    """ILS = |Reveal(S^state, P^m) \ Reveal(S^state, r_t)| / |S^state|"""
+    if not state_facts:
+        return None
+    already  = set(leaking_facts(state_facts, request))
+    in_pay   = set(leaking_facts(state_facts, payload))
+    injected = in_pay - already
+    return round(len(injected) / len(state_facts), 4)
+
+
+def weighted_leakage_severity(
+    facts:      List[str],
+    payload:    str,
+    weight_map: Dict[str, float],
+    default_w:  float = 0.6,
+) -> Optional[float]:
+    """WLS = Σ w(f) for f in Reveal(S,P) / Σ w(f) for f in S"""
+    if not facts:
+        return None
+    leaked    = leaking_facts(facts, payload)
+    numerator = sum(weight_map.get(f, default_w) for f in leaked)
+    denom     = sum(weight_map.get(f, default_w) for f in facts)
+    return round(numerator / denom, 4) if denom else 0.0
 
 
 # ════════════════════════════════════════════════════════════════════════════════
@@ -436,6 +484,7 @@ def evaluate_task(
     cloud_instances: Dict[str, CloudLLM],
     cloud_mode:      str,
     judge_instances: Dict[str, "CloudLLM"],
+    weight_map:      Dict[str, float],
     n_clm_calls:     int  = 2,
 ) -> dict:
     """
@@ -565,6 +614,13 @@ def evaluate_task(
         LRatio_prof = round(len(leaked_prof) / n_prof, 4) if n_prof else None
         LRatio_hist = round(len(leaked_hist) / n_hist, 4) if n_hist else None
 
+        # ILS: state facts injected by LC beyond what user stated in r_t
+        ILS = injection_leakage_severity(residual_facts, payload, task_prompt)
+
+        # WLS: weighted leakage over full sensitive set (Tier1=1.0, Tier2=0.6, Tier3=0.3)
+        all_facts = list(dict.fromkeys(cur_facts + residual_facts))
+        WLS = weighted_leakage_severity(all_facts, payload, weight_map)
+
         # PR: (tok(P_t) - tok(P_t^m)) / tok(P_t)
         tok_method = count_tokens(payload)
         PR = round((naive_tokens - tok_method) / naive_tokens, 4) if naive_tokens > 0 else 0.0
@@ -631,6 +687,8 @@ def evaluate_task(
             "LRatio":                  LRatio,
             "RLR":                     RLR,
             "RLRatio":                 RLRatio,
+            "ILS":                     ILS,
+            "WLS":                     WLS,
             "LRatio_cur":              LRatio_cur,
             "LRatio_prof":             LRatio_prof,
             "LRatio_hist":             LRatio_hist,
@@ -692,6 +750,7 @@ def compute_aggregates(results: List[dict]) -> dict:
     for method in _METHODS:
         acc: Dict[str, list] = {k: [] for k in (
             "LR", "LRatio", "RLR", "RLRatio",
+            "ILS", "WLS",
             "LRatio_cur", "LRatio_prof", "LRatio_hist",
             "PR", "latency_s", "token_count",
         )}
@@ -712,6 +771,7 @@ def compute_aggregates(results: List[dict]) -> dict:
             if not m:
                 continue
             for key in ("LR", "LRatio", "RLR", "RLRatio",
+                        "ILS", "WLS",
                         "LRatio_cur", "LRatio_prof", "LRatio_hist", "PR"):
                 if m.get(key) is not None:
                     acc[key].append(m[key])
@@ -743,6 +803,8 @@ def compute_aggregates(results: List[dict]) -> dict:
             "LRatio":          _mean(acc["LRatio"]),
             "RLR":             _mean(acc["RLR"]),
             "RLRatio":         _mean(acc["RLRatio"]),
+            "ILS":             _mean(acc["ILS"]),
+            "WLS":             _mean(acc["WLS"]),
             "LRatio_cur":      _mean(acc["LRatio_cur"]),
             "LRatio_prof":     _mean(acc["LRatio_prof"]),
             "LRatio_hist":     _mean(acc["LRatio_hist"]),
@@ -873,6 +935,20 @@ def print_summary(agg: dict, n_tasks: int) -> None:
                 row2 += f"  {tok_(resp_tok):>{tok_col_w}}"
             print(row2)
 
+    # ILS and WLS
+    print(f"\n  Injection & Weighted Leakage Severity:")
+    print(f"  {'Method':<12}  {'ILS':>8}  {'WLS':>8}")
+    print(f"  {'─'*12}  {'─'*8}  {'─'*8}")
+    for method in _METHODS:
+        a = agg.get(method, {})
+        if a.get("n_tasks", 0) == 0:
+            continue
+        print(
+            f"  {method:<12}  "
+            f"{pct(a.get('ILS')):>8}  "
+            f"{pct(a.get('WLS')):>8}"
+        )
+
     # Source-specific LRatio
     print(f"\n  Source-specific LRatio (fraction of each fact type leaked):")
     print(f"  {'Method':<12}  {'LRatio^cur':>10}  {'LRatio^prof':>11}  {'LRatio^hist':>11}")
@@ -892,6 +968,8 @@ def print_summary(agg: dict, n_tasks: int) -> None:
     print(f"  LRatio   = mean fraction of S^cur leaked  per task")
     print(f"  RLR      = fraction of tasks leaking ≥1 residual (S^prof ∪ S^hist) fact")
     print(f"  RLRatio  = mean fraction of S^res leaked  per task")
+    print(f"  ILS      = Injection Leakage Severity: state facts injected by LC beyond r_t / |S^state|")
+    print(f"  WLS      = Weighted Leakage Severity: PII-tier weighted leakage (T1=1.0, T2=0.6, T3=0.3)")
     print(f"  URR      = mean fraction of naive candidates retained (averaged over N paired CLM calls)")
     print(f"  TSR      = fraction of CLM responses judged domain-correct and actionable by GPT-4o-mini (averaged over N calls)")
     print(f"  PR       = mean fractional token reduction vs naive payload  ({_TOK_SOURCE})")
@@ -967,7 +1045,7 @@ def main() -> None:
     # ── Load data ─────────────────────────────────────────────────────────────
     print("\nLoading evaluation data …")
     all_tasks     = load_tasks(Path(args.tasks_file))
-    profile_facts = load_profile_facts(_PROFILE_FILE)
+    profile_facts, weight_map = load_profile_facts(_PROFILE_FILE)
 
     preloaded_facts = load_trace_facts(_PRELOADED_TRACE_FILE)
     runtime_facts   = load_trace_facts(trace_path)
@@ -1040,6 +1118,7 @@ def main() -> None:
             cloud_instances = cloud_instances,
             cloud_mode      = cloud_mode,
             judge_instances = judge_instances,
+            weight_map      = weight_map,
             n_clm_calls     = args.n_clm_calls,
         )
         results.append(result)
