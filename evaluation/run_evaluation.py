@@ -57,11 +57,11 @@ import privacy.pep       as pep_baseline
 from llm.cloud_router    import CloudLLM
 
 # ── Canonical file paths ──────────────────────────────────────────────────────
-_TASKS_FILE            = _ROOT / "task_generated" / "task_prompts.json"
-_PROFILE_FILE          = _ROOT / "state" / "profile_state.json"
-_PRELOADED_TRACE_FILE  = _ROOT / "state" / "working_trace_preloaded.json"
-_DEFAULT_TRACE_FILE    = _ROOT / "state" / "working_trace.json"
-_RESULTS_FILE          = Path(__file__).resolve().parent / "run_evaluation.json"
+_TASKS_FILE        = _ROOT / "task_generated" / "task_prompts.json"
+_PROFILE_FILE      = _ROOT / "state" / "profile_state.json"
+_BACKSTORY_FILE    = _ROOT / "state" / "memory_backstory.json"   # fixed pre-memory, never reset
+_TRACE_FILE        = _ROOT / "state" / "working_trace.json"      # grows during eval, reset between runs
+_RESULTS_FILE      = Path(__file__).resolve().parent / "run_evaluation.json"
 
 _METHODS          = ("naive", "privscope", "presidio", "pep")
 _CLOUD_PROVIDERS  = ("openai", "claude", "gemini")
@@ -154,12 +154,11 @@ def load_profile_facts(path: Path):
     return facts, weight_map
 
 
-def load_trace_facts(runtime_path: Path, preloaded_path: Path = None) -> List[str]:
+def load_trace_facts() -> List[str]:
     """
-    Extract data-field values from memory trace files.
-    Loads from preloaded_path first (permanent backstory), then runtime_path
-    (run-time accumulation). Only the 'data' payload of each trace entry is
-    extracted — metadata fields are excluded to avoid circular contamination.
+    Extract sensitive fact strings from memory traces.
+    Loads backstory first (fixed, never reset), then working_trace (grows during eval).
+    Only 'data' payload of each entry is extracted to avoid circular contamination.
     """
     def _facts_from_file(p: Path) -> List[str]:
         data = _load_json(p, required=False)
@@ -172,10 +171,9 @@ def load_trace_facts(runtime_path: Path, preloaded_path: Path = None) -> List[st
                 out.extend(_extract_strings(entry.get("data")))
         return out
 
-    all_facts = _facts_from_file(preloaded_path) if preloaded_path else []
-    all_facts += _facts_from_file(runtime_path)
+    all_facts = _facts_from_file(_BACKSTORY_FILE)   # pre-existing history — never reset
+    all_facts += _facts_from_file(_TRACE_FILE)       # runtime accumulation — reset between runs
 
-    # Deduplicate while preserving encounter order
     seen: set = set()
     deduped: List[str] = []
     for f in all_facts:
@@ -205,28 +203,34 @@ def _extract_strings(obj, min_len: int = 3) -> List[str]:
 # TRACE FILE HELPERS  (path-aware; do not rely on state_io hardcoded paths)
 # ════════════════════════════════════════════════════════════════════════════════
 
-def _append_trace(trace_path: Path, entry: dict) -> None:
-    """Append one entry to the specified trace file (not the state_io default)."""
+def _append_trace(entry: dict) -> None:
+    """Append one entry to working_trace.json (runtime accumulation only)."""
     data: dict = {"memory_traces": []}
-    if trace_path.exists():
+    if _TRACE_FILE.exists():
         try:
-            data = json.loads(trace_path.read_text(encoding="utf-8"))
+            data = json.loads(_TRACE_FILE.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             pass
     data.setdefault("memory_traces", []).append(entry)
-    trace_path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    _TRACE_FILE.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
-def _reload_agent_traces(agent: HybridAgent, trace_path: Path) -> None:
+def _reset_working_trace() -> None:
+    """Clear working_trace.json only. Backstory is never touched."""
+    _TRACE_FILE.write_text(json.dumps({"memory_traces": []}, indent=2), encoding="utf-8")
+
+
+def _reload_agent_traces(agent: HybridAgent) -> None:
     """
-    Refresh agent.state['memory_traces'] from both the preloaded backstory
-    and the run-time trace file. Preloaded entries come first.
+    Refresh agent.state['memory_traces'] from:
+      1. memory_backstory.json  — fixed pre-existing history, never reset
+      2. working_trace.json     — runtime accumulation, reset between eval runs
     """
     traces: list = []
-    pre = _load_json(_PRELOADED_TRACE_FILE, required=False)
-    if pre:
-        traces.extend(pre.get("memory_traces", []))
-    runtime = _load_json(trace_path, required=False)
+    backstory = _load_json(_BACKSTORY_FILE, required=False)
+    if backstory:
+        traces.extend(backstory.get("memory_traces", []))
+    runtime = _load_json(_TRACE_FILE, required=False)
     if runtime:
         traces.extend(runtime.get("memory_traces", []))
     agent.state["memory_traces"] = traces
@@ -1025,21 +1029,9 @@ def main() -> None:
             "hallucination variance cancels in the mean URR."
         ),
     )
-    ap.add_argument(
-        "--trace-file", default=str(_DEFAULT_TRACE_FILE),
-        help=(
-            "Path to the working trace JSON to use as S^hist baseline and to grow during eval. "
-            "Default: state/working_trace.json. "
-            "Ablation variants: state/working_trace_0.json  …  state/working_trace_25.json"
-        ),
-    )
     args = ap.parse_args()
 
-    out_path   = Path(args.out)
-    trace_path = Path(args.trace_file)
-    # Resolve relative paths against the project root
-    if not trace_path.is_absolute():
-        trace_path = _ROOT / trace_path
+    out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     # ── Load data ─────────────────────────────────────────────────────────────
@@ -1047,19 +1039,20 @@ def main() -> None:
     all_tasks     = load_tasks(Path(args.tasks_file))
     profile_facts, weight_map = load_profile_facts(_PROFILE_FILE)
 
-    preloaded_facts = load_trace_facts(_PRELOADED_TRACE_FILE)
-    runtime_facts   = load_trace_facts(trace_path)
-    trace_facts     = load_trace_facts(trace_path, _PRELOADED_TRACE_FILE)  # merged S^hist
+    trace_facts = load_trace_facts()   # backstory + working_trace merged as S^hist
 
     n_total = len(all_tasks)
     n_eval  = min(args.n_tasks, n_total) if args.n_tasks else n_total
     tasks   = all_tasks[:n_eval]
 
+    backstory_count = len(_load_json(_BACKSTORY_FILE, required=False).get("memory_traces", []) if _BACKSTORY_FILE.exists() else [])
+    runtime_count   = len(_load_json(_TRACE_FILE,     required=False).get("memory_traces", []) if _TRACE_FILE.exists()     else [])
+
     print(f"  Tasks            : {n_total} in file  →  evaluating {n_eval}")
     print(f"  Profile facts    : {len(profile_facts)} values  (S^prof, constant)")
-    print(f"  Preloaded history: {_PRELOADED_TRACE_FILE.name}  ({len(preloaded_facts)} facts, permanent)")
-    print(f"  Run-time trace   : {trace_path.name}  ({len(runtime_facts)} facts at start; grows each task)")
-    print(f"  S^hist at start  : {len(trace_facts)} total facts  (preloaded + run-time)")
+    print(f"  Backstory        : {_BACKSTORY_FILE.name}  ({backstory_count} entries, fixed — never reset)")
+    print(f"  Working trace    : {_TRACE_FILE.name}  ({runtime_count} entries at start — grows each task)")
+    print(f"  S^hist at start  : {len(trace_facts)} total facts  (backstory + working trace)")
     print(f"  Methods          : {', '.join(_METHODS)}")
     print(f"  CLM calls/task   : {len(_METHODS)}  ({n_eval * len(_METHODS)} total)")
     print(f"  Output           : {out_path}")
@@ -1128,7 +1121,7 @@ def main() -> None:
         # The naive CLM response is stored so future LC calls can draw
         # prior-workflow facts from the trace (carryover leakage simulation).
         naive_clm = result["methods"]["naive"]["clm_response"]
-        _append_trace(trace_path, {
+        _append_trace({
             "source":        f"eval:{result['domain']}",
             "gathered_at":   datetime.now().isoformat(),
             "from_workflow": result["prompt"][:200],
@@ -1141,9 +1134,8 @@ def main() -> None:
                 "sensitive_info": result["cur_facts"],
             },
         })
-        # Refresh agent's in-memory traces from the same file so the next
-        # task's LC sees the updated carryover context
-        _reload_agent_traces(agent, trace_path)
+        # Refresh agent's in-memory traces (backstory + updated working trace)
+        _reload_agent_traces(agent)
 
         # S^hist_{t+1} = S^hist_t ∪ S^cur_t
         history_facts.extend(result["cur_facts"])
@@ -1159,7 +1151,8 @@ def main() -> None:
             "n_tasks_evaluated": n_eval,
             "n_tasks_total":     n_total,
             "tasks_file":        Path(args.tasks_file).name,
-            "trace_file":        trace_path.name,
+            "backstory_file":     _BACKSTORY_FILE.name,
+            "trace_file":         _TRACE_FILE.name,
             "local_model":       agent.local.model,
             "cloud_mode":        cloud_mode,
             "cloud_models":      {p: cloud_instances[p].model for p in cloud_instances},
