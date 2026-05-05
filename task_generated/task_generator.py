@@ -352,9 +352,9 @@ def _expand_template(seed: TaskSeed, n_variants: int) -> List[TaskInstance]:
 # ── LLM prompt builder ────────────────────────────────────────────────────────
 
 def _llm_prompt(seed: TaskSeed, n_variants: int) -> str:
-    domain_sens_str  = "; ".join(seed.domain_sensitive)  if seed.domain_sensitive  else "none"
-    general_sens_str = "; ".join(seed.general_sensitive) if seed.general_sensitive else "none"
-    context_str      = "; ".join(seed.supporting_context) if seed.supporting_context else "none"
+    domain_sens_str  = ", ".join(seed.domain_sensitive)  if seed.domain_sensitive  else "none"
+    general_sens_str = ", ".join(seed.general_sensitive) if seed.general_sensitive else "none"
+    context_str      = ", ".join(seed.supporting_context) if seed.supporting_context else "none"
     hard_str         = ", ".join(seed.hard_constraints)  if seed.hard_constraints  else "none"
     soft_str         = ", ".join(seed.soft_preference)   if seed.soft_preference   else "none"
 
@@ -383,9 +383,9 @@ def _llm_prompt(seed: TaskSeed, n_variants: int) -> str:
         f"  general context:         {general_sens_str}\n"
         f"  supporting context:      {context_str}\n"
         f"  user goal:               {seed.user_goal}\n\n"
-        f"VERBATIM COPY REQUIRED — paste these exact strings into every variant:\n"
-        f"  {'; '.join(seed.domain_sensitive + seed.general_sensitive)}\n"
-        f"\nJSON array:"
+        f"VERBATIM COPY REQUIRED — each string below must appear word-for-word in every variant:\n"
+        + "".join(f"  - {item}\n" for item in seed.domain_sensitive + seed.general_sensitive)
+        + f"\nJSON array:"
     )
 
 
@@ -468,10 +468,6 @@ def _expand_openai(
         variants.append(_expand_template(seed, 1)[0].prompt)
 
     variants = variants[:n_variants]
-    variants = [
-        _ensure_sensitive_coverage(v, seed.domain_sensitive, seed.general_sensitive)
-        for v in variants
-    ]
 
     return [
         TaskInstance(
@@ -535,10 +531,6 @@ def _expand_local(
         variants.append(_expand_template(seed, 1)[0].prompt)
 
     variants = variants[:n_variants]
-    variants = [
-        _ensure_sensitive_coverage(v, seed.domain_sensitive, seed.general_sensitive)
-        for v in variants
-    ]
 
     return [
         TaskInstance(
