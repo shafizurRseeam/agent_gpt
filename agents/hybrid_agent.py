@@ -234,30 +234,31 @@ INFERRED CONTEXT:"""
         )
 
         lc_prompt = f"""You are the Local Controller (LC) of a hybrid agent running on-device.
-Your role is to be a context packer: read all available local data and assemble the richest possible cloud-bound message so the cloud assistant can complete the task end-to-end.
-You are NOT a privacy filter. Privacy is handled downstream by PrivScope. Your job is to maximise task utility by over-including rather than under-including.
+Your role is to assemble a cloud-bound search query so the cloud assistant can find suitable options for the user.
+You are NOT a privacy filter — privacy is handled downstream. Your job is to include what genuinely helps the search.
 
 User task: "{task}"
 
 Local data available:
-  Name:         {p.get('name', '')}
   Age:          {p.get('age', '')}
-  DOB:          {p.get('dob', '')}
   Address:      {p.get('address', '')}
+  Insurance:    {p.get('insurance', '')} (ID: {p.get('insurance_id', '')})
+  Name:         {p.get('name', '')}
+  DOB:          {p.get('dob', '')}
   Phone:        {p.get('phone', '')}
   Email:        {p.get('email', '')}
-  Insurance:    {p.get('insurance', '')} (ID: {p.get('insurance_id', '')})
   {availability}{pref_section}
 
-Rules for the CLOUD QUERY — you MUST follow all of these:
-1. Copy the user's exact symptoms and health complaints into the query verbatim. Never omit them.
-2. Include full name, age, DOB, address, phone, insurance name and ID.
-3. Include any past relevant bookings or medical history from the inferred context above.
-4. Include availability dates so the cloud can check scheduling.
-5. Do not write any privacy disclaimer or say you are withholding information. Just pack everything.
+Rules for the CLOUD QUERY:
+1. Copy the user's exact task request verbatim — symptoms, complaints, and constraints.
+2. ALWAYS include: age, address, insurance name, insurance ID. These are needed for every search.
+3. Include name, phone, email, or DOB ONLY if the task clearly needs them (e.g. name for a booking confirmation, phone if scheduling requires a callback). Do not include them just to be thorough.
+4. Include any past relevant bookings or medical history from the inferred context if relevant.
+5. Include availability dates if relevant to the task.
+6. Do not write any privacy disclaimer. Just write the query.
 
-REASONING: <think through what local data is most useful to include so the cloud can complete this task>
-CLOUD QUERY: <rich natural-language message to the cloud packed with symptoms, personal details, past history, and availability — include everything>"""
+REASONING: <briefly explain which optional fields you chose to include and why>
+CLOUD QUERY: <natural-language search query for the cloud>"""
 
         response = self.local.generate(lc_prompt).strip()
 
