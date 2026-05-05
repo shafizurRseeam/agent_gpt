@@ -53,7 +53,18 @@ def main():
 
     print("\nInitialising agent (local LLM must be running)...")
     agent = HybridAgent()
-    print(f"Local model: {agent.local.model}\n")
+    print(f"Local model : {agent.local.model}")
+
+    traces = agent.state.get("memory_traces", [])
+    backstory = [t for t in traces if t.get("source") == "backstory"]
+    runtime   = [t for t in traces if t.get("source") != "backstory"]
+    print(f"Memory loaded: {len(backstory)} backstory entries + {len(runtime)} runtime entries\n")
+
+    if backstory:
+        print("Backstory entries visible to LC:")
+        for b in backstory:
+            print(f"  - {b['from_workflow']}")
+        print()
 
     tasks = load_tasks(args.n, args.seed)
 

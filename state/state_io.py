@@ -30,8 +30,8 @@ from pathlib import Path
 from typing import Any, Dict
 
 PROFILE_PATH   = Path("state/profile_state.json")
-PRELOADED_PATH = Path("state/working_trace_preloaded.json")
-TRACE_PATH     = Path("state/working_trace.json")
+BACKSTORY_PATH = Path("state/memory_backstory.json")   # fixed pre-history, never reset
+TRACE_PATH     = Path("state/working_trace.json")       # grows during eval, reset between runs
 
 _EMPTY_STATE: Dict[str, Any] = {
     "user_profile":    {},
@@ -51,16 +51,17 @@ def _read_json(path: Path) -> dict:
 
 def load_state() -> Dict[str, Any]:
     """
-    Load and merge profile_state.json + working_trace_preloaded.json
-    + working_trace.json into one state dict.
-    Preloaded traces come first; run-time traces are appended after.
+    Load and merge all three state layers into one state dict:
+      1. profile_state.json    — static demographics (never changes)
+      2. memory_backstory.json — pre-existing history (fixed, never reset)
+      3. working_trace.json    — runtime accumulation (reset between eval runs)
     """
-    profile    = _read_json(PROFILE_PATH)
-    preloaded  = _read_json(PRELOADED_PATH)
-    runtime    = _read_json(TRACE_PATH)
+    profile   = _read_json(PROFILE_PATH)
+    backstory = _read_json(BACKSTORY_PATH)
+    runtime   = _read_json(TRACE_PATH)
 
     traces = (
-        preloaded.get("memory_traces", [])
+        backstory.get("memory_traces", [])
         + runtime.get("memory_traces", [])
     )
 
@@ -94,12 +95,12 @@ def save_state(state: Dict[str, Any]) -> None:
 
 def reset_trace() -> None:
     """
-    Clear run-time memory traces — resets working_trace.json to empty.
-    working_trace_preloaded.json is NOT touched; it is permanent backstory.
+    Clear working_trace.json only.
+    memory_backstory.json is never touched — it is permanent pre-history.
     """
     TRACE_PATH.parent.mkdir(parents=True, exist_ok=True)
     TRACE_PATH.write_text(json.dumps({"memory_traces": []}, indent=2))
-    print("working_trace.json reset — run-time traces cleared (preloaded backstory unchanged).")
+    print("working_trace.json reset — runtime traces cleared (backstory unchanged).")
 
 
 def append_trace(entry: Dict[str, Any]) -> None:
