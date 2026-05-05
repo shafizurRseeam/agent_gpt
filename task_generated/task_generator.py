@@ -226,7 +226,11 @@ def _build_constraint_clause(
 
 
 def _phrase_general_sensitive(item: str) -> str:
-    """Return a natural constraint sentence for a general_sensitive item."""
+    """
+    Return a natural constraint sentence for a general_sensitive item.
+    The original item text ALWAYS appears verbatim inside the returned string
+    so that case-insensitive substring leakage detection works correctly.
+    """
     lc = item.lower()
     # Specific date or travel date
     if re.search(r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\b", lc) or "traveling" in lc:
@@ -245,54 +249,71 @@ def _phrase_general_sensitive(item: str) -> str:
     # Life situation / context
     if any(t in lc for t in ["moved", "changed jobs", "out of town", "spouse away",
                                "roommate away", "court", "shared car"]):
-        return f"Also, I'm {item}."
-    # Privacy / practical constraints
-    if any(t in lc for t in ["no home mail", "mail"]):
-        return f"Please do not mail anything to my home — {item}."
+        return f"Also, I am {item}."
+    # Privacy / practical constraints — keep item verbatim at the end
+    if "mail" in lc:
+        return f"Please do not send anything by mail to my address — {item}."
     if "private" in lc:
-        return "This needs to be a private visit."
-    if "avoid calls" in lc or "calls" in lc:
-        return "Please avoid calling me."
+        return f"This needs to be a private visit — {item}."
+    if "calls" in lc:
+        return f"Please do not call — {item}."
     if "cash" in lc:
-        return "I can only pay in cash."
+        return f"I can only pay in cash — {item}."
     if "parking" in lc:
-        return "I will need parking."
-    # Default: treat as a plain constraint note
-    return f"One constraint: {item}."
+        return f"I will need parking — {item}."
+    # Default: plain constraint note with verbatim item
+    return f"Please note: {item}."
 
 
 def _build_detail_sentence(
-    supporting_context: List[str],
-    domain_sensitive:   List[str],
-    general_sensitive:  List[str],
+    ctx: str,
+    domain_sensitive: List[str],
+    general_sensitive: List[str],
     user_goal: str,
+    pattern: int,
 ) -> str:
-    parts: List[str] = []
+    """
+    Build a detail sentence embedding ALL sensitive items using one of five
+    structural patterns to produce variety across variants.
+    pattern is 0-4 (cycled by variant index).
+    """
+    dom  = " and ".join(domain_sensitive) if domain_sensitive else ""
+    gen  = " ".join(_phrase_general_sensitive(g) for g in general_sensitive)
+    ctx_s = ctx.capitalize() + "." if ctx else ""
+    goal  = f"I need to {user_goal}." if user_goal else ""
 
-    if domain_sensitive:
-        parts.append("I have been dealing with " + " and ".join(domain_sensitive) + ".")
+    if pattern == 0:
+        # condition → context → scheduling
+        parts = [f"I have been dealing with {dom}." if dom else "",
+                 ctx_s, gen, goal]
+    elif pattern == 1:
+        # scheduling → condition → context
+        parts = [gen,
+                 f"I have been dealing with {dom}." if dom else "",
+                 ctx_s, goal]
+    elif pattern == 2:
+        # condition + goal → context → scheduling
+        parts = [f"I have been dealing with {dom} and {goal}" if dom else goal,
+                 ctx_s, gen]
+    elif pattern == 3:
+        # context → condition as reason → scheduling
+        parts = [ctx_s,
+                 f"Because of {dom}, {goal}" if dom else goal,
+                 gen]
+    else:
+        # scheduling → condition as reason → goal
+        parts = [gen,
+                 f"This is because of {dom}." if dom else "",
+                 ctx_s, goal]
 
-    if supporting_context:
-        parts.append(" ".join(c.capitalize() + "." for c in supporting_context))
-
-    for item in general_sensitive:
-        parts.append(_phrase_general_sensitive(item))
-
-    if user_goal:
-        parts.append("I really need to " + user_goal + ".")
-
-    return " ".join(parts).strip()
+    return " ".join(p for p in parts if p).strip()
 
 
 def _expand_template(seed: TaskSeed, n_variants: int) -> List[TaskInstance]:
     out: List[TaskInstance] = []
 
     for vid in range(n_variants):
-        # Resample a subset of details per variant for natural variety.
-        ctx_sample     = _pick(seed.supporting_context, k=1)
-        dom_sample     = _pick(seed.domain_sensitive,   k=min(1, len(seed.domain_sensitive)))
-        gen_sample     = _pick(seed.general_sensitive,  k=min(1, len(seed.general_sensitive)))
-
+        ctx = RNG.choice(seed.supporting_context) if seed.supporting_context else ""
         tpl = RNG.choice(_TEMPLATES)
         prompt = tpl.format(
             intent            = seed.intent,
@@ -302,13 +323,15 @@ def _expand_template(seed: TaskSeed, n_variants: int) -> List[TaskInstance]:
                 seed.soft_preference,
             ),
             detail_sentence   = _build_detail_sentence(
-                ctx_sample,
-                dom_sample,
-                gen_sample,
+                ctx,
+                seed.domain_sensitive,
+                seed.general_sensitive,
                 seed.user_goal,
+                vid % 5,
             ),
         ).strip()
 
+        # Safety net: inject any item that still didn't make it in verbatim.
         prompt = _ensure_sensitive_coverage(
             prompt, seed.domain_sensitive, seed.general_sensitive
         )
