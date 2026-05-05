@@ -158,7 +158,7 @@ class HybridAgent:
                 free = data.get("free_slots", [])
                 if free:
                     activity_lines.append(f'- Calendar: free on {", ".join(free[:2])}')
-            elif (src.startswith("preloaded:") or src.startswith("eval:")) and isinstance(data, dict):
+            elif (src == "backstory" or src.startswith("preloaded:") or src.startswith("eval:")) and isinstance(data, dict):
                 # Preloaded backstory and eval run-time traces share the same dict schema:
                 # {task, result, sensitive_info, domain}. Include the outcome narrative
                 # so the LC can surface relevant medical/logistical carryover.
