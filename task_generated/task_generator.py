@@ -188,7 +188,7 @@ def _sample_seed(seed_id: str, domain_cfg: Dict[str, Any]) -> TaskSeed:
         intent             = RNG.choice(domain_cfg["intent_templates"]),
         service_type       = RNG.choice(domain_cfg["service_type"]),
         hard_constraints   = _pick(domain_cfg.get("hard_constraints", []), k=2),
-        soft_preference    = _pick(domain_cfg.get("soft_preference", []), k=RNG.randint(0, 1)),
+        soft_preference    = _pick(domain_cfg.get("soft_preference", []), k=RNG.randint(1, 2)),
         supporting_context = _pick(domain_cfg.get("supporting_context", []), k=RNG.randint(1, 2)),
         domain_sensitive   = domain_sens,
         general_sensitive  = general_sens,
