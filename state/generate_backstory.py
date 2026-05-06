@@ -12,9 +12,11 @@ Only working_trace.json is cleared between evaluation runs.
 Modes:
   template  — offline, no API call (default)
   openai    — GPT-4o-mini for more natural narratives
+  claude    — Claude Haiku for more natural narratives
 
 Usage (from project root):
     uv run python state/generate_backstory.py
+    uv run python state/generate_backstory.py --n 50 --mode claude
     uv run python state/generate_backstory.py --n 10 --mode openai
 ════════════════════════════════════════════════════════════════════════
 """
@@ -123,6 +125,32 @@ def _build_narrative_openai(seed: dict, model: str, temperature: float) -> str:
     return (resp.choices[0].message.content or "").strip()
 
 
+# ── Claude Haiku narrative builder ───────────────────────────────────────────
+
+def _build_narrative_claude(seed: dict) -> str:
+    from llm.cloud_router import CloudLLM
+
+    dom  = ", ".join(seed["domain_sensitive"])
+    gen  = ", ".join(seed["general_sensitive"])
+    svc  = seed.get("service_type", "medical visit")
+    prov = RNG.choice(_PROVIDERS)
+
+    prompt = (
+        f"Write one short paragraph (2-3 sentences) describing a past medical visit "
+        f"that Bob Smith completed several months ago. "
+        f"Bob visited {prov} for a {svc}. "
+        f"The visit involved these health issues: {dom}. "
+        f"These scheduling constraints were relevant: {gen}. "
+        f"Write in past tense, third person. Be specific and realistic. "
+        f"The words '{dom}' must appear verbatim. "
+        f"Return only the paragraph, no preamble."
+    )
+
+    clm = CloudLLM(provider="claude", model="claude-haiku-4-5-20251001")
+    raw, _, _ = clm.chat_with_usage([{"role": "user", "content": prompt}])
+    return raw.strip()
+
+
 # ── Seed loader ───────────────────────────────────────────────────────────────
 
 def load_seeds(n: int) -> list:
@@ -138,7 +166,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--n",          type=int,   default=10,
                     help="Number of backstory entries to generate (default: 10)")
-    ap.add_argument("--mode",       choices=["template", "openai"], default="template",
+    ap.add_argument("--mode",       choices=["template", "openai", "claude"], default="template",
                     help="Generation mode (default: template)")
     ap.add_argument("--model",      default="gpt-4o-mini",
                     help="OpenAI model (default: gpt-4o-mini)")
@@ -155,6 +183,8 @@ def main():
         try:
             if args.mode == "openai":
                 narrative = _build_narrative_openai(seed, args.model, args.temperature)
+            elif args.mode == "claude":
+                narrative = _build_narrative_claude(seed)
             else:
                 narrative = _build_narrative_template(seed)
             status = "ok"

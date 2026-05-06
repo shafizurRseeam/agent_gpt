@@ -110,6 +110,7 @@ _PATTERNS: List[tuple[str, re.Pattern]] = [
     )),
     ("date",       re.compile(r'\b\d{4}-\d{2}-\d{2}\b')),
     ("date",       re.compile(r'\b\d{1,2}/\d{1,2}/\d{2,4}\b')),
+    ("age",        re.compile(r'\b\d{1,3}[-\s]years?[-\s]old\b|\bage[d]?\s*[:\s]\s*\d{1,3}\b', re.IGNORECASE)),
     ("time",       re.compile(r'\b\d{1,2}(?::\d{2})?\s?(?:AM|PM|am|pm)\b')),
     ("time",       re.compile(r'\b\d{1,2}:\d{2}\b')),
     ("phone",      re.compile(r'\b(?:\+1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)\d{3}[-.\s]?\d{4}\b')),
@@ -138,6 +139,9 @@ _BAD_CHUNK_PREFIXES = {"a ", "an ", "the ", "my ", "your ", "our ", "if "}
 _BAD_CHUNK_EXACT    = {
     "a dentist", "if possible, book", "my insurance id",
     "my zip", "the cost",
+    # LC-injected structured field labels — not content spans
+    "insurance id", "patient context", "patient information",
+    "insurance plan", "insurance type",
 }
 _GOOD_CHUNK_EXCEPTIONS = {"my home", "my work", "my office", "my insurance"}
 
@@ -204,6 +208,30 @@ class SpanExtractor:
                     span_type="noun_phrase", source="spacy",
                     bucket="U_med", subsource="noun_chunk",
                 ))
+
+        # Post-process: reclassify medical/disease abbreviations that spaCy
+        # mis-tags as ORG (e.g. "STD", "HIV", "HPV") → noun_phrase so that
+        # abstraction treats them as medical conditions, not organizations.
+        _MEDICAL_ABBREVS = {
+            "std", "hiv", "hpv", "hbv", "hcv", "sti", "sti", "tb", "utis", "uti",
+            "adhd", "ptsd", "ocd", "asd", "copd", "afib", "gerd", "ibs", "eds",
+        }
+        # Structured field labels injected by the LC — never real content spans.
+        _FIELD_LABELS = {
+            "insurance id", "patient context", "patient information",
+            "insurance plan", "insurance type",
+        }
+        _AGE_RE = re.compile(r'\b\d{1,3}[-\s]years?[-\s]old\b|\bage[d]?\s*[:\s]\s*\d{1,3}\b', re.IGNORECASE)
+        candidates = [
+            span for span in candidates
+            if not (span.source == "spacy" and span.text.lower() in _FIELD_LABELS)
+        ]
+        for span in candidates:
+            if span.span_type == "organization" and span.text.lower() in _MEDICAL_ABBREVS:
+                object.__setattr__(span, "span_type", "noun_phrase")
+            # spaCy sometimes tags "32-year-old" / "32 years old" as DATE; reclassify to age.
+            elif span.span_type == "date" and span.source == "spacy" and _AGE_RE.search(span.text):
+                object.__setattr__(span, "span_type", "age")
 
         spans = _merge_overlaps(candidates)
         U_loc = [s for s in spans if s.bucket == "U_loc"]

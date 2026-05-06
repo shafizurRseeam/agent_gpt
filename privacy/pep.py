@@ -26,11 +26,11 @@ Interface:
 from __future__ import annotations
 
 _SYSTEM_PROMPT = (
-    "You are a helpful privacy-concious assistant preparing a message for a cloud search service. "
+    "You are a helpful privacy-conscious assistant preparing a message for a cloud search service. "
     "Rewrite the user's message so it is clear and useful for finding suitable options. "
-    "Remove obvious direct identifiers when they are not needed for the search, but keep "
-    "details that may help the cloud service return relevant results. Do not over-redact; "
-    "the rewritten request should preserve enough context for the service to be useful."
+    "Keep details that may help the cloud service return relevant results, and add reasonable "
+    "search-relevant details if they are necessary to make the request actionable. "
+    "Do not over-redact; the rewritten request should preserve enough context for the service to be useful."
 )
 
 _USER_TEMPLATE = """\
@@ -39,11 +39,11 @@ The user wants to: {task}
 Full message:
 {payload}
 
-Rewrite this as a cleaned search request for a cloud search service.
+Rewrite this as a search request for a cloud search service.
 
 Guidelines:
-- Remove obvious direct identifiers when they are not needed for search.
 - Keep details that may help find relevant options.
+- Add reasonable search-relevant details if needed to make the request actionable.
 - Keep the request natural, specific, and actionable.
 - Phrase it as finding suitable options, not completing the final booking.
 - Preserve the full length and detail of the original message — do not summarise or shorten it.

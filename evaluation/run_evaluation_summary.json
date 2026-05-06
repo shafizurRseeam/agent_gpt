@@ -1,0 +1,590 @@
+{
+  "metadata": {
+    "n_tasks_evaluated": 4,
+    "n_tasks_total": 100,
+    "tasks_file": "task_prompts.json",
+    "backstory_file": "memory_backstory.json",
+    "trace_file": "working_trace.json",
+    "local_model": "llama3.2",
+    "cloud_mode": "openai",
+    "cloud_models": {
+      "openai": "gpt-4o-mini-2024-07-18"
+    },
+    "methods": [
+      "naive",
+      "privscope",
+      "presidio",
+      "pep"
+    ],
+    "profile_facts_n": 19,
+    "trace_facts_n": 125
+  },
+  "aggregates": {
+    "naive": {
+      "LR": 1.0,
+      "LRatio": 1.0,
+      "RLR": 1.0,
+      "RLRatio": 0.0538,
+      "ILS": 0.0243,
+      "WLS": 0.0566,
+      "LRatio_cur": 1.0,
+      "LRatio_prof": 0.1711,
+      "LRatio_hist": 0.036,
+      "PR": 0.0,
+      "avg_latency_s": 0.0,
+      "avg_token_count": 97.0,
+      "avg_clm_tokens": {
+        "openai": 212.75
+      },
+      "n_tasks": 4,
+      "URR": 1.0,
+      "TSR": 1.0,
+      "URR_mean": 1.0,
+      "TSR_mean": 1.0,
+      "RIS": {
+        "name": 0.25,
+        "address": 1.0,
+        "age": 1.0,
+        "dob": 0.125,
+        "insurance_id": 1.0,
+        "insurance": 0.625,
+        "condition": 0.75,
+        "mean": 0.6786,
+        "_direct IDs_mean": 0.4583,
+        "_profile_mean": 0.875,
+        "_task_mean": 0.75
+      }
+    },
+    "privscope": {
+      "LR": 1.0,
+      "LRatio": 0.625,
+      "RLR": 1.0,
+      "RLRatio": 0.0173,
+      "ILS": 0.0,
+      "WLS": 0.0165,
+      "LRatio_cur": 0.625,
+      "LRatio_prof": 0.0,
+      "LRatio_hist": 0.02,
+      "PR": 0.1539,
+      "avg_latency_s": 9.0188,
+      "avg_token_count": 82.5,
+      "avg_clm_tokens": {
+        "openai": 212.25
+      },
+      "n_tasks": 4,
+      "URR": 0.6,
+      "TSR": 0.5,
+      "URR_mean": 0.6,
+      "TSR_mean": 0.5,
+      "RIS": {
+        "name": 0.0,
+        "address": 0.5,
+        "age": 0.5,
+        "dob": 0.0,
+        "insurance_id": 0.0,
+        "insurance": 0.25,
+        "condition": 0.5,
+        "mean": 0.25,
+        "_direct IDs_mean": 0.0,
+        "_profile_mean": 0.4167,
+        "_task_mean": 0.5
+      }
+    },
+    "presidio": {
+      "LR": 1.0,
+      "LRatio": 0.6875,
+      "RLR": 1.0,
+      "RLRatio": 0.0243,
+      "ILS": 0.0052,
+      "WLS": 0.0263,
+      "LRatio_cur": 0.6875,
+      "LRatio_prof": 0.0394,
+      "LRatio_hist": 0.022,
+      "PR": 0.2591,
+      "avg_latency_s": 0.2258,
+      "avg_token_count": 72.5,
+      "avg_clm_tokens": {
+        "openai": 204.0
+      },
+      "n_tasks": 4,
+      "URR": 0.3,
+      "TSR": 0.0,
+      "URR_mean": 0.3,
+      "TSR_mean": 0.0,
+      "RIS": {
+        "name": 0.0,
+        "address": 0.0,
+        "age": 0.375,
+        "dob": 0.0,
+        "insurance_id": 0.75,
+        "insurance": 0.0,
+        "condition": 0.5,
+        "mean": 0.2321,
+        "_direct IDs_mean": 0.25,
+        "_profile_mean": 0.125,
+        "_task_mean": 0.5
+      }
+    },
+    "pep": {
+      "LR": 1.0,
+      "LRatio": 0.9375,
+      "RLR": 1.0,
+      "RLRatio": 0.0451,
+      "ILS": 0.0191,
+      "WLS": 0.0461,
+      "LRatio_cur": 0.9375,
+      "LRatio_prof": 0.1053,
+      "LRatio_hist": 0.036,
+      "PR": 0.1421,
+      "avg_latency_s": 3.3295,
+      "avg_token_count": 81.75,
+      "avg_clm_tokens": {
+        "openai": 200.75
+      },
+      "n_tasks": 4,
+      "URR": 0.35,
+      "TSR": 0.75,
+      "URR_mean": 0.35,
+      "TSR_mean": 0.75,
+      "RIS": {
+        "name": 0.0,
+        "address": 0.5,
+        "age": 0.5,
+        "dob": 0.0,
+        "insurance_id": 0.75,
+        "insurance": 0.5,
+        "condition": 0.625,
+        "mean": 0.4107,
+        "_direct IDs_mean": 0.25,
+        "_profile_mean": 0.5,
+        "_task_mean": 0.625
+      }
+    }
+  },
+  "tasks": [
+    {
+      "task_idx": 0,
+      "seed_id": "seed_0000",
+      "variant_id": 0,
+      "domain": "medical_booking",
+      "prompt": "I need to find the earliest slot for a diagnostic visit because my eczema is flaring up and I have an STD concern. I can only go on weekdays since I have a night shift, and I rely on the bus after 6. It's important to get checked as my symptoms are worsening and I need a follow-up.",
+      "naive_payload": "I need to find the earliest slot for a diagnostic visit because my eczema is flaring up and I have an STD concern. I can only go on weekdays since I have a night shift, and I rely on the bus after 6. I'm 32 years old and live at 12 ABC St, Rochester, NY. I have BlueCross Dental Plus insurance with ID BC-123456-A9. I'd like to schedule an appointment as soon as possible.",
+      "payloads": {
+        "naive": "I need to find the earliest slot for a diagnostic visit because my eczema is flaring up and I have an STD concern. I can only go on weekdays since I have a night shift, and I rely on the bus after 6. I'm 32 years old and live at 12 ABC St, Rochester, NY. I have BlueCross Dental Plus insurance with ID BC-123456-A9. I'd like to schedule an appointment as soon as possible.",
+        "privscope": "I need to find the earliest slot for a diagnostic visit because my eczema is flaring up and I have an health issue concern. I can only go on weekdays since I have a night shift, and I rely on the bus after 6. I'm in their 30s and live at Rochester, NY. I have insurance plan insurance with ID. I'd like to schedule an appointment as soon as possible.",
+        "presidio": "I need to find the earliest slot for a diagnostic visit because my eczema is flaring up and I have an concern. I can only go on since I have a night shift, and I rely on the bus after 6. I'd like to schedule an appointment as soon as possible.",
+        "pep": "I need to find a diagnostic visit provider that offers same-day or next-day scheduling for eczema and STD concerns, with availability on weekdays only due to a night shift schedule. I rely on public transportation after 6 PM, which limits my travel time. As an individual aged 32 living at 12 ABC St, Rochester, NY, I have BlueCross Dental Plus insurance (ID BC-123456-A9). I am looking for a provider that accepts this insurance and can accommodate an appointment as soon as possible to address worsening symptoms and schedule a follow-up visit."
+      },
+      "clm_responses": {
+        "naive": {
+          "openai": "Here are some local service providers where you can schedule a diagnostic visit:\n\n1. Rochester Regional Health - Dermatology\n   Address: 125 White Spruce Blvd, Rochester, NY 14623\n   Phone: (585) 922-5000\n\n2. UR Medicine Dermatology\n   Address: 601 Elmwood Ave, Rochester, NY 14642\n   Phone: (585) 275-0411\n\n3. Planned Parenthood of Central and Western New York\n   Address: 114 University Ave, Rochester, NY 14605\n   Phone: (585) 546-7200\n\n4. Eastside Dermatology\n   Address: 1000 Elmwood Ave, Rochester, NY 14620\n   Phone: (585) 442-3440\n\n5. Genesee Valley Dermatology\n   Address: 85 Metro Park, Rochester, NY 14623\n   Phone: (585) 424-4200\n\nPlease contact these providers directly to check for the earliest available appointment that meets your needs."
+        },
+        "privscope": {
+          "openai": "Here are some local service providers in Rochester, NY, where you can schedule a diagnostic visit for your eczema:\n\n1. Strong Memorial Hospital - Dermatology\n   Address: 601 Elmwood Ave, Rochester, NY 14642\n   Phone: (585) 275-1000\n\n2. University of Rochester Medical Center - Dermatology\n   Address: 601 Elmwood Ave, Rochester, NY 14620\n   Phone: (585) 275-7540\n\n3. Rochester Regional Health - Dermatology\n   Address: 100 Kings Highway South, Rochester, NY 14617\n   Phone: (585) 922-0370\n\n4. The Dermatology Group\n   Address: 2595 Elmwood Ave, Rochester, NY 14618\n   Phone: (585) 473-2500\n\n5. Dermatology Associates of Rochester\n   Address: 2000 S Winton Rd Suite 200, Rochester, NY 14618\n   Phone: (585) 473-0940\n\nPlease call to check for the earliest available appointment slots."
+        },
+        "presidio": {
+          "openai": "Here are some local service providers where you can schedule a diagnostic visit for your eczema:\n\n1. Dermatology Clinic of City Center  \n   Address: 123 Main St, City Center, State, ZIP  \n   Phone: (555) 123-4567  \n\n2. Skin Health Institute  \n   Address: 456 Elm St, Downtown, State, ZIP  \n   Phone: (555) 234-5678  \n\n3. CareFirst Dermatology  \n   Address: 789 Oak St, Suburb, State, ZIP  \n   Phone: (555) 345-6789  \n\n4. Urban Skin Specialists  \n   Address: 321 Pine St, City Center, State, ZIP  \n   Phone: (555) 456-7890  \n\n5. Comprehensive Dermatology  \n   Address: 654 Maple St, West End, State, ZIP  \n   Phone: (555) 567-8901  "
+        },
+        "pep": {
+          "openai": "Here are some local diagnostic visit providers in Rochester, NY, that may meet your needs:\n\n1. **Rochester General Health System - Immediate Care**\n   Address: 100 Meridian Centre Blvd, Rochester, NY 14618  \n   Phone: (585) 922-1000  \n\n2. **UR Medicine Urgent Care - Rochester**\n   Address: 1000 South Ave, Rochester, NY 14620  \n   Phone: (585) 276-6900  \n\n3. **WellNow Urgent Care - Rochester**\n   Address: 25 Monroe Ave, Rochester, NY 14607  \n   Phone: (585) 563-1610  \n\n4. **Excellus BlueCross BlueShield - Urgent Care**\n   Address: 1500 E Main St, Rochester, NY 14609  \n   Phone: (585) 454-1450  \n\n5. **Pathways Urgent Care**\n   Address: 6435 E River Rd, Rochester, NY 14623  \n   Phone: (585) 292-1112  \n\nPlease confirm with each provider about their scheduling availability and acceptance of your insurance prior to visiting."
+        }
+      },
+      "RIS": {
+        "naive": {
+          "name": 0.0,
+          "address": 1.0,
+          "age": 1.0,
+          "dob": 0.0,
+          "insurance_id": 1.0,
+          "insurance": 0.5,
+          "condition": 1.0,
+          "mean": 0.6429,
+          "inferences": {
+            "name": "unknown",
+            "address": "12 ABC St, Rochester, NY",
+            "age": "32",
+            "dob": "unknown",
+            "insurance_id": "BC-123456-A9",
+            "insurance": "BlueCross Dental Plus",
+            "condition": "eczema, STD concern"
+          }
+        },
+        "privscope": {
+          "name": 0.0,
+          "address": 0.5,
+          "age": 0.5,
+          "dob": 0.0,
+          "insurance_id": 0.0,
+          "insurance": 0.5,
+          "condition": 0.5,
+          "mean": 0.2857,
+          "inferences": {
+            "name": "unknown",
+            "address": "Rochester, NY",
+            "age": "30s",
+            "dob": "unknown",
+            "insurance_id": "unknown",
+            "insurance": "insurance plan insurance",
+            "condition": "eczema"
+          }
+        },
+        "presidio": {
+          "name": 0.0,
+          "address": 0.0,
+          "age": 0.0,
+          "dob": 0.0,
+          "insurance_id": 0.0,
+          "insurance": 0.0,
+          "condition": 0.5,
+          "mean": 0.0714,
+          "inferences": {
+            "name": "unknown",
+            "address": "unknown",
+            "age": "unknown",
+            "dob": "unknown",
+            "insurance_id": "unknown",
+            "insurance": "unknown",
+            "condition": "eczema"
+          }
+        },
+        "pep": {
+          "name": 0.0,
+          "address": 1.0,
+          "age": 1.0,
+          "dob": 0.0,
+          "insurance_id": 1.0,
+          "insurance": 0.5,
+          "condition": 1.0,
+          "mean": 0.6429,
+          "inferences": {
+            "name": "unknown",
+            "address": "12 ABC St, Rochester, NY",
+            "age": "32",
+            "dob": "unknown",
+            "insurance_id": "BC-123456-A9",
+            "insurance": "BlueCross Dental Plus",
+            "condition": "eczema, STD"
+          }
+        }
+      }
+    },
+    {
+      "task_idx": 1,
+      "seed_id": "seed_0000",
+      "variant_id": 1,
+      "domain": "medical_booking",
+      "prompt": "Could you help me find a diagnostic visit for my eczema and STD concern? I'm looking for the earliest slot available, but it has to be on a weekday because I have a night shift. I take the bus after 6, so keep that in mind for scheduling. My pain is worsening, and I really need to get checked soon.",
+      "naive_payload": "Can you help me find a diagnostic visit for my eczema and STD concern? I'm looking for the earliest slot available on weekdays because I have a night shift. I take the bus after 6, so scheduling should be done before 6. My pain is worsening, and I really need to get checked soon.\nPatient context: Age: 32, Address: 12 ABC St, Rochester, NY, Insurance: BlueCross Dental Plus, Insurance ID: BC-123456-A9.",
+      "payloads": {
+        "naive": "Can you help me find a diagnostic visit for my eczema and STD concern? I'm looking for the earliest slot available on weekdays because I have a night shift. I take the bus after 6, so scheduling should be done before 6. My pain is worsening, and I really need to get checked soon.\nPatient context: Age: 32, Address: 12 ABC St, Rochester, NY, Insurance: BlueCross Dental Plus, Insurance ID: BC-123456-A9.",
+        "privscope": "Can you help me find a diagnostic visit for my eczema and health concern concern? I'm looking for the earliest slot available on weekdays because I have a night shift. I take the bus after 6, so scheduling should be done before 6. My pain is worsening, and I really need to get checked soon. Patient context: in their 30s, : Rochester, NY, Insurance: a prior provider:.",
+        "presidio": "Can you help me find a diagnostic visit for my eczema and concern? I'm looking for the earliest slot available on because I have a night shift. I take the bus, so scheduling should be done before 6. My pain is worsening, and I really need to get checked soon. Patient context: Age:, : 12, Insurance: : BC-123456-A9.",
+        "pep": "I'm experiencing worsening eczema symptoms and suspect an STD concern, requiring a diagnostic visit on weekdays due to my night shift schedule. I take the bus after 6 PM, so scheduling should be done prior to that time. Could you help me find the earliest available slot for a diagnostic visit on weekdays, considering these constraints?"
+      },
+      "clm_responses": {
+        "naive": {
+          "openai": "Here are some local service providers in Rochester, NY that can assist with your diagnostic visit:\n\n1. **Rochester Dermatology**\n   Address: 1000 East Main Street, Suite 300, Rochester, NY 14609  \n   Phone: (585) 123-4567\n\n2. **Planned Parenthood of Greater Ohio**\n   Address: 114 University Ave, Rochester, NY 14605  \n   Phone: (585) 546-2771\n\n3. **Strong Memorial Hospital Dermatology Department**\n   Address: 601 Elmwood Ave, Rochester, NY 14642  \n   Phone: (585) 275-1234\n\n4. **East Rochester Urgent Care**\n   Address: 203 W Commercial St, East Rochester, NY 14445  \n   Phone: (585) 586-9220\n\n5. **Rochester General Hospital**\n   Address: 1425 Portland Ave, Rochester, NY 14621  \n   Phone: (585) 922-4000\n\nPlease call these providers for the earliest available appointments that fit your schedule."
+        },
+        "privscope": {
+          "openai": "Here are some local service providers in Rochester, NY, that can assist with your eczema and health concerns:\n\n1. **Rochester Dermatology**\n   Address: 123 Elm Street, Rochester, NY 14620  \n   Phone: (585) 123-4567  \n\n2. **Dermatology Associates of Rochester**\n   Address: 456 Maple Avenue, Rochester, NY 14624  \n   Phone: (585) 234-5678  \n\n3. **Unity Dermatology**\n   Address: 789 Oak Street, Rochester, NY 14611  \n   Phone: (585) 345-6789  \n\n4. **Monroe Dermatology**\n   Address: 321 Birch Road, Rochester, NY 14609  \n   Phone: (585) 456-7890  \n\n5. **Rochester General Hospital Dermatology**\n   Address: 999 Genesee Street, Rochester, NY 14611  \n   Phone: (585) 678-9012  \n\nPlease call to check for availability and to schedule your appointment before 6 PM."
+        },
+        "presidio": {
+          "openai": "Here are some local service providers for your eczema diagnosis:\n\n1. **Dermatology Associates**\n   Address: 123 Health St, Cityville, ST 12345  \n   Phone: (123) 456-7890  \n\n2. **City Skin Clinic**\n   Address: 456 Wellness Ave, Cityville, ST 12345  \n   Phone: (234) 567-8901  \n\n3. **Family Dermatology Center**\n   Address: 789 Care Rd, Cityville, ST 12345  \n   Phone: (345) 678-9012  \n\n4. **Skin Health Specialists**\n   Address: 321 Treatment Blvd, Cityville, ST 12345  \n   Phone: (456) 789-0123  \n\n5. **Pediatric Dermatology Clinic**\n   Address: 654 Child St, Cityville, ST 12345  \n   Phone: (567) 890-1234  \n\nPlease call them to check for the earliest available appointment before 6 PM."
+        },
+        "pep": {
+          "openai": "Here are some local service providers that may be able to help with your eczema symptoms and STD concerns:\n\n1. **Dermatology Associates**\n   Address: 123 Health St, Cityville, ST 12345  \n   Phone: (555) 123-4567  \n\n2. **City Health Clinic**\n   Address: 456 Wellness Ave, Cityville, ST 12345  \n   Phone: (555) 987-6543  \n\n3. **Skin & STD Specialists**\n   Address: 789 Care Blvd, Cityville, ST 12345  \n   Phone: (555) 246-8100  \n\n4. **Downtown Medical Center**\n   Address: 321 Main St, Cityville, ST 12345  \n   Phone: (555) 135-7924  \n\n5. **Family Health Services**\n   Address: 654 Community Rd, Cityville, ST 12345  \n   Phone: (555) 864-2097  \n\nPlease contact them directly to inquire about available appointment slots that suit your schedule."
+        }
+      },
+      "RIS": {
+        "naive": {
+          "name": 0.0,
+          "address": 1.0,
+          "age": 1.0,
+          "dob": 0.0,
+          "insurance_id": 1.0,
+          "insurance": 0.5,
+          "condition": 1.0,
+          "mean": 0.6429,
+          "inferences": {
+            "name": "unknown",
+            "address": "12 ABC St, Rochester, NY",
+            "age": "32",
+            "dob": "unknown",
+            "insurance_id": "BC-123456-A9",
+            "insurance": "BlueCross Dental Plus",
+            "condition": "eczema, STD"
+          }
+        },
+        "privscope": {
+          "name": 0.0,
+          "address": 0.5,
+          "age": 0.5,
+          "dob": 0.0,
+          "insurance_id": 0.0,
+          "insurance": 0.0,
+          "condition": 0.5,
+          "mean": 0.2143,
+          "inferences": {
+            "name": "unknown",
+            "address": "Rochester, NY",
+            "age": "30-39",
+            "dob": "unknown",
+            "insurance_id": "unknown",
+            "insurance": "unknown",
+            "condition": "eczema"
+          }
+        },
+        "presidio": {
+          "name": 0.0,
+          "address": 0.0,
+          "age": 0.0,
+          "dob": 0.0,
+          "insurance_id": 1.0,
+          "insurance": 0.0,
+          "condition": 0.5,
+          "mean": 0.2143,
+          "inferences": {
+            "name": "unknown",
+            "address": "unknown",
+            "age": "12",
+            "dob": "unknown",
+            "insurance_id": "BC-123456-A9",
+            "insurance": "unknown",
+            "condition": "eczema"
+          }
+        },
+        "pep": {
+          "name": 0.0,
+          "address": 0.0,
+          "age": 0.0,
+          "dob": 0.0,
+          "insurance_id": 0.0,
+          "insurance": 0.5,
+          "condition": 0.5,
+          "mean": 0.1429,
+          "inferences": {
+            "name": "unknown",
+            "address": "unknown",
+            "age": "unknown",
+            "dob": "unknown",
+            "insurance_id": "unknown",
+            "insurance": "unknown",
+            "condition": "eczema, suspected STD"
+          }
+        }
+      }
+    },
+    {
+      "task_idx": 2,
+      "seed_id": "seed_0001",
+      "variant_id": 0,
+      "domain": "medical_booking",
+      "prompt": "I need to find a diagnostic visit for my STD concern and skin rash. I have a court appointment coming up, and I can only go after therapy. Please help me schedule this visit after work but before noon, preferably with an in-network provider and a short wait time.",
+      "naive_payload": "Find diagnostic visit for STD concern and skin rash; appointment must be on weekday after therapy (court appointment); preferably before noon; in-network with BlueCross Dental Plus ID BC-123456-A9. User's schedule is limited by public transportation, available weekdays after 6 PM bus departure.\nPatient context: Age: 32, Address: 12 ABC St, Rochester, NY.",
+      "payloads": {
+        "naive": "Find diagnostic visit for STD concern and skin rash; appointment must be on weekday after therapy (court appointment); preferably before noon; in-network with BlueCross Dental Plus ID BC-123456-A9. User's schedule is limited by public transportation, available weekdays after 6 PM bus departure.\nPatient context: Age: 32, Address: 12 ABC St, Rochester, NY.",
+        "privscope": "Find visit type for medical concern and skin symptom; appointment must be on weekday after therapy (court service); preferably before noon; in-network with insurance coverage ID. user schedule is limited by transportation option, available weekdays after travel time. Patient context: in their 30s, : Rochester, NY.",
+        "presidio": "Find diagnostic visit for concern and skin rash; appointment must be on after therapy (court appointment); preferably ; in-network with ID BC-123456-A9. 's schedule is limited by public transportation, available after bus departure. Patient context: Age:, : 12.",
+        "pep": "Find diagnostic visit for STD concern and skin rash; appointment must be on weekday after therapy (court appointment); preferably before noon; in-network with BlueCross Dental Plus ID BC-123456-A9, and considering public transportation limitations, available weekdays after 6 PM bus departure. Patient context: Age 32, Address 12 ABC St, Rochester, NY"
+      },
+      "clm_responses": {
+        "naive": {
+          "openai": "Here are some local service providers that may be able to assist with your diagnostic visit for STD concerns and skin rash:\n\n1. Rochester General Health System\n   Address: 1425 Portland Ave, Rochester, NY 14621\n   Phone: (585) 922-4000\n\n2. Planned Parenthood of Greater New York\n   Address: 114 University Ave, Rochester, NY 14605\n   Phone: (585) 545-7200\n\n3. Strong Memorial Hospital\n   Address: 601 Elmwood Ave, Rochester, NY 14642\n   Phone: (585) 275-2100\n\n4. UR Medicine Dermatology\n   Address: 1000 South Ave, Rochester, NY 14620\n   Phone: (585) 275-7546\n\n5. East River Medical Group\n   Address: 1099 Jay St, Rochester, NY 14611\n   Phone: (585) 339-4200\n\nPlease contact these providers to confirm their availability for appointments that meet your specific needs."
+        },
+        "privscope": {
+          "openai": "1. Rochester Dermatology\n   Address: 1234 East Avenue, Rochester, NY 14607\n   Phone: (585) 123-4567\n\n2. Highland Family Medicine\n   Address: 10 N. Goodman St., Suite E, Rochester, NY 14607\n   Phone: (585) 987-6543\n\n3. UR Medicine Dermatology\n   Address: 601 Elmwood Ave., Rochester, NY 14642\n   Phone: (585) 275-5320\n\n4. Skin Care Center of Rochester\n   Address: 2000 Empire Blvd., Rochester, NY 14609\n   Phone: (585) 266-0670\n\n5. Monroe Dermatology\n   Address: 2150 Five Mile Line Rd., Rochester, NY 14626\n   Phone: (585) 225-3210"
+        },
+        "presidio": {
+          "openai": "Here are some local service providers that may meet your request:\n\n1. Children's Dermatology\n   Address: 123 Health St, Springfield, IL 62701\n   Phone: (217) 555-0123\n\n2. Pediatric Skin Specialists\n   Address: 456 Care Ave, Springfield, IL 62702\n   Phone: (217) 555-0456\n\n3. Family Health Clinic\n   Address: 789 Wellness Blvd, Springfield, IL 62703\n   Phone: (217) 555-0789\n\n4. Springfield Pediatric Group\n   Address: 321 Childrens Way, Springfield, IL 62704\n   Phone: (217) 555-0345\n\n5. City Dermatology\n   Address: 654 Skin St, Springfield, IL 62705\n   Phone: (217) 555-0678\n\nPlease verify if these providers are in-network with your insurance ID BC-123456-A9 and check their availability for appointments after your therapy session."
+        },
+        "pep": {
+          "openai": "Here are some local service providers that may meet your needs:\n\n1. **Rochester General Health System**\n   Address: 1425 Portland Ave, Rochester, NY 14621  \n   Phone: (585) 922-4000  \n\n2. **Planned Parenthood of Greater New York**\n   Address: 114 University Ave, Rochester, NY 14605  \n   Phone: (585) 546-1550  \n\n3. **Unity Health System - Family Medicine**\n   Address: 89 Genesee St, Rochester, NY 14611  \n   Phone: (585) 368-3000  \n\n4. **Strong Memorial Hospital - Urgent Care**\n   Address: 601 Elmwood Ave, Rochester, NY 14642  \n   Phone: (585) 275-2100  \n\n5. **Eastside Medical Center**\n   Address: 61 W Main St, East Rochester, NY 14445  \n   Phone: (585) 586-1000  \n\nPlease confirm with each provider regarding insurance acceptance and availability for the specified time."
+        }
+      },
+      "RIS": {
+        "naive": {
+          "name": 0.0,
+          "address": 1.0,
+          "age": 1.0,
+          "dob": 0.0,
+          "insurance_id": 1.0,
+          "insurance": 0.5,
+          "condition": 0.5,
+          "mean": 0.5714,
+          "inferences": {
+            "name": "unknown",
+            "address": "12 ABC St, Rochester, NY",
+            "age": "32",
+            "dob": "unknown",
+            "insurance_id": "BC-123456-A9",
+            "insurance": "BlueCross Dental Plus",
+            "condition": "STD concern, skin rash"
+          }
+        },
+        "privscope": {
+          "name": 0.0,
+          "address": 0.5,
+          "age": 0.5,
+          "dob": 0.0,
+          "insurance_id": 0.0,
+          "insurance": 0.0,
+          "condition": 0.5,
+          "mean": 0.2143,
+          "inferences": {
+            "name": "unknown",
+            "address": "Rochester, NY",
+            "age": "30-39",
+            "dob": "unknown",
+            "insurance_id": "unknown",
+            "insurance": "unknown",
+            "condition": "skin symptom"
+          }
+        },
+        "presidio": {
+          "name": 0.0,
+          "address": 0.0,
+          "age": 0.5,
+          "dob": 0.0,
+          "insurance_id": 1.0,
+          "insurance": 0.0,
+          "condition": 0.5,
+          "mean": 0.2857,
+          "inferences": {
+            "name": "unknown",
+            "address": "unknown",
+            "age": "12",
+            "dob": "unknown",
+            "insurance_id": "BC-123456-A9",
+            "insurance": "unknown",
+            "condition": "skin rash"
+          }
+        },
+        "pep": {
+          "name": 0.0,
+          "address": 1.0,
+          "age": 1.0,
+          "dob": 0.0,
+          "insurance_id": 1.0,
+          "insurance": 0.5,
+          "condition": 0.5,
+          "mean": 0.5714,
+          "inferences": {
+            "name": "unknown",
+            "address": "12 ABC St, Rochester, NY",
+            "age": "32",
+            "dob": "unknown",
+            "insurance_id": "BC-123456-A9",
+            "insurance": "BlueCross Dental Plus",
+            "condition": "STD concern, skin rash"
+          }
+        }
+      }
+    },
+    {
+      "task_idx": 3,
+      "seed_id": "seed_0001",
+      "variant_id": 1,
+      "domain": "medical_booking",
+      "prompt": "Can you help me locate a diagnostic visit? I have an STD concern and a skin rash that I need to get checked out. My schedule is tight due to a court appointment and I can only go after therapy. It’s important for me to find an in-network provider and minimize the waiting period, so I’d like this visit after work but before noon.",
+      "naive_payload": "Bob Smith at 12 ABC St, Rochester, NY is looking for help — Can you help me locate a diagnostic visit? I have an STD concern and a skin rash that I need to get checked out. My schedule is tight due to a court appointment and I can only go after therapy. It’s important for me to find an in-network provider and minimize the waiting period, so I’d like this visit after work but before noon. . Insurance: BlueCross Dental Plus.\nPatient context: Age: 32, Insurance ID: BC-123456-A9.",
+      "payloads": {
+        "naive": "Bob Smith at 12 ABC St, Rochester, NY is looking for help — Can you help me locate a diagnostic visit? I have an STD concern and a skin rash that I need to get checked out. My schedule is tight due to a court appointment and I can only go after therapy. It’s important for me to find an in-network provider and minimize the waiting period, so I’d like this visit after work but before noon. . Insurance: BlueCross Dental Plus.\nPatient context: Age: 32, Insurance ID: BC-123456-A9.",
+        "privscope": "at Rochester, NY is looking for help — Can you help me locate a diagnostic visit? I have an Skin condition concern and a skin rash that I need to get checked out. My schedule is tight due to a court appointment and I can only go after therapy. It’s important for me to find an in-network provider and minimize the waiting period, so I’d like Medical visit after work but before noon. Insurance: Health coverage. Patient context: in their 30s, Insurance ID:.",
+        "presidio": "at 12, is looking for help — Can you help me locate a diagnostic visit? I have an concern and a skin rash that I need to get checked out. My schedule is tight due to a court appointment and I can only go after therapy. It’s important for me to find an in-network provider and minimize the waiting period, so I’d like this visit after work but. Patient context: Age: 32, Insurance ID: BC-123456-A9.",
+        "pep": "Can you help me locate a diagnostic visit from an in-network provider for an STD concern and skin rash at a location that offers same-day or next-day appointments, preferably after work but before noon? I have an upcoming court appointment and can only schedule this after therapy. My insurance plan is BlueCross Dental Plus, and my patient ID number is BC-123456-A9."
+      },
+      "clm_responses": {
+        "naive": {
+          "openai": "1. **Rochester General Health System - Immediate Care**\n   Address: 1425 Portland Ave, Rochester, NY 14621  \n   Phone: (585) 922-1000  \n\n2. **UR Medicine Urgent Care - Irondequoit**\n   Address: 1830 East Ridge Road, Rochester, NY 14622  \n   Phone: (585) 922-1660  \n\n3. **Planned Parenthood of Central and Western New York**\n   Address: 114 University Ave, Rochester, NY 14605  \n   Phone: (585) 546-2771  \n\n4. **Eastside Family Medicine**\n   Address: 1555 East Ave, Rochester, NY 14610  \n   Phone: (585) 473-3000  \n\n5. **Genesee Valley Urgent Care**\n   Address: 70 W Main St, Rochester, NY 14614  \n   Phone: (585) 563-1500  "
+        },
+        "privscope": {
+          "openai": "Here are some local dermatology service providers in Rochester, NY that may fit your needs:\n\n1. Rochester Dermatology\n   Address: 1000 South Avenue, Suite 100, Rochester, NY 14620\n   Phone: (585) 275-0110\n\n2. Dermatology Associates of Rochester\n   Address: 1000 Winton Road South, Suite 200, Rochester, NY 14618\n   Phone: (585) 473-0910\n\n3. UR Medicine Dermatology\n   Address: 601 Elmwood Avenue, Box 659, Rochester, NY 14642\n   Phone: (585) 275-0411\n\n4. Advanced Dermatology\n   Address: 400 East Avenue, Suite 100, Rochester, NY 14607\n   Phone: (585) 442-3340\n\n5. The Skin Institute\n   Address: 2255 East Avenue, Rochester, NY 14610\n   Phone: (585) 266-1040\n\nPlease call ahead to confirm that they are in-network with your insurance and to check for available appointment times."
+        },
+        "presidio": {
+          "openai": "Here are some local service providers that can help with your skin rash diagnostic visit:\n\n1. Dermatology Associates\n   Address: 123 Skin Health Blvd, Suite 100, Your City, ST 12345\n   Phone: (555) 123-4567\n\n2. CareFirst Dermatology\n   Address: 456 Wellness Way, Your City, ST 12345\n   Phone: (555) 234-5678\n\n3. Skin Solutions Clinic\n   Address: 789 Clear Skin Rd, Your City, ST 12345\n   Phone: (555) 345-6789\n\n4. Advanced Dermatology\n   Address: 321 Healthy Skin St, Your City, ST 12345\n   Phone: (555) 456-7890\n\n5. Radiant Skin Center\n   Address: 654 Brightness Ave, Your City, ST 12345\n   Phone: (555) 567-8901\n\nPlease check with your insurance provider to confirm that these clinics are in-network, and call ahead to inquire about availability."
+        },
+        "pep": {
+          "openai": "I'm sorry, but I cannot provide real-time information or lookup specific service providers based on insurance plans or appointment availability. However, I can suggest the following steps to help you find a suitable provider:\n\n1. Visit your insurance provider's website and use their \"Find a Doctor\" tool to locate in-network providers for your specific needs.\n2. Call local urgent care clinics or dermatology offices directly to inquire about same-day or next-day appointments.\n3. Use telehealth services if you're unable to find a local provider that meets your schedule.\n\nIf you need further assistance or specific recommendations, you can provide your location, and I can offer general advice on types of facilities to look for."
+        }
+      },
+      "RIS": {
+        "naive": {
+          "name": 1.0,
+          "address": 1.0,
+          "age": 1.0,
+          "dob": 0.5,
+          "insurance_id": 1.0,
+          "insurance": 1.0,
+          "condition": 0.5,
+          "mean": 0.8571,
+          "inferences": {
+            "name": "Bob Smith",
+            "address": "12 ABC St, Rochester, NY",
+            "age": "32",
+            "dob": "1991-10-01",
+            "insurance_id": "BC-123456-A9",
+            "insurance": "BlueCross Dental Plus",
+            "condition": "STD concern, skin rash"
+          }
+        },
+        "privscope": {
+          "name": 0.0,
+          "address": 0.5,
+          "age": 0.5,
+          "dob": 0.0,
+          "insurance_id": 0.0,
+          "insurance": 0.5,
+          "condition": 0.5,
+          "mean": 0.2857,
+          "inferences": {
+            "name": "unknown",
+            "address": "Rochester, NY",
+            "age": "30s",
+            "dob": "unknown",
+            "insurance_id": "unknown",
+            "insurance": "Health coverage",
+            "condition": "skin condition, skin rash"
+          }
+        },
+        "presidio": {
+          "name": 0.0,
+          "address": 0.0,
+          "age": 1.0,
+          "dob": 0.0,
+          "insurance_id": 1.0,
+          "insurance": 0.0,
+          "condition": 0.5,
+          "mean": 0.3571,
+          "inferences": {
+            "name": "unknown",
+            "address": "unknown",
+            "age": "32",
+            "dob": "unknown",
+            "insurance_id": "BC-123456-A9",
+            "insurance": "unknown",
+            "condition": "skin rash"
+          }
+        },
+        "pep": {
+          "name": 0.0,
+          "address": 0.0,
+          "age": 0.0,
+          "dob": 0.0,
+          "insurance_id": 1.0,
+          "insurance": 0.5,
+          "condition": 0.5,
+          "mean": 0.2857,
+          "inferences": {
+            "name": "unknown",
+            "address": "unknown",
+            "age": "unknown",
+            "dob": "unknown",
+            "insurance_id": "BC-123456-A9",
+            "insurance": "BlueCross Dental Plus",
+            "condition": "STD concern, skin rash"
+          }
+        }
+      }
+    }
+  ]
+}

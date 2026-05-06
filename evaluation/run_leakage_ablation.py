@@ -45,12 +45,15 @@ import privacy.pep       as pep_baseline
 # ── Canonical file paths ──────────────────────────────────────────────────────
 _TASKS_FILE      = _ROOT / "task_generated" / "task_prompts.json"
 _PROFILE_FILE    = _ROOT / "state" / "profile_state.json"
-_TRACE_FILE      = _ROOT / "state" / "working_trace.json"
+_BACKSTORY_FILE  = _ROOT / "state" / "memory_backstory.json"   # fixed pre-history
+_TRACE_FILE      = _ROOT / "state" / "working_trace.json"      # runtime, reset each size
 _RESULTS_FILE    = Path(__file__).resolve().parent / "run_leakage_ablation.json"
 
-_METHODS             = ("naive", "privscope", "presidio", "pep")
-_PRELOADED_SIZES     = (0, 5, 10, 20, 30, 40, 50)
-_PRELOADED_TEMPLATE  = "working_trace_preloaded_{size}.json"
+_METHODS         = ("naive", "privscope", "presidio", "pep")
+# Ablation sizes = number of backstory entries to expose to the LC.
+# Generate backstory with:
+#   uv run python state/generate_backstory.py --n 10 --mode claude
+_ABLATION_SIZES  = (0, 2, 4, 6, 8, 10)
 
 
 # ════════════════════════════════════════════════════════════════════════════════
@@ -158,12 +161,17 @@ def _append_trace(entry: dict) -> None:
     _TRACE_FILE.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
-def _reload_agent_traces(agent: HybridAgent, preloaded_path: Path) -> None:
-    """Refresh agent.state['memory_traces'] from preloaded + runtime trace."""
-    traces: list = []
-    pre     = _load_json(preloaded_path, required=False)
-    if pre:
-        traces.extend(pre.get("memory_traces", []))
+def _load_backstory_slice(n: int) -> list:
+    """Return the first n entries from memory_backstory.json (0 = empty)."""
+    data = _load_json(_BACKSTORY_FILE, required=False)
+    if not data:
+        return []
+    return data.get("memory_traces", [])[:n]
+
+
+def _reload_agent_traces(agent: HybridAgent, backstory_slice: list) -> None:
+    """Refresh agent.state['memory_traces'] from a backstory slice + runtime trace."""
+    traces: list = list(backstory_slice)
     runtime = _load_json(_TRACE_FILE, required=False)
     if runtime:
         traces.extend(runtime.get("memory_traces", []))
@@ -369,11 +377,28 @@ def main() -> None:
     n_eval  = min(args.n_tasks, n_total) if args.n_tasks else n_total
     tasks   = all_tasks[:n_eval]
 
+    # Check backstory has enough entries for the largest ablation size
+    backstory_data = _load_json(_BACKSTORY_FILE, required=False)
+    max_backstory  = len(backstory_data.get("memory_traces", [])) if backstory_data else 0
+    valid_sizes    = [s for s in _ABLATION_SIZES if s <= max_backstory]
+    skipped_sizes  = [s for s in _ABLATION_SIZES if s > max_backstory]
+
     print(f"  Tasks         : {n_total} in file  →  evaluating {n_eval}")
     print(f"  Profile facts : {len(profile_facts)} values (S^prof, constant)")
-    print(f"  History sizes : {list(_PRELOADED_SIZES)}")
+    print(f"  Backstory     : {_BACKSTORY_FILE.name}  ({max_backstory} entries available)")
+    print(f"  Ablation sizes: {valid_sizes}", end="")
+    if skipped_sizes:
+        print(f"  [SKIP {skipped_sizes} — not enough backstory entries]", end="")
+    print()
     print(f"  Methods       : {', '.join(_METHODS)}")
     print(f"  Output        : {out_path}")
+
+    if not valid_sizes:
+        sys.exit(
+            f"\n[ERROR] Backstory has only {max_backstory} entries but smallest ablation size "
+            f"is {_ABLATION_SIZES[0]}. Run:\n"
+            f"  uv run python state/generate_backstory.py --n 50"
+        )
 
     print("\nInitialising models …")
     agent = HybridAgent(local_model=args.local_model)
@@ -383,33 +408,36 @@ def main() -> None:
 
     all_results: Dict[str, dict] = {}
 
-    for size in _PRELOADED_SIZES:
-        preloaded_name = _PRELOADED_TEMPLATE.format(size=size)
-        preloaded_path = _ROOT / "state" / preloaded_name
-
-        if not preloaded_path.exists():
-            print(f"\n[SKIP] {preloaded_name} not found — skipping size {size}")
-            continue
-
+    for size in valid_sizes:
         print(f"\n{'─' * 60}")
-        print(f"  History size = {size}  ({preloaded_name})")
+        print(f"  History size = {size} backstory entries")
         print(f"{'─' * 60}")
 
         # Reset working_trace so each size starts from a clean runtime slate
         _reset_trace()
 
-        # Reload trace facts for this preloaded size
-        trace_facts = load_trace_facts(_TRACE_FILE, preloaded_path)
+        # Load the first `size` backstory entries as S^hist for this run
+        backstory_slice = _load_backstory_slice(size)
+        trace_facts     = load_trace_facts(_TRACE_FILE, None)   # runtime only at start
+        # Merge backstory facts into trace_facts for leakage measurement
+        backstory_facts = []
+        for entry in backstory_slice:
+            if isinstance(entry.get("data"), dict):
+                for v in entry["data"].values():
+                    if isinstance(v, str) and len(v.strip()) >= 3:
+                        backstory_facts.append(v.strip())
+                    elif isinstance(v, list):
+                        backstory_facts.extend(x for x in v if isinstance(x, str) and len(x.strip()) >= 3)
+        trace_facts = list(dict.fromkeys(backstory_facts + trace_facts))
         print(f"  S^hist facts at start : {len(trace_facts)}")
 
-        # Reload agent state with this preloaded trace
-        _reload_agent_traces(agent, preloaded_path)
+        _reload_agent_traces(agent, backstory_slice)
 
         task_results:   List[dict] = []
-        history_facts:  List[str]  = []   # accumulates S^cur across tasks this run
+        history_facts:  List[str]  = []
 
         for i, task in enumerate(tasks):
-            _reload_agent_traces(agent, preloaded_path)
+            _reload_agent_traces(agent, backstory_slice)
 
             result = evaluate_task(
                 task_idx      = i,
@@ -422,11 +450,9 @@ def main() -> None:
             )
             task_results.append(result)
 
-            # Grow S^hist with this task's current-task facts
             cur_facts = [str(f).strip() for f in task.get("sensitive_info", []) if str(f).strip()]
             history_facts.extend(f for f in cur_facts if f not in history_facts)
 
-            # Append naive CLM response placeholder to trace (keeps carryover realistic)
             _append_trace({
                 "task_id": result["seed_id"],
                 "domain":  result["domain"],
@@ -435,11 +461,11 @@ def main() -> None:
 
         aggregates = compute_aggregates(task_results)
         all_results[str(size)] = {
-            "preloaded_trace":  preloaded_name,
-            "n_trace_facts":    len(trace_facts),
-            "n_tasks":          len(task_results),
-            "aggregates":       aggregates,
-            "tasks":            task_results,
+            "backstory_size":  size,
+            "n_trace_facts":   len(trace_facts),
+            "n_tasks":         len(task_results),
+            "aggregates":      aggregates,
+            "tasks":           task_results,
         }
 
         print(f"\n  Aggregates for size {size}:")
@@ -455,7 +481,7 @@ def main() -> None:
     output = {
         "metadata": {
             "n_tasks":        n_eval,
-            "history_sizes":  list(_PRELOADED_SIZES),
+            "history_sizes":  list(_ABLATION_SIZES),
             "methods":        list(_METHODS),
             "local_model":    agent.local.model,
             "timestamp":      datetime.now().isoformat(),

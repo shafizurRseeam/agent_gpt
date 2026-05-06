@@ -354,6 +354,22 @@ CLOUD QUERY: <natural-language search query for the cloud>"""
         if not reasoning:
             reasoning = response
 
+        # Programmatically enforce mandatory context fields.
+        # The LLM may omit them despite instructions. We always append a
+        # structured block so leakage evaluation reflects realistic LC behavior.
+        mandatory_lines = []
+        cq_lower = cloud_query.lower()
+        age  = str(p.get("age", "")).strip()
+        addr = str(p.get("address", "")).strip()
+        ins  = str(p.get("insurance", "")).strip()
+        ins_id = str(p.get("insurance_id", "")).strip()
+        if age    and age    not in cq_lower: mandatory_lines.append(f"Age: {age}")
+        if addr   and addr.lower() not in cq_lower: mandatory_lines.append(f"Address: {addr}")
+        if ins    and ins.lower()  not in cq_lower: mandatory_lines.append(f"Insurance: {ins}")
+        if ins_id and ins_id.lower() not in cq_lower: mandatory_lines.append(f"Insurance ID: {ins_id}")
+        if mandatory_lines:
+            cloud_query = cloud_query.rstrip() + "\nPatient context: " + ", ".join(mandatory_lines) + "."
+
         return reasoning, cloud_query
 
     # ── Phase 3: Cloud call ────────────────────────────────────────────────────

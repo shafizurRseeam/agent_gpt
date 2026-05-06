@@ -204,9 +204,23 @@ class CarryoverController:
         else:
             decisions = self._rule_filter(u_med, source="rule")
 
-        kept    = [d.span for d in decisions if d.kept]
-        dropped = [d.span for d in decisions if not d.kept]
-        return CarryoverResult(kept=kept, dropped=dropped, decisions=decisions, task_frame=g_t, method=method)
+        # Hard-keep override: scheduling, location, and medical condition spans.
+        # The LLM sometimes drops noun_phrases (medical conditions, symptoms)
+        # that are critical for routing to the right specialist type. These are
+        # always abstracted by Stage 3b rather than released verbatim.
+        _HARD_KEEP_TYPES = {"date", "time", "address", "location", "zip", "age", "noun_phrase"}
+        final_decisions = []
+        for d in decisions:
+            if not d.kept and d.span.span_type in _HARD_KEEP_TYPES:
+                final_decisions.append(CarryoverDecision(
+                    span=d.span, kept=True, reason="rule:hard_keep_scheduling"
+                ))
+            else:
+                final_decisions.append(d)
+
+        kept    = [d.span for d in final_decisions if d.kept]
+        dropped = [d.span for d in final_decisions if not d.kept]
+        return CarryoverResult(kept=kept, dropped=dropped, decisions=final_decisions, task_frame=g_t, method=method)
 
     def _llm_filter(self, u_med: List[Span], g_t: str, local_llm) -> List[CarryoverDecision]:
         span_list = "\n".join(

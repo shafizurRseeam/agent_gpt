@@ -100,6 +100,7 @@ _GROUPABLE_TYPES = {"medical_symptom", "medical_condition"}
 # "preference" and "group" require sub-classification; excluded here.
 
 _DIRECT_TYPE_MAP: Dict[str, str] = {
+    "age":            "age",
     "address":        "address",
     "location":       "location",
     "zip":            "zip",
@@ -144,6 +145,16 @@ _MEDICAL_CONDITION_WORDS = {
     "condition", "disease", "disorder", "chronic", "syndrome", "infection",
     "eczema", "psoriasis", "thyroid", "cardiac", "heart", "stroke", "autism",
     "sclerosis", "fibromyalgia", "colitis", "crohn",
+    # common medical abbreviations written as words
+    "std", "sti", "hiv", "hpv", "hbv", "hcv", "uti", "adhd", "ptsd",
+    "ocd", "asd", "copd", "afib", "gerd", "ibs",
+}
+
+# Abbreviations that should always resolve to medical_condition, not prior_provider,
+# even if they look like proper nouns (all caps, single word).
+_MEDICAL_ABBREV_SET = {
+    "std", "sti", "hiv", "hpv", "hbv", "hcv", "uti", "adhd", "ptsd",
+    "ocd", "asd", "copd", "afib", "gerd", "ibs", "tb",
 }
 
 _SYMPTOM_WORDS = {
@@ -333,6 +344,10 @@ def _infer_abstraction_type(span: Span) -> str:
         # ── Proper noun → named entity (provider or venue) ────────────────────
         alpha = [w for w in span.text.split() if w.isalpha()]
         if alpha and all(w[0].isupper() for w in alpha):
+            # Single-word all-caps abbreviations that are medical conditions
+            # must not fall through to prior_provider (e.g. "STD", "HIV").
+            if len(alpha) == 1 and alpha[0].lower() in _MEDICAL_ABBREV_SET:
+                return "medical_condition"
             if any(w.lower() in _VENUE_WORDS for w in alpha):
                 return "prior_venue"
             return "prior_provider"
@@ -463,6 +478,22 @@ def _rule_address(text: str, level: int) -> Optional[str]:
     return None
 
 
+def _rule_age(text: str, level: int) -> Optional[str]:
+    m = re.search(r'\b(\d{1,3})\b', text)
+    if not m:
+        return None
+    age    = int(m.group(1))
+    decade = (age // 10) * 10
+    if level == 0:
+        return "an adult"
+    elif level == 1:
+        return f"in their {decade}s"
+    elif level == 2:
+        lower = (age // 5) * 5
+        return f"in the {lower}–{lower + 4} age range"
+    return None
+
+
 def _rule_abstract(span: Span, abs_type: str, level: int) -> Optional[str]:
     if abs_type == "date":
         return _rule_date(span.text, level)
@@ -472,6 +503,8 @@ def _rule_abstract(span: Span, abs_type: str, level: int) -> Optional[str]:
         return _rule_address(span.text, level)
     if abs_type == "zip":
         return "local area" if level == 0 else "nearby area"
+    if abs_type == "age":
+        return _rule_age(span.text, level)
     return None
 
 
@@ -479,6 +512,7 @@ def _rule_abstract(span: Span, abs_type: str, level: int) -> Optional[str]:
 
 _FALLBACK: Dict[str, Dict[int, str]] = {
     # Structured
+    "age":                   {0: "an adult",                    1: "in their 30s",                  2: "in the 30-35 age range"},
     "address":               {0: "local area",                  1: "the local area",                2: "a nearby neighborhood"},
     "location":              {0: "local area",                  1: "the local area",                2: "a nearby area"},
     "zip":                   {0: "local area",                  1: "nearby area",                   2: "the local zip area"},
@@ -582,6 +616,13 @@ Reply with only the abstracted phrase."""
 # ── Post-abstraction validation ────────────────────────────────────────────────
 
 _VALIDATION_SIGNALS: Dict[str, Dict] = {
+    "age": {
+        "required_positive": {
+            "adult", "30s", "20s", "40s", "50s", "60s", "range", "years", "age",
+            "older", "younger", "middle", "senior",
+        },
+        "prohibited": {"street", "city", "clinic", "doctor", "date"},
+    },
     "prior_provider": {
         "required_positive": {
             "provider", "clinic", "office", "practice", "dental", "medical",
@@ -621,6 +662,20 @@ _VALIDATION_SIGNALS: Dict[str, Dict] = {
         },
     },
 }
+
+
+_LLM_META_RE = re.compile(
+    r'^(?:generalized\s+span\s*[:=]|abstracted?\s*[:=]|'
+    r'the\s+abstraction\s+(?:is|for)\s*[:=]|output\s*[:=]|'
+    r'result\s*[:=]|answer\s*[:=])\s*["\']?',
+    re.IGNORECASE,
+)
+
+def _clean_llm_output(text: str) -> str:
+    """Strip LLM meta-commentary prefixes (e.g. 'Generalized span: "..."')."""
+    text = text.strip().strip('"').strip("'").strip()
+    text = _LLM_META_RE.sub("", text).strip().strip('"').strip("'").strip()
+    return text
 
 
 def _validate(abs_type: str, abstracted_text: str) -> str:
@@ -786,6 +841,8 @@ class SpanAbstractor:
             if abstracted is None:
                 abstracted = _fallback_abstract(abs_type, level)
                 method     = "rule"
+            elif method == "llm":
+                abstracted = _clean_llm_output(abstracted)
 
             if len(span_group) > 1:
                 anchor = min(span_group, key=lambda s: s.start)

@@ -34,6 +34,12 @@ from typing import Dict, List
 ABSTRACTION_HIERARCHIES: Dict[str, List[str]] = {
 
     # ── Structured / semi-structured ──────────────────────────────────────────
+    "age": [
+        "adult",
+        "decade range",
+        "5-year range",
+        "exact age",
+    ],
     "address": [
         "region",
         "city",
@@ -277,11 +283,12 @@ ABSTRACTION_HIERARCHIES: Dict[str, List[str]] = {
 
 CALIBRATED_ABSTRACTION_POLICY: Dict[str, int] = {
     # Structured constraints
+    "age":                   1,   # decade range (e.g. "30s") sufficient for provider matching
     "address":               1,
     "location":              1,
     "zip":                   1,
-    "date":                  2,
-    "time":                  2,
+    "date":                  3,   # verbatim — exact scheduling values required
+    "time":                  3,   # verbatim — exact scheduling values required
     "distance_proximity":    2,
     "budget_cost":           2,
     "party_size":            2,

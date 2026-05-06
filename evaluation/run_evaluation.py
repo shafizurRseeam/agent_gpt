@@ -1165,7 +1165,44 @@ def main() -> None:
     }
 
     out_path.write_text(json.dumps(output, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"  Results saved → {out_path}\n")
+    print(f"  Results saved → {out_path}")
+
+    summary_path = out_path.with_name(out_path.stem + "_summary.json")
+    _write_summary(output, summary_path)
+    print(f"  Summary saved → {summary_path}\n")
+
+
+def _write_summary(output: dict, path: Path) -> None:
+    """
+    Write a compact human-readable summary alongside the full results file.
+    Contains: metadata, aggregates, and per-task:
+      prompt, naive_payload, sanitized payload per method, CLM responses per method.
+    """
+    task_summaries = []
+    for t in output.get("tasks", []):
+        payloads     = {}
+        clm_responses = {}
+        for method, m in t.get("methods", {}).items():
+            payloads[method]      = m.get("payload", "")
+            clm_responses[method] = m.get("clm_responses") or m.get("clm_response", "")
+
+        task_summaries.append({
+            "task_idx":    t["task_idx"],
+            "seed_id":     t["seed_id"],
+            "variant_id":  t["variant_id"],
+            "domain":      t["domain"],
+            "prompt":      t["prompt"],
+            "naive_payload": t["naive_payload"],
+            "payloads":    payloads,
+            "clm_responses": clm_responses,
+        })
+
+    summary = {
+        "metadata":   output["metadata"],
+        "aggregates": output["aggregates"],
+        "tasks":      task_summaries,
+    }
+    path.write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 if __name__ == "__main__":
